@@ -1,0 +1,43 @@
+// Copyleft 2013 Chris Korda
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or any later version.
+/*
+        chris korda
+ 
+		revision history:
+		rev		date	comments
+        00      28nov13	initial version
+
+		reference-countable handle wrapper
+ 
+*/
+
+#ifndef CSAFEHANDLE_INCLUDED
+#define CSAFEHANDLE_INCLUDED
+
+#include "RefPtr.h"
+
+class CSafeHandle : public CRefObj {
+public:
+// Construction
+	CSafeHandle();
+	~CSafeHandle();
+
+// Attributes
+	HANDLE	GetHandle() const;
+
+// Operations
+	void	Attach(HANDLE Handle);
+	HANDLE	Detach();
+
+protected:
+	HANDLE	m_Handle;	// protected handle
+};
+
+inline HANDLE CSafeHandle::GetHandle() const
+{
+	return(m_Handle);
+}
+
+#endif

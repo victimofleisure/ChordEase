@@ -1,0 +1,1525 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\ChordEase.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#include ""afxprint.rc""       // printing/print preview resources\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\ChordEase.ico"
+IDR_CHORDEASEDOC        ICON    DISCARDABLE     "res\\ChordEaseDoc.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
+IDB_HEADER_SORT         BITMAP  DISCARDABLE     "res\\header_sort.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      ID_FILE_NEW
+    BUTTON      ID_FILE_OPEN
+    SEPARATOR
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_EDIT_UNDO
+    BUTTON      ID_EDIT_REDO
+    SEPARATOR
+    BUTTON      ID_TRANSPORT_PLAY
+    BUTTON      ID_TRANSPORT_PAUSE
+    BUTTON      ID_TRANSPORT_REWIND
+    BUTTON      ID_TRANSPORT_REPEAT
+    BUTTON      ID_TRANSPORT_RECORD
+    BUTTON      ID_TRANSPORT_NEXT_SECTION
+    SEPARATOR
+    BUTTON      ID_MIDI_LEARN
+    BUTTON      ID_MIDI_CHASE_EVENTS
+    BUTTON      ID_MIDI_PANIC
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Edit...\tCtrl+E",            ID_FILE_EDIT
+        MENUITEM SEPARATOR
+        MENUITEM "Print Set&up...",             ID_FILE_PRINT_SETUP
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&Redo\tCtrl+Y",               ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Insert\tIns",                ID_EDIT_INSERT_PART
+        MENUITEM "&Delete\tDel",                ID_EDIT_DELETE_PART
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All\tCtrl+A",         ID_EDIT_SELECT_ALL
+        MENUITEM "Dese&lect\tEsc",              ID_EDIT_DESELECT
+        MENUITEM "Re&name\tF2",                 ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Options...\tShift+O",        ID_EDIT_OPTIONS
+    END
+    POPUP "&Patch"
+    BEGIN
+        MENUITEM "&New\tCtrl+Shift+N",          ID_PATCH_NEW
+        MENUITEM "&Open...\tCtrl+Shift+O",      ID_PATCH_OPEN
+        MENUITEM "&Save\tCtrl+Shift+S",         ID_PATCH_SAVE
+        MENUITEM "Save &As...",                 ID_PATCH_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Recent Patch",                ID_PATCH_MRU_FILE1, GRAYED
+    END
+    POPUP "&Transport"
+    BEGIN
+        MENUITEM "&Play\tCtrl+Space",           ID_TRANSPORT_PLAY
+        MENUITEM "Pa&use\tShift+Space",         ID_TRANSPORT_PAUSE
+        MENUITEM "Re&wind\tCtrl+W",             ID_TRANSPORT_REWIND
+        MENUITEM "Repea&t\tCtrl+Backspace",     ID_TRANSPORT_REPEAT
+        MENUITEM "&Record\tCtrl+R",             ID_TRANSPORT_RECORD
+        MENUITEM SEPARATOR
+        MENUITEM "&Next Section\tCtrl+Enter",   ID_TRANSPORT_NEXT_SECTION
+        MENUITEM "Next &Chord\tF7",             ID_TRANSPORT_NEXT_CHORD
+        MENUITEM "Previous &Chord\tShift+F7",   ID_TRANSPORT_PREV_CHORD
+    END
+    POPUP "&MIDI"
+    BEGIN
+        MENUITEM "&Devices",                    ID_MIDI_DEVICES
+        MENUITEM "&Input",                      ID_MIDI_INPUT
+        MENUITEM "&Output",                     ID_MIDI_OUTPUT
+        MENUITEM SEPARATOR
+        MENUITEM "&Learn\tCtrl+L",              ID_MIDI_LEARN
+        MENUITEM "&Assignments",                ID_MIDI_ASSIGNMENTS
+        MENUITEM "&Note Mappings",              ID_MIDI_NOTE_MAPPINGS
+        MENUITEM "&Chase Events",               ID_MIDI_CHASE_EVENTS
+        MENUITEM "&Reset All Targets",          ID_MIDI_RESET_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Panic\tShift+Esc",           ID_MIDI_PANIC
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM SEPARATOR
+        MENUITEM "P&atch Bar",                  ID_VIEW_PATCH
+        MENUITEM "Pa&rts Bar",                  ID_VIEW_PARTS
+        MENUITEM SEPARATOR
+        MENUITEM "&Piano",                      ID_VIEW_PIANO
+        MENUITEM "T&hreads",                    ID_VIEW_THREADS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics\tF1",            ID_HELP_FINDER
+        MENUITEM "ChordEase on the &Web",       ID_APP_HOME_PAGE
+        MENUITEM "Check for &Updates...",       ID_APP_CHECK_FOR_UPDATES
+        MENUITEM "&Demo",                       ID_APP_DEMO
+        MENUITEM SEPARATOR
+        MENUITEM "&About ChordEase",            ID_APP_ABOUT
+    END
+END
+
+IDR_PART_LIST_CTX MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Cu&t",                        ID_EDIT_CUT
+        MENUITEM "&Copy",                       ID_EDIT_COPY
+        MENUITEM "&Paste",                      ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Insert",                     ID_EDIT_INSERT_PART
+        MENUITEM "&Delete",                     ID_EDIT_DELETE_PART
+        MENUITEM SEPARATOR
+        MENUITEM "Re&name",                     ID_EDIT_RENAME
+    END
+END
+
+IDR_MIDI_ASSIGNS_CTX MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Delete",                     ID_MIDIASS_DELETE
+    END
+END
+
+IDR_MIDI_EVENT_CTX MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Clear History",               ID_MIDI_EVENT_CLEAR_HISTORY
+        MENUITEM "Pause",                       ID_MIDI_EVENT_PAUSE
+    END
+END
+
+IDR_PIANO_CTX MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        POPUP "Key &Labels"
+        BEGIN
+            MENUITEM "&None",                       ID_PIANO_KEY_LABEL_TYPE
+            MENUITEM "&Shortcut",                   ID_PIANO_KEY_LABEL_TYPE2
+            MENUITEM "&Input Note",                 ID_PIANO_KEY_LABEL_TYPE3
+            MENUITEM "&Output Note",                ID_PIANO_KEY_LABEL_TYPE4
+            MENUITEM "&Chord Tone",                 ID_PIANO_KEY_LABEL_TYPE5
+        END
+        MENUITEM "&Rotate Labels",              ID_PIANO_ROTATE_LABELS
+        MENUITEM "Show &Octaves",               ID_PIANO_SHOW_OCTAVES
+        MENUITEM "&Vertical Keyboard",          ID_PIANO_VERTICAL
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_FILE_EDIT,           VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_MIDI_LEARN,          VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_PATCH_NEW,           VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_EDIT_OPTIONS,        VIRTKEY, SHIFT, NOINVERT
+    "O",            ID_PATCH_OPEN,          VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_TRANSPORT_RECORD,    VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_PATCH_SAVE,          VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_TRANSPORT_REPEAT,    VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_DELETE_PART,    VIRTKEY, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_EDIT_DESELECT,       VIRTKEY, NOINVERT
+    VK_ESCAPE,      ID_MIDI_PANIC,          VIRTKEY, SHIFT, NOINVERT
+    VK_F2,          ID_EDIT_RENAME,         VIRTKEY, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_F7,          ID_TRANSPORT_NEXT_CHORD, VIRTKEY, NOINVERT
+    VK_F7,          ID_TRANSPORT_PREV_CHORD, VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_INSERT_PART,    VIRTKEY, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_TRANSPORT_NEXT_SECTION, VIRTKEY, CONTROL, NOINVERT
+    VK_SPACE,       ID_TRANSPORT_PLAY,      VIRTKEY, CONTROL, NOINVERT
+    VK_SPACE,       ID_TRANSPORT_PAUSE,     VIRTKEY, SHIFT, NOINVERT
+    "W",            ID_TRANSPORT_REWIND,    VIRTKEY, CONTROL, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Y",            ID_EDIT_REDO,           VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 207, 90
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About ChordEase"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDR_MAINFRAME,IDR_MAINFRAME,7,7,20,20
+    LTEXT           "ChordEase Version 1.0\nCopyleft 2013 Chris Korda",
+                    IDC_ABOUT_TEXT,40,7,108,17,SS_NOPREFIX
+    CONTROL         "chordease.sourceforge.net",IDC_ABOUT_URL,"Static",
+                    SS_LEFTNOWORDWRAP | SS_NOTIFY | WS_GROUP,40,23,115,8
+    DEFPUSHBUTTON   "OK",IDOK,160,7,40,14,WS_GROUP
+    EDITTEXT        IDC_ABOUT_LICENSE,7,38,193,45,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL
+END
+
+IDD_TABBED DIALOGEX 0, 0, 165, 82
+STYLE WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tab1",IDC_TABDLG_TAB,"SysTabControl32",TCS_MULTILINE | 
+                    WS_TABSTOP,0,0,156,70
+END
+
+IDD_PATCH_GENERAL DIALOG DISCARDABLE  0, 0, 202, 90
+STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Tempo:",IDC_STATIC,7,7,25,8
+    EDITTEXT        IDC_PATCH_GEN_TEMPO,7,17,40,12,ES_AUTOHSCROLL
+    LTEXT           "Multiple:",IDC_STATIC,51,7,27,8
+    EDITTEXT        IDC_PATCH_GEN_TEMPO_MULTIPLE,51,17,40,12,ES_AUTOHSCROLL
+    LTEXT           "Key:",IDC_STATIC,95,7,15,8
+    COMBOBOX        IDC_PATCH_GEN_KEY,95,17,34,130,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Transpose:",IDC_STATIC,133,7,36,8
+    EDITTEXT        IDC_PATCH_GEN_TRANSPOSE,133,17,34,12,ES_AUTOHSCROLL
+    LTEXT           "PPQ:",IDC_STATIC,7,37,18,8
+    COMBOBOX        IDC_PATCH_GEN_PPQ,7,47,40,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Lead-in:",IDC_STATIC,51,36,26,8
+    EDITTEXT        IDC_PATCH_GEN_LEAD_IN,51,47,34,12,ES_AUTOHSCROLL
+END
+
+IDD_PATCH_METRONOME DIALOG DISCARDABLE  0, 0, 202, 110
+STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Metronome"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Enable",IDC_PATCH_AINST_ENABLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,7,38,10
+    LTEXT           "Port:",IDC_STATIC,7,22,16,8
+    EDITTEXT        IDC_PATCH_AINST_PORT,7,32,34,12,ES_AUTOHSCROLL
+    LTEXT           "Channel:",IDC_STATIC,45,22,29,8
+    EDITTEXT        IDC_PATCH_AINST_CHANNEL,45,32,34,12,ES_AUTOHSCROLL
+    LTEXT           "Patch:",IDC_STATIC,83,22,22,8
+    EDITTEXT        IDC_PATCH_AINST_PATCH,83,32,34,12,ES_AUTOHSCROLL
+    LTEXT           "Volume:",IDC_STATIC,121,22,26,8
+    EDITTEXT        IDC_PATCH_AINST_VOLUME,121,32,34,12,ES_AUTOHSCROLL
+    GROUPBOX        "Normal",IDC_STATIC,7,50,85,40
+    LTEXT           "Note:",IDC_STATIC,14,60,18,8
+    EDITTEXT        IDC_PATCH_METRO_NOTE,14,70,34,12,ES_AUTOHSCROLL
+    LTEXT           "Velocity:",IDC_STATIC,52,60,28,8
+    EDITTEXT        IDC_PATCH_AINST_VELOCITY,52,70,34,12,ES_AUTOHSCROLL
+    GROUPBOX        "Accent",IDC_STATIC,99,50,85,52
+    LTEXT           "Note:",IDC_STATIC,106,60,18,8
+    EDITTEXT        IDC_PATCH_METRO_ACCENT_NOTE,106,70,34,12,ES_AUTOHSCROLL
+    LTEXT           "Velocity:",IDC_STATIC,144,60,28,8
+    EDITTEXT        IDC_PATCH_METRO_ACCENT_VEL,144,70,34,12,ES_AUTOHSCROLL
+    CONTROL         "Use same note",IDC_PATCH_METRO_ACCENT_SAME_NOTE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,106,86,63,10
+END
+
+IDD_PART_INPUT DIALOG DISCARDABLE  0, 0, 180, 86
+STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Input"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Port:",IDC_STATIC,7,7,16,8
+    EDITTEXT        IDC_PART_IN_PORT,7,17,34,12,ES_AUTOHSCROLL
+    LTEXT           "Channel:",IDC_STATIC,45,7,29,8
+    EDITTEXT        IDC_PART_IN_CHAN,45,17,34,12,ES_AUTOHSCROLL
+    LTEXT           "Zone Low:",IDC_STATIC,83,7,35,8
+    EDITTEXT        IDC_PART_IN_ZONE_LOW,83,17,34,12,ES_AUTOHSCROLL
+    LTEXT           "Zone High:",IDC_STATIC,121,7,36,8
+    EDITTEXT        IDC_PART_IN_ZONE_HIGH,121,17,34,12,ES_AUTOHSCROLL
+    LTEXT           "Transpose:",IDC_STATIC,7,37,36,8
+    EDITTEXT        IDC_PART_IN_TRANSPOSE,7,47,34,12,ES_AUTOHSCROLL
+    LTEXT           "Vel. Offset:",IDC_STATIC,45,37,36,8
+    EDITTEXT        IDC_PART_IN_VEL_OFFSET,45,47,34,12,ES_AUTOHSCROLL
+    LTEXT           "Device:",IDC_STATIC,7,67,26,12
+    EDITTEXT        IDC_PART_IN_DEVICE_NAME,35,67,138,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+END
+
+IDD_PART_OUTPUT DIALOG DISCARDABLE  0, 0, 180, 102
+STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Output"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Port:",IDC_STATIC,7,7,16,8
+    EDITTEXT        IDC_PART_OUT_PORT,7,17,34,12,ES_AUTOHSCROLL
+    LTEXT           "Channel:",IDC_STATIC,45,7,29,8
+    EDITTEXT        IDC_PART_OUT_CHAN,45,17,34,12,ES_AUTOHSCROLL
+    LTEXT           "Patch:",IDC_STATIC,83,7,22,8
+    EDITTEXT        IDC_PART_OUT_PATCH,83,17,34,12,ES_AUTOHSCROLL
+    LTEXT           "Volume:",IDC_STATIC,121,7,26,8
+    EDITTEXT        IDC_PART_OUT_VOLUME,121,17,34,12,ES_AUTOHSCROLL
+    LTEXT           "Harm. Anticipation:",IDC_STATIC,7,37,60,8
+    COMBOBOX        IDC_PART_OUT_ANTICIPATION,7,47,60,80,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Controllers thru",IDC_PART_OUT_CONTROLS_THRU,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,77,38,63,10
+    CONTROL         "Local control",IDC_PART_OUT_LOCAL_CONTROL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,77,51,57,10
+    CONTROL         "Fix held notes",IDC_PART_OUT_FIX_HELD_NOTES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,67,62,10
+    LTEXT           "Device:",IDC_STATIC,7,83,26,12
+    EDITTEXT        IDC_PART_OUT_DEVICE_NAME,35,83,138,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+END
+
+IDD_PART_LEAD DIALOG DISCARDABLE  0, 0, 180, 90
+STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Lead"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Harmonize",IDC_STATIC,7,7,162,59
+    LTEXT           "Generic interval:",IDC_STATIC,14,18,52,8
+    EDITTEXT        IDC_PART_LEAD_HARM_INTERVAL,14,28,34,12,ES_AUTOHSCROLL
+    CONTROL         "Omit melody",IDC_PART_LEAD_HARM_OMIT_MELODY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,46,54,10
+    GROUPBOX        "Static harmony range",IDC_STATIC,73,16,88,41
+    LTEXT           "Minimum:",IDC_STATIC,81,27,30,8
+    EDITTEXT        IDC_PART_LEAD_HARM_STATIC_MIN,81,37,34,12,ES_AUTOHSCROLL
+    LTEXT           "Maximum:",IDC_STATIC,119,27,32,8
+    EDITTEXT        IDC_PART_LEAD_HARM_STATIC_MAX,119,37,34,12,
+                    ES_AUTOHSCROLL
+END
+
+IDD_PART_COMP DIALOG DISCARDABLE  0, 0, 180, 114
+STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Comp"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Voicing:",IDC_STATIC,7,7,26,8
+    COMBOBOX        IDC_PART_COMP_VOICING,7,17,60,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Variation:",IDC_STATIC,73,7,30,8
+    COMBOBOX        IDC_PART_COMP_VARIATION,73,17,48,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Chord change resets alternation",
+                    IDC_PART_COMP_CHORD_RESETS_ALT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,36,116,10
+    GROUPBOX        "Arpeggio",IDC_STATIC,7,50,130,55
+    LTEXT           "Period:",IDC_STATIC,14,61,23,8
+    COMBOBOX        IDC_PART_COMP_ARP_PERIOD,14,71,48,80,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Order:",IDC_STATIC,67,61,20,8
+    COMBOBOX        IDC_PART_COMP_ARP_ORDER,67,71,64,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Repeat",IDC_PART_COMP_ARP_REPEAT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,89,39,10
+END
+
+IDD_PART_BASS DIALOG DISCARDABLE  0, 0, 180, 90
+STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Bass"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Lowest note:",IDC_STATIC,7,7,42,8
+    EDITTEXT        IDC_PART_BASS_LOWEST,7,17,34,12,ES_AUTOHSCROLL
+    CONTROL         "Allow chromatic",IDC_PART_BASS_CHROMATIC,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,58,7,65,10
+    CONTROL         "Slash chords",IDC_PART_BASS_SLASH_CHORDS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,58,20,57,10
+    LTEXT           "Approach length:",IDC_STATIC,7,37,55,8
+    COMBOBOX        IDC_PART_BASS_APPROACH_LENGTH,7,47,60,80,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Target alignment:",IDC_STATIC,72,37,56,8
+    COMBOBOX        IDC_PART_BASS_TARGET_ALIGNMENT,72,47,48,80,
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "measures",IDC_STATIC,123,47,31,12,SS_CENTERIMAGE
+END
+
+IDD_PROGRESS DIALOG DISCARDABLE  0, 0, 186, 49
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Progress"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",PBS_SMOOTH | 
+                    WS_BORDER,7,7,172,14
+    PUSHBUTTON      "Cancel",IDCANCEL,67,28,50,14
+    RTEXT           "",IDC_PROGRESS_PERCENT,139,27,40,15,SS_CENTERIMAGE
+END
+
+IDD_DEVICE DIALOG DISCARDABLE  0, 0, 200, 100
+STYLE WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Input:",IDC_DEVICE_IN_LIST_CAP,0,0,19,8
+    CONTROL         "List1",IDC_DEVICE_IN_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_TABSTOP,0,10,98,90
+    LTEXT           "Output:",IDC_DEVICE_OUT_LIST_CAP,102,0,24,8
+    CONTROL         "List1",IDC_DEVICE_OUT_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_TABSTOP,102,10,98,90
+END
+
+IDD_OPT_CHART DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Chart"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Measures per line:",IDC_STATIC,7,7,58,8
+    EDITTEXT        IDC_OPT_CHART_LINE_MEASURES,7,17,40,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    PUSHBUTTON      "&Font...",IDC_OPT_CHART_CHOOSE_FONT,7,47,50,14
+    PUSHBUTTON      "&Default Font",IDC_OPT_CHART_DEFAULT_FONT,64,47,60,14
+END
+
+IDD_ROW_FORM DIALOGEX 0, 0, 240, 137
+STYLE WS_CHILD | WS_CLIPCHILDREN
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+END
+
+IDD_PART_MIDI DIALOG DISCARDABLE  0, 0, 180, 90
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN | WS_CAPTION
+CAPTION "MIDI"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_MIDI_TARGET_ROW DIALOG DISCARDABLE  0, 0, 270, 14
+STYLE DS_CONTROL | WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDS_MIDI_TARG_ROW_NAME,2,0,60,12,SS_NOTIFY | 
+                    SS_CENTERIMAGE | SS_ENDELLIPSIS
+    EDITTEXT        IDS_MIDI_TARG_ROW_PORT,64,0,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDS_MIDI_TARG_ROW_CHAN,96,0,30,12,ES_AUTOHSCROLL
+    COMBOBOX        IDS_MIDI_TARG_ROW_EVENT,128,0,40,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDS_MIDI_TARG_ROW_CONTROL,170,0,34,12,ES_AUTOHSCROLL
+    EDITTEXT        IDS_MIDI_TARG_ROW_RANGE_START,206,0,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDS_MIDI_TARG_ROW_RANGE_END,238,0,30,12,ES_AUTOHSCROLL
+END
+
+IDD_MIDI_ASSIGNS DIALOG DISCARDABLE  0, 0, 382, 150
+STYLE WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "MIDI Assignments"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_MIDI_ASSIGNS_LIST,"SysListView32",LVS_REPORT | 
+                    WS_BORDER | WS_TABSTOP,0,0,382,150
+END
+
+IDD_NOTEPAD DIALOG DISCARDABLE  0, 0, 250, 230
+STYLE WS_MAXIMIZEBOX | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | 
+    WS_THICKFRAME
+CAPTION "Notepad"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_NOTEPAD_EDIT,7,7,236,195,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "OK",IDOK,136,209,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,193,209,50,14
+END
+
+IDD_THREADS DIALOG DISCARDABLE  0, 0, 180, 150
+STYLE WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+CAPTION "Threads"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_THREADS_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,0,0,180,150
+END
+
+IDD_PART_AUTO DIALOG DISCARDABLE  0, 0, 180, 114
+STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Auto"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Auto Play",IDC_PART_AUTO_PLAY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,7,46,10
+    LTEXT           "Window:",IDC_STATIC,7,22,29,8
+    EDITTEXT        IDC_PART_AUTO_WINDOW,7,32,34,12,ES_AUTOHSCROLL
+    LTEXT           "Velocity:",IDC_STATIC,45,22,28,8
+    EDITTEXT        IDC_PART_AUTO_VELOCITY,45,32,34,12,ES_AUTOHSCROLL
+END
+
+IDD_MIDI_EVENT DIALOG DISCARDABLE  0, 0, 340, 170
+STYLE WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_MIDI_EVENT_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_OWNERDATA | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_TABSTOP,0,0,340,170
+END
+
+IDD_SPLASH DIALOG DISCARDABLE  0, 0, 50, 50
+STYLE WS_POPUP | WS_VISIBLE
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            "",IDC_SPLASH_ICON,0,0,21,20
+END
+
+IDD_OPT_RECORD DIALOG DISCARDABLE  0, 0, 242, 106
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Record"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Always record",IDC_OPT_REC_ALWAYS_RECORD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,7,60,10
+    CONTROL         "&Prompt for filename",IDC_OPT_REC_PROMPT_FILENAME,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,79,7,76,10
+    LTEXT           "Buffer &size:",IDC_STATIC,7,22,36,8
+    EDITTEXT        IDC_OPT_REC_BUFFER_SIZE,7,32,44,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "events",IDC_STATIC,54,32,23,12,SS_CENTERIMAGE
+    LTEXT           "MIDI file &resolution:",IDC_STATIC,91,22,61,8
+    EDITTEXT        IDC_OPT_REC_MIDI_FILE_PPQ,91,32,40,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "PPQ",IDC_STATIC,134,32,16,12,SS_CENTERIMAGE
+    GROUPBOX        "Output folder",IDC_STATIC,7,53,228,47
+    CONTROL         "&Default",IDC_OPT_REC_FOLDER_TYPE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,14,66,39,10
+    CONTROL         "&Custom",IDC_OPT_REC_FOLDER_TYPE2,"Button",
+                    BS_AUTORADIOBUTTON,58,66,39,10
+    EDITTEXT        IDC_OPT_REC_FOLDER_PATH,14,79,160,14,ES_AUTOHSCROLL | 
+                    WS_GROUP
+    PUSHBUTTON      "&Browse...",IDC_OPT_REC_FOLDER_BROWSE,178,79,50,14
+END
+
+IDD_OPT_OTHER DIALOG DISCARDABLE  0, 0, 242, 106
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Other"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Automatically check for updates",
+                    IDC_OPT_OTHER_AUTO_CHECK_UPDATES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,7,117,10
+    CONTROL         "&Show tooltips",IDC_OPT_OTHER_SHOW_TOOLTIPS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,21,58,10
+    GROUPBOX        "Application data folder",IDC_STATIC,7,53,228,47
+    CONTROL         "&Default",IDC_OPT_OTHER_DATA_FOLDER_TYPE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,14,66,39,10
+    CONTROL         "&Custom",IDC_OPT_OTHER_DATA_FOLDER_TYPE2,"Button",
+                    BS_AUTORADIOBUTTON,58,66,39,10
+    EDITTEXT        IDC_OPT_OTHER_DATA_FOLDER_PATH,14,79,160,14,
+                    ES_AUTOHSCROLL | WS_GROUP
+    PUSHBUTTON      "&Browse...",IDC_OPT_OTHER_DATA_FOLDER_BROWSE,178,79,50,
+                    14
+END
+
+IDD_PIANO DIALOGEX 100, 100, 340, 90
+STYLE WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Piano"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "Port:",IDC_STATIC,1,1,16,8
+    COMBOBOX        IDC_PIANO_PORT,1,11,36,120,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Channel:",IDC_STATIC,39,1,29,8
+    COMBOBOX        IDC_PIANO_CHANNEL,39,11,36,120,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Start note:",IDC_STATIC,77,1,34,8
+    COMBOBOX        IDC_PIANO_START_NOTE,77,11,36,120,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Keys:",IDC_STATIC,115,1,18,8
+    COMBOBOX        IDC_PIANO_KEY_COUNT,115,11,36,120,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Velocity:",IDC_STATIC,153,1,28,8
+    CONTROL         "Velocity",IDC_PIANO_VELOCITY,"msctls_trackbar32",
+                    TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,153,11,36,12
+END
+
+IDD_MESSAGE_BOX_CHECK DIALOG DISCARDABLE  0, 0, 300, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_MSGBOXCHK_TEXT,7,7,286,8
+    CONTROL         "In the future, do not show me this dialog box",
+                    IDC_MSGBOXCHK_CHECK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,24,155,10
+    DEFPUSHBUTTON   "OK",IDOK,186,41,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,243,41,50,14
+END
+
+IDD_MIDI_NOTE_MAP DIALOG DISCARDABLE  0, 0, 500, 150
+STYLE WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "MIDI Note Mappings"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_MIDI_NOTE_MAP_LIST,"SysListView32",
+                    LVS_REPORT | WS_BORDER | WS_TABSTOP,0,0,500,150
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        VERTGUIDE, 40
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_PATCH_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 195
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_PATCH_METRONOME, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 195
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 103
+    END
+
+    IDD_PART_INPUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 173
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 79
+    END
+
+    IDD_PART_OUTPUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 173
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 95
+    END
+
+    IDD_PART_LEAD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 173
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_PART_COMP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 173
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 107
+    END
+
+    IDD_PART_BASS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 173
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_PROGRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 42
+    END
+
+    IDD_OPT_CHART, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+
+    IDD_PART_MIDI, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 173
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_NOTEPAD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 223
+    END
+
+    IDD_PART_AUTO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 173
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 107
+        HORZGUIDE, 7
+    END
+
+    IDD_MIDI_EVENT, DIALOG
+    BEGIN
+        RIGHTMARGIN, 330
+        BOTTOMMARGIN, 150
+    END
+
+    IDD_OPT_RECORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 235
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 99
+    END
+
+    IDD_OPT_OTHER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 235
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 99
+    END
+
+    IDD_PIANO, DIALOG
+    BEGIN
+        LEFTMARGIN, 1
+        RIGHTMARGIN, 339
+        TOPMARGIN, 1
+        BOTTOMMARGIN, 89
+    END
+
+    IDD_MESSAGE_BOX_CHECK, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 293
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_DRAG_SINGLE         CURSOR  DISCARDABLE     "res\\dragsingle.cur"
+IDC_DRAG_MULTI          CURSOR  DISCARDABLE     "res\\dragmulti.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_PART_COMP DLGINIT
+BEGIN
+    IDC_PART_COMP_VARIATION, 0x403, 7, 0
+0x2041, 0x6e6f, 0x796c, "\000" 
+    IDC_PART_COMP_VARIATION, 0x403, 7, 0
+0x2042, 0x6e6f, 0x796c, "\000" 
+    IDC_PART_COMP_VARIATION, 0x403, 7, 0
+0x2041, 0x6f74, 0x4220, "\000" 
+    IDC_PART_COMP_VARIATION, 0x403, 7, 0
+0x2042, 0x6f74, 0x4120, "\000" 
+    IDC_PART_COMP_ARP_ORDER, 0x403, 8, 0
+0x6544, 0x6166, 0x6c75, 0x0074, 
+    IDC_PART_COMP_ARP_ORDER, 0x403, 10, 0
+0x7341, 0x6563, 0x646e, 0x6e69, 0x0067, 
+    IDC_PART_COMP_ARP_ORDER, 0x403, 11, 0
+0x6544, 0x6373, 0x6e65, 0x6964, 0x676e, "\000" 
+    IDC_PART_COMP_ARP_ORDER, 0x403, 10, 0
+0x6c41, 0x6574, 0x6e72, 0x7461, 0x0065, 
+    IDC_PART_COMP_ARP_ORDER, 0x403, 7, 0
+0x6152, 0x646e, 0x6d6f, "\000" 
+    0
+END
+
+IDD_MIDI_TARGET_ROW DLGINIT
+BEGIN
+    IDS_MIDI_TARG_ROW_EVENT, 0x403, 5, 0
+0x6f4e, 0x656e, "\000" 
+    IDS_MIDI_TARG_ROW_EVENT, 0x403, 8, 0
+0x6f43, 0x746e, 0x6f72, 0x006c, 
+    IDS_MIDI_TARG_ROW_EVENT, 0x403, 6, 0
+0x6857, 0x6565, 0x006c, 
+    IDS_MIDI_TARG_ROW_EVENT, 0x403, 15, 0
+0x7250, 0x676f, 0x6172, 0x206d, 0x6843, 0x6e61, 0x6567, "\000" 
+    IDS_MIDI_TARG_ROW_EVENT, 0x403, 16, 0
+0x6843, 0x6e61, 0x4120, 0x7466, 0x7265, 0x6f74, 0x6375, 0x0068, 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "ChordEase\n\nChordEase\nSong Files (*.ces)\n.ces\nChordEase.Document\nChordEase Song"
+    IDR_PATCH               "Patch\n\nPatch\nPatch Files (*.cep)\n.cep\nChordEasePatch.Document\nChordEase Patch"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    ID_APP_CHECK_FOR_UPDATES "Check for a newer version\nCheck for Updates"
+    ID_APP_DEMO             "Run the demonstration\nDemo"
+    ID_APP_HOME_PAGE        "Go to the ChordEase home page\nHome Page"
+    ID_EDIT_DELETE_PART     "Delete the selected part\nDelete Part"
+    ID_EDIT_DESELECT        "Cancel the current selection\nDeselect"
+    ID_EDIT_INSERT_PART     "Insert a new part\nInsert Part"
+    ID_EDIT_OPTIONS         "Edit the options\nEdit options"
+    ID_EDIT_RENAME          "Rename the selected item\nRename"
+    ID_FILE_EDIT            "Edit the current song\nEdit Song"
+    ID_INDICATOR_KEY        "G#"
+    ID_INDICATOR_METER      "0/0"
+    ID_INDICATOR_POSITION   "0000000000000"
+    ID_INDICATOR_RECORD     "REC"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    ID_INDICATOR_TEMPO      "000.00"
+    ID_MIDIASS_DELETE       "Remove the selected MIDI assignments"
+    ID_MIDI_ASSIGNMENTS     "List MIDI target assignments\nAssignments"
+    ID_MIDI_CHASE_EVENTS    "Chase MIDI target events\nChase Events"
+    ID_MIDI_DEVICES         "Show or hide the MIDI device bar\nMIDI Devices"
+    ID_MIDI_EVENT_CLEAR_HISTORY "Remove all events"
+    ID_MIDI_EVENT_PAUSE     "Pause event display"
+    ID_MIDI_INPUT           "Show or hide the MIDI input bar\nMIDI Input"
+    ID_MIDI_LEARN           "Learn MIDI target assignments\nMIDI Learn"
+    ID_MIDI_NOTE_MAPPINGS   "List MIDI note mappings\nNote Mappings"
+    ID_MIDI_OUTPUT          "Show or hide the MIDI output bar\nMIDI Output"
+    ID_MIDI_PANIC           "Reset all MIDI notes\nPanic"
+    ID_MIDI_RESET_ALL       "Reset all MIDI targets\nReset All Targets"
+    ID_PATCH_MRU_FILE1      "Open this patch"
+    ID_PATCH_MRU_FILE2      "Open this patch"
+    ID_PATCH_MRU_FILE3      "Open this patch"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    ID_PATCH_MRU_FILE4      "Open this patch"
+    ID_PATCH_NEW            "Create a new patch\nNew Patch"
+    ID_PATCH_OPEN           "Open an existing patch\nOpen Patch"
+    ID_PATCH_SAVE           "Save the current patch\nSave"
+    ID_PATCH_SAVE_AS        "Save the current patch with a new name\nSave Patch As"
+    ID_PIANO_KEY_LABEL_TYPE "Hide piano key labels"
+    ID_PIANO_KEY_LABEL_TYPE2 "Show shortcuts on piano keys"
+    ID_PIANO_KEY_LABEL_TYPE3 "Show input notes on piano keys"
+    ID_PIANO_KEY_LABEL_TYPE4 "Show output notes on piano keys"
+    ID_PIANO_ROTATE_LABELS  "Rotate piano key labels sideways"
+    ID_PIANO_SHOW_OCTAVES   "Append octave to note names"
+    ID_PIANO_VERTICAL       "Orient piano keyboard vertically"
+    ID_TRANSPORT_NEXT_CHORD "Skip forward to next chord\nNext Chord"
+    ID_TRANSPORT_NEXT_SECTION "Continue to next section\nNext Section"
+    ID_TRANSPORT_PAUSE      "Pause or resume song\nPause"
+    ID_TRANSPORT_PLAY       "Play or stop song\nPlay"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    ID_TRANSPORT_PREV_CHORD "Skip backward to previous chord\nPrevious Chord"
+    ID_TRANSPORT_RECORD     "Record performance\nRecord"
+    ID_TRANSPORT_REPEAT     "Repeat song\nRepeat"
+    ID_TRANSPORT_REWIND     "Rewind song\nRewind"
+    ID_VIEW_PARTS           "Show or hide the parts bar\nToggle Parts Bar"
+    ID_VIEW_PATCH           "Show or hide the patch bar\nToggle Patch Bar"
+    ID_VIEW_PIANO           "Show or hide the virtual piano\nToggle Piano"
+    ID_VIEW_THREADS         "Show or hide the threads dialog\nToggle Threads Dialog"
+    ID_PIANO_KEY_LABEL_TYPE5 "Show chord tones and tensions on piano keys"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_MIDI_EVT_COL_TIMESTAMP "Timestamp"
+    IDS_MIDI_EVT_PAUSE      "Pause"
+    IDS_MIDI_FILE_FILTER    "MIDI Files (*.mid)|*.mid|All Files (*.*)|*.*||"
+    IDS_MIDI_INPUT_BAR      "MIDI Input"
+    IDS_MIDI_NMAP_COL_ENABLE "Enable"
+    IDS_MIDI_NMAP_COL_FUNCTION "Function"
+    IDS_MIDI_NMAP_COL_IN_CHAN "Input Chan"
+    IDS_MIDI_NMAP_COL_IN_DEVICE "Input Device"
+    IDS_MIDI_NMAP_COL_IN_PORT "Input Port"
+    IDS_MIDI_NMAP_COL_OUT_CHAN "Output Chan"
+    IDS_MIDI_NMAP_COL_OUT_DEVICE "Output Device"
+    IDS_MIDI_NMAP_COL_OUT_PORT "Output Port"
+    IDS_MIDI_NMAP_COL_PART_INDEX "#"
+    IDS_MIDI_NMAP_COL_PART_NAME "Part Name"
+    IDS_MIDI_NMAP_COL_ZONE_HIGH "Zone High"
+    IDS_MIDI_NMAP_COL_ZONE_LOW "Zone Low"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_MIDI_OUTPUT_BAR     "MIDI Output"
+    IDS_MIDI_STAT_ACTIVE_SENSING "Active Sensing"
+    IDS_MIDI_STAT_CHANNEL_WILDCARD "Channel *"
+    IDS_MIDI_STAT_CHAN_AFT  "Chan Aft"
+    IDS_MIDI_STAT_CLOCK     "Clock"
+    IDS_MIDI_STAT_CONTINUE  "Continue"
+    IDS_MIDI_STAT_CONTROL   "Control"
+    IDS_MIDI_STAT_EOX       "EOX"
+    IDS_MIDI_STAT_KEY_AFT   "Key Aft"
+    IDS_MIDI_STAT_MTC_QTR_FRAME "MTC Qtr Frame"
+    IDS_MIDI_STAT_NOTE_OFF  "Note Off"
+    IDS_MIDI_STAT_NOTE_ON   "Note On"
+    IDS_MIDI_STAT_PATCH     "Patch"
+    IDS_MIDI_STAT_SONG_POSITION "Song Position"
+    IDS_MIDI_STAT_SONG_SELECT "Song Select"
+    IDS_MIDI_STAT_START     "Start"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_MTEVT_CONTROL       "Control"
+    IDS_MTEVT_NONE          "None"
+    IDS_MTEVT_PROGRAM_CHANGE "Program Change"
+    IDS_MTEVT_WHEEL         "Wheel"
+    IDS_NOT_APPLICABLE      "N/A"
+    IDS_OPTIONS             "Options"
+    IDS_OPT_OTHER_DATA_FOLDER "Application data folder"
+    IDS_OPT_REC_OUTPUT_FOLDER "Record output folder"
+    IDS_OPT_RESET_ALL       "Reset All"
+    IDS_OPT_RESTORE_DEFAULTS "Restore all options to default settings?"
+    IDS_PARTS_BAR           "Parts"
+    IDS_PARTS_COL_FUNCTION  "Function"
+    IDS_PARTS_COL_PART_NAME "Part"
+    IDS_PARTS_TIP_ENABLE    "Enable this part"
+    IDS_PARTS_TIP_FUNCTION  "Part mapping function"
+    IDS_PARTS_TIP_LIST      "List of parts"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_PARTS_TIP_NAME      "Part name"
+    IDS_PART_FORMAT         "Part%d"
+    IDS_PART_MT_AUTO_PLAY   "Auto Play"
+    IDS_PART_MT_AUTO_VELOCITY "Auto Velocity"
+    IDS_PART_MT_AUTO_WINDOW "Auto Window"
+    IDS_PART_MT_BASS_APPROACH_LENGTH "Bass Approach Length"
+    IDS_PART_MT_BASS_APPROACH_TRIGGER "Bass Approach Trigger"
+    IDS_PART_MT_BASS_SLASH_CHORDS "Bass Slash Chords"
+    IDS_PART_MT_BASS_TARGET_ALIGNMENT "Bass Target Alignment"
+    IDS_PART_MT_COMP_ARP_ORDER "Comp Arp Order"
+    IDS_PART_MT_COMP_ARP_PERIOD "Comp Arp Period"
+    IDS_PART_MT_COMP_ARP_PERIOD_QUANT "Comp Arp Period Quant"
+    IDS_PART_MT_COMP_ARP_REPEAT "Comp Arp Repeat"
+    IDS_PART_MT_COMP_VARIATION "Comp Variation"
+    IDS_PART_MT_COMP_VOICING "Comp Voicing"
+    IDS_PART_MT_HARM_ANTICIPATION "Harmonic Anticipation"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_PART_MT_INPUT_TRANSPOSE "Input Transpose"
+    IDS_PART_MT_INPUT_VEL_OFFSET "Input Vel. Offset"
+    IDS_PART_MT_LEAD_HARM_INTERVAL "Lead Harm Interval"
+    IDS_PART_MT_LEAD_HARM_OMIT_MELODY "Lead Harm Omit Melody"
+    IDS_PART_MT_LEAD_HARM_STATIC_MAX "Lead Harm Static Max"
+    IDS_PART_MT_LEAD_HARM_STATIC_MIN "Lead Harm Static Min"
+    IDS_PART_MT_OUTPUT_PATCH "Output Patch"
+    IDS_PART_MT_OUTPUT_VOLUME "Output Volume"
+    IDS_PART_MT_PART_ENABLE "Part Enable"
+    IDS_PART_MT_PART_FUNCTION "Part Function"
+    IDS_PATCH_BAD_FORMAT    "'%1' has an invalid format."
+    IDS_PATCH_BAR           "Patch"
+    IDS_PATCH_FILTER        "Patch Files (*.rgp)|*.rgp|All Files (*.*)|*.*||"
+    IDS_PATCH_MT_LEAD_IN    "Lead-in"
+    IDS_PATCH_MT_METRO_ENABLE "Metro. Enable"
+    IDS_PATCH_MT_METRO_VOLUME "Metro. Volume"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_PATCH_MT_NEXT_CHORD "Next Chord"
+    IDS_PATCH_MT_NEXT_SECTION "Next Section"
+    IDS_PATCH_MT_PAUSE      "Pause"
+    IDS_PATCH_MT_PLAY       "Play"
+    IDS_PATCH_MT_PREV_CHORD "Previous Chord"
+    IDS_PATCH_MT_REPEAT     "Repeat"
+    IDS_PATCH_MT_REWIND     "Rewind"
+    IDS_PATCH_MT_SONG_POSITION "Song Position"
+    IDS_PATCH_MT_TEMPO      "Tempo"
+    IDS_PATCH_MT_TEMPO_MULTIPLE "Tempo Multiple"
+    IDS_PATCH_MT_TRANSPOSE  "Transpose"
+    IDS_RECORD_AS           "Record As"
+    IDS_RECORD_LOCKED       "Locked to always record."
+    IDS_SONG_BAD_METER      "Invalid time signature %d/%d."
+    IDS_SONG_ERR_BAD_CHORD  "Invalid chord '%s'."
+    IDS_SONG_ERR_BAD_CHORD_TYPE "Unknown chord type '%s'."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SONG_ERR_BAD_COMMAND "Unknown command '%s' or missing duration."
+    IDS_SONG_ERR_BAD_DURATION "Invalid duration '%d'."
+    IDS_SONG_ERR_BAD_KEY    "Invalid key signature '%s'."
+    IDS_SONG_ERR_BAD_MODE   "Unknown mode '%s'."
+    IDS_SONG_ERR_BAD_ROOT   "Invalid root '%s'."
+    IDS_SONG_ERR_BAD_SCALE  "Unknown scale '%s'."
+    IDS_SONG_ERR_BAD_SYNTAX "Invalid syntax."
+    IDS_SONG_ERR_BAD_TEMPO  "Invalid tempo '%s'."
+    IDS_SONG_ERR_CHORD_TONE_RANGE "Chord tone out of range: '%s'."
+    IDS_SONG_ERR_DUP_CHORD_TYPE "Duplicate chord type '%s'."
+    IDS_SONG_ERR_READ       "Error reading '%s' at line %d."
+    IDS_SONG_ERR_SEC_BAD_REPEAT "Invalid section repeat count."
+    IDS_SONG_ERR_SEC_BAD_SYNTAX "Invalid section syntax."
+    IDS_SONG_ERR_SEC_CANT_NEST "Sections can't be nested."
+    IDS_SONG_ERR_SEC_UNTERMINATED "Missing section terminator."
+    IDS_THREADS_COL_KERNEL_TIME "Kernel"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_THREADS_COL_PRIORITY "Priority"
+    IDS_THREADS_COL_THREAD_ID "ID"
+    IDS_THREADS_COL_USER_TIME "User"
+    IDS_UC_BASE_PATCH       "Base Patch"
+    IDS_UC_CUT              "Cut"
+    IDS_UC_DELETE           "Delete"
+    IDS_UC_ENABLE_PART      "Enable Part"
+    IDS_UC_INSERT           "Insert"
+    IDS_UC_MIDI_CHASE       "MIDI Chase"
+    IDS_UC_MIDI_TARGETS     "MIDI Targets"
+    IDS_UC_PART             "Part"
+    IDS_UC_PASTE            "Paste"
+    IDS_UC_RENAME           "Rename"
+    IDS_UC_REORDER          "Reorder"
+    IDS_UC_SELECT_PART      "Select Part"
+    IDS_UC_SELECT_PART_PAGE "Select Part Page"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_UC_SELECT_PATCH_PAGE "Select Patch Page"
+    IDS_UC_SONG_EDIT        "Song Edit"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_APP_UNKNOWN_SYSTEM_ERROR "Unknown error %d (0x%x)."
+    IDS_CKUP_CANT_GET_ADDR  "Can't get address '%1'.\n%2"
+    IDS_CKUP_CANT_LOAD_DLL  "Can't load library '%1'.\n%2"
+    IDS_CLIPBOARD_CANT_COPY "Can't copy data to clipboard."
+    IDS_CLIPBOARD_CANT_PASTE "Can't paste clipboard data."
+    IDS_COMMON_NO           "No"
+    IDS_COMMON_YES          "Yes"
+    IDS_DEVICE_BAR          "MIDI Devices"
+    IDS_DEVICE_COL_NAME     "Name"
+    IDS_DEVICE_COL_PORT     "#"
+    IDS_DEVICE_COL_STATE    "State"
+    IDS_DEVICE_STATE_CLOSED "Closed"
+    IDS_DEVICE_STATE_OPEN   "Open"
+    IDS_EDIT_REDO_FMT       "&Redo %s\tCtrl+Y"
+    IDS_EDIT_UNDO_FMT       "&Undo %s\tCtrl+Z"
+    IDS_ENGERR_CANT_CLOSE_MIDI_IN "Can't close MIDI input device '%s'.\n%s"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_ENGERR_CANT_CLOSE_MIDI_OUT "Can't close MIDI output device '%s'.\n%s"
+    IDS_ENGERR_CANT_OPEN_MIDI_IN "Can't open MIDI input device '%s'.\n%s"
+    IDS_ENGERR_CANT_OPEN_MIDI_OUT "Can't open MIDI output device '%s'.\n%s"
+    IDS_ENGERR_CANT_PLAY_STOPPED "Can't play because engine is stopped."
+    IDS_ENGERR_CANT_START_MIDI_IN "Can't start MIDI input device '%s'.\n%s"
+    IDS_ENGERR_CREATE_TIMER "Can't create timer."
+    IDS_ENGERR_CREATE_TIMER_EVENT "Can't create timer event."
+    IDS_ENGERR_CREATE_TIMER_THREAD "Can't create timer thread."
+    IDS_ENGERR_DESTROY_TIMER "Can't destroy timer."
+    IDS_ENGERR_DESTROY_TIMER_THREAD "Can't destroy timer thread."
+    IDS_ENGERR_RECORDING_TRUNCATED "Recording was truncated."
+    IDS_ENGERR_SET_TIMER_RESOLUTION "Can't set timer resolution."
+    IDS_ENGERR_START_TIMER_THREAD "Can't start timer thread."
+    IDS_ENGERR_STOP_TIMER_THREAD "Can't stop timer thread."
+    IDS_ENGERR_TOO_MANY_NOTES "Too many notes."
+    IDS_ENGINE_MIDI_DEVICE_NONE "<None>"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_APP_ABOUT_TEXT      "%s %d.%d.%d.%d\nCopyleft 2013 Chris Korda"
+    IDS_APP_CANT_INIT_COM   "Can't initialize COM."
+    IDS_APP_DEMO_CHECK      "Do you want to try the demo?"
+    IDS_APP_FOLDER_NOT_FOUND "Folder '%1' not found."
+    IDS_APP_FOLDER_REQUIRED "Folder must be specified."
+    IDS_APP_HELP_FILE_MISSING "Can't find help file '%1'."
+    IDS_APP_LICENSE         "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.  You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA."
+    IDS_APP_TEMP_FOLDER_NOT_FOUND "Temporary folder '%1' not found."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_MIDI_STAT_STOP      "Stop"
+    IDS_MIDI_STAT_SYSEX     "System Exclusive"
+    IDS_MIDI_STAT_SYSTEM_RESET "System Reset"
+    IDS_MIDI_STAT_SYSTEM_WILDCARD "System *"
+    IDS_MIDI_STAT_TUNE_REQUEST "Tune Request"
+    IDS_MIDI_STAT_WHEEL     "Wheel"
+    IDS_MIDI_TARG_ROW_CHAN  "Input channel"
+    IDS_MIDI_TARG_ROW_CONTROL "Controller number"
+    IDS_MIDI_TARG_ROW_EVENT "Event type"
+    IDS_MIDI_TARG_ROW_NAME  "Target parameter name"
+    IDS_MIDI_TARG_ROW_PORT  "Input port"
+    IDS_MIDI_TARG_ROW_RANGE_END "End of normalized controller range"
+    IDS_MIDI_TARG_ROW_RANGE_START "Start of normalized controller range"
+    IDS_MSGBOX_NO           "&No"
+    IDS_MSGBOX_YES          "&Yes"
+    IDS_MTEVT_CHAN_AFTERTOUCH "Chan Aftertouch"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_ENGMSG_MISSING_DEVICE 
+                            "One or more referenced MIDI devices are missing."
+    IDS_HLINK_CANT_LAUNCH   "Can't launch browser."
+    IDS_MIDI_ASS_COL_CHANNEL "Chan"
+    IDS_MIDI_ASS_COL_CONTROL "Control"
+    IDS_MIDI_ASS_COL_DEVICE "Device"
+    IDS_MIDI_ASS_COL_EVENT  "Event"
+    IDS_MIDI_ASS_COL_PART   "Part #"
+    IDS_MIDI_ASS_COL_PART_NAME "Part Name"
+    IDS_MIDI_ASS_COL_PORT   "Port"
+    IDS_MIDI_ASS_COL_TARGET "Target"
+    IDS_MIDI_EVT_COL_CHANNEL "Chan"
+    IDS_MIDI_EVT_COL_DEVICE "Device"
+    IDS_MIDI_EVT_COL_MESSAGE "Message"
+    IDS_MIDI_EVT_COL_P1     "P1"
+    IDS_MIDI_EVT_COL_P2     "P2"
+    IDS_MIDI_EVT_COL_PORT   "Port"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDC_MIDI_TARGET         "PatchMidiRow"
+    IDC_MIDI_TARG_COL_CHAN  "Chan"
+    IDC_MIDI_TARG_COL_CONTROL "Control"
+    IDC_MIDI_TARG_COL_EVENT "Event"
+    IDC_MIDI_TARG_COL_NAME  "Target"
+    IDC_MIDI_TARG_COL_PORT  "Port"
+    IDC_MIDI_TARG_COL_RANGE_END "End"
+    IDC_MIDI_TARG_COL_RANGE_START "Start"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDC_OPT_CHART_CHOOSE_FONT "Select chart font"
+    IDC_OPT_CHART_DEFAULT_FONT "Reset chart font to default"
+    IDC_OPT_CHART_LINE_MEASURES "Number of measures per line"
+    IDC_OPT_OTHER_AUTO_CHECK_UPDATES 
+                            "Automatically check for updates on startup"
+    IDC_OPT_OTHER_DATA_FOLDER_BROWSE "Browse for application data folder"
+    IDC_OPT_OTHER_DATA_FOLDER_PATH "Location of application data folder"
+    IDC_OPT_OTHER_DATA_FOLDER_TYPE "Use default application data folder"
+    IDC_OPT_OTHER_DATA_FOLDER_TYPE2 "Specify custom application data folder"
+    IDC_OPT_OTHER_SHOW_TOOLTIPS "Display tooltips"
+    IDC_OPT_REC_ALWAYS_RECORD "Always record while playing"
+    IDC_OPT_REC_BUFFER_SIZE "Size of record buffer size, in events"
+    IDC_OPT_REC_FOLDER_BROWSE "Browse for destination folder"
+    IDC_OPT_REC_FOLDER_PATH "Location of destination folder"
+    IDC_OPT_REC_FOLDER_TYPE "Use default destination folder for recordings"
+    IDC_OPT_REC_FOLDER_TYPE2 
+                            "Specify custom destination folder for recordings"
+    IDC_OPT_REC_MIDI_FILE_PPQ 
+                            "Time resolution of output MIDI file, in pulses per quarter note"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDC_OPT_REC_PROMPT_FILENAME 
+                            "Prompt for filename before recording; else generate filename"
+    IDC_PARTS_LIST          " "
+    IDC_PART_AUTO_PLAY      "Play part automatically"
+    IDC_PART_AUTO_VELOCITY  "Auto-play note velocity"
+    IDC_PART_AUTO_WINDOW    "Start of auto-play pitch window"
+    IDC_PART_BASS_APPROACH_LENGTH 
+                            "Fixed approach length, as fraction of whole note"
+    IDC_PART_BASS_CHROMATIC "Allow non-scale tones"
+    IDC_PART_BASS_LOWEST    "Lowest bass note allowed"
+    IDC_PART_BASS_SLASH_CHORDS "Respect slash chord bass notes"
+    IDC_PART_BASS_TARGET_ALIGNMENT 
+                            "Alignment of triggered approach target, in measures"
+    IDC_PART_COMP_ARP_ORDER "Arpeggio note order"
+    IDC_PART_COMP_ARP_PERIOD "Time between arpeggio notes, in whole notes"
+    IDC_PART_COMP_ARP_REPEAT "True if arpeggio repeats; false for one-shot"
+    IDC_PART_COMP_CHORD_RESETS_ALT 
+                            "True if chord change resets variant alternation"
+    IDC_PART_COMP_VARIATION "Chord variation scheme"
+    IDC_PART_COMP_VOICING   "Chord voicing type"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDC_PART_IN_CHAN        "Input channel"
+    IDC_PART_IN_DEVICE_NAME "Input device name"
+    IDC_PART_IN_PORT        "Input port"
+    IDC_PART_IN_TRANSPOSE   "Input transposition, in semitones"
+    IDC_PART_IN_VEL_OFFSET  "Input note velocity offset"
+    IDC_PART_IN_ZONE_HIGH   "Highest note of input range"
+    IDC_PART_IN_ZONE_LOW    "Lowest note of input range"
+    IDC_PART_LEAD_HARM_INTERVAL "Generic interval, in diatonic steps"
+    IDC_PART_LEAD_HARM_OMIT_MELODY 
+                            "True if harmonizer should omit melody note"
+    IDC_PART_LEAD_HARM_STATIC_MAX 
+                            "Minimum static harmony interval, in semitones"
+    IDC_PART_LEAD_HARM_STATIC_MIN 
+                            "Maximum static harmony interval, in semitones"
+    IDC_PART_MIDI_ROW       "PartMidiRow"
+    IDC_PART_OUT_ANTICIPATION 
+                            "Harmonic anticipation, as fraction of whole note"
+    IDC_PART_OUT_CHAN       "Output channel"
+    IDC_PART_OUT_CONTROLS_THRU "Pass controllers through to output"
+    IDC_PART_OUT_DEVICE_NAME "Output device name"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDC_PART_OUT_FIX_HELD_NOTES 
+                            "Correct held notes that become non-scale tones"
+    IDC_PART_OUT_LOCAL_CONTROL "Enable local control"
+    IDC_PART_OUT_PATCH      "Patch number, or -1 if none"
+    IDC_PART_OUT_PORT       "Output port"
+    IDC_PART_OUT_VOLUME     "Output volume, or -1 if none"
+    IDC_PATCH_AINST_CHANNEL "Output channel"
+    IDC_PATCH_AINST_ENABLE  "Enable instrument"
+    IDC_PATCH_AINST_PATCH   "Patch number, or -1 if none"
+    IDC_PATCH_AINST_PORT    "Output port"
+    IDC_PATCH_AINST_VELOCITY "Note velocity"
+    IDC_PATCH_AINST_VOLUME  "Output volume, or -1 if none"
+    IDC_PATCH_GEN_KEY       "Transposed key signature"
+    IDC_PATCH_GEN_LEAD_IN   "Lead-in length, in measures"
+    IDC_PATCH_GEN_PPQ       "Time resolution, in pulses per quarter note"
+    IDC_PATCH_GEN_TEMPO     "Tempo, in beats per minute"
+    IDC_PATCH_GEN_TEMPO_MULTIPLE "Tempo multiplier"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDC_PATCH_GEN_TRANSPOSE "Key transposition, in semitones"
+    IDC_PATCH_METRO_ACCENT_NOTE "Accented metronome note"
+    IDC_PATCH_METRO_ACCENT_SAME_NOTE "Use same note for accent"
+    IDC_PATCH_METRO_ACCENT_VEL "Accented note velocity"
+    IDC_PATCH_METRO_NOTE    "Normal metronome note"
+    IDC_PIANO_CHANNEL       "Output channel"
+    IDC_PIANO_KEY_COUNT     "Number of keys"
+    IDC_PIANO_PORT          "Output port"
+    IDC_PIANO_START_NOTE    "Keyboard's first note"
+    IDC_PIANO_VELOCITY      "Output velocity"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "ChordEase"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_NEW             "Create a new song\nNew"
+    ID_FILE_OPEN            "Open an existing song\nOpen"
+    ID_FILE_CLOSE           "Close the active document\nClose"
+    ID_FILE_SAVE            "Save the current song\nSave"
+    ID_FILE_SAVE_AS         "Save the current song with a new name\nSave As"
+    ID_FILE_PAGE_SETUP      "Change the printing options\nPage Setup"
+    ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
+    ID_FILE_PRINT           "Print the active document\nPrint"
+    ID_FILE_PRINT_PREVIEW   "Display full pages\nPrint Preview"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyleft\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+    ID_HELP_FINDER          "List Help topics\nHelp"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+    ID_FILE_MRU_FILE5       "Open this document"
+    ID_FILE_MRU_FILE6       "Open this document"
+    ID_FILE_MRU_FILE7       "Open this document"
+    ID_FILE_MRU_FILE8       "Open this document"
+    ID_FILE_MRU_FILE9       "Open this document"
+    ID_FILE_MRU_FILE10      "Open this document"
+    ID_FILE_MRU_FILE11      "Open this document"
+    ID_FILE_MRU_FILE12      "Open this document"
+    ID_FILE_MRU_FILE13      "Open this document"
+    ID_FILE_MRU_FILE14      "Open this document"
+    ID_FILE_MRU_FILE15      "Open this document"
+    ID_FILE_MRU_FILE16      "Open this document"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "Close print preview mode\nCancel Preview"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "res\ChordEase.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#include "afxprint.rc"       // printing/print preview resources
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

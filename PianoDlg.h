@@ -47,6 +47,7 @@ public:
 public:
 	void	TimerHook();
 	void	OnMidiIn(int Port, DWORD MidiMsg);
+	void	OnPanic();
 
 // Implementation
 protected:
@@ -109,12 +110,13 @@ protected:
 		MAX_KEYS = 88,			// maximum number of keys
 		MIN_PIANO_HEIGHT = 32,	// minimum height of piano control, in pixels
 	};
-	enum {	//	key label types
+	enum {	//	key label types; must match menu item order
 		KL_NONE,				// no key labels
-		KL_SHORTCUT,			// show shortcuts
-		KL_INPUT_NOTE,			// show input notes
-		KL_OUTPUT_NOTE,			// show output notes
-		KL_CHORD_TONE,			// show chord tones
+		KL_SHORTCUTS,			// show shortcuts
+		KL_INPUT_NOTES,			// show input notes
+		KL_OUTPUT_NOTES,		// show output notes
+		KL_INTERVALS,			// show intervals
+		KL_SCALE_TONES,			// show scale tones
 		KEY_LABEL_TYPES
 	};
 

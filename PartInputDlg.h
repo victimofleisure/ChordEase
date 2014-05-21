@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		15may14	add non-diatonic rule combo
 
 		part input dialog
  
@@ -51,6 +52,7 @@ protected:
 // Dialog Data
 	//{{AFX_DATA(CPartInputDlg)
 	enum { IDD = IDD_PART_INPUT };
+	CComboBox	m_NonDiatonic;
 	CEdit	m_DeviceName;
 	CMidiOffsetEdit	m_VelOffset;
 	CPortEdit	m_Port;

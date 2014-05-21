@@ -16,7 +16,7 @@
 //
 #define MAJOR_VERSION		1
 #define MINOR_VERSION		0
-#define MAJOR_SUBVERSION	3
+#define MAJOR_SUBVERSION	5
 #define MINOR_SUBVERSION	0
 
 /////////////////////////////////////////////////////////////////////////////

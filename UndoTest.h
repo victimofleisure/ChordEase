@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      08oct13	initial version
+        01      07may14	refactor into abstract base class
 
 		automated undo test
  
@@ -16,15 +17,34 @@
 #pragma once
 
 #include "ProgressDlg.h"
+#include "ArrayEx.h"
 
-class CMainFrame;
+#define LOG_TO_FILE 0	// set non-zero to redirect log to a file
+#define LOG_SAFE_MODE 0	// set non-zero to flush log after every write
+#define QUIET_MODE 1	// suppress console natter
+#if LOG_TO_FILE
+#define PRINTF LogPrintf
+#else
+#if QUIET_MODE
+#define PRINTF sizeof
+#else
+#define PRINTF _tprintf
+#endif
+#endif
+
 class CUndoManager;
 
 class CUndoTest : public WObject {
 public:
+// Types
+	struct EDIT_INFO {
+		int		UndoCode;		// undo code
+		float	Probability;	// relative probability
+	};
+
 // Construction
-	CUndoTest(bool Start);
-	~CUndoTest();
+	CUndoTest(bool InitRunning, int TimerPeriod, const EDIT_INFO *EditInfo, int EditInfoSize);
+	virtual ~CUndoTest();
 
 // Attributes
 	bool	IsRunning() const;
@@ -34,13 +54,8 @@ public:
 
 protected:
 // Types
-	struct EDIT_INFO {
-		int		UndoCode;		// undo code; see UndoCodes.h
-		float	Probability;	// relative probability
-		int		ColumnIdx;		// for view column edits
-	};
+	typedef CArrayEx<EDIT_INFO, EDIT_INFO&> CEditInfoArray;
 	typedef CArrayEx<LONGLONG, LONGLONG> CSnapshotArray;
-	typedef CArrayEx<HWND, HWND>	CHWNDArray;
 
 // Constants
 	enum {	// command returns
@@ -61,40 +76,20 @@ protected:
 		DONE,
 		CANCEL,
 	};
-#if 0	// non-zero for short test
-	enum {
-		CYCLES = 1,				// number of test cycles
-		PASSES = 2,				// number of passes to do
-		PASS_EDITS = 10,		// number of edits per pass
-		PASS_UNDOS = 5,			// number of undos per pass
-		MAX_EDITS = INT_MAX,	// maximum number of edits
-		RAND_SEED = 666,		// random number generator seed
-		MAKE_SNAPSHOTS = 1,		// if true, create and test snapshots
-		TIMER_PERIOD = 1000,	// timer period, in milliseconds
-		ENGINE_RUNNING = 0,		// if true, do test with engine running
-	};
-#else
-	enum {
-		CYCLES = 2,				// number of test cycles
-		PASSES = 10,			// number of passes to do
-		PASS_EDITS = 250,		// number of edits per pass
-		PASS_UNDOS = 100,		// number of undos per pass
-		MAX_EDITS = INT_MAX,	// maximum number of edits
-		RAND_SEED = 666,		// random number generator seed
-		MAKE_SNAPSHOTS = 1,		// if true, create and test snapshots
-		TIMER_PERIOD = 0,		// timer period, in milliseconds
-		ENGINE_RUNNING = 0,		// if true, do test with engine running
-	};
-#endif
-	static const EDIT_INFO	m_EditInfo[];
 	static const LPCTSTR	m_StateName[STATES];
 
 // Member data
 	bool	m_InitRunning;		// true if initally running
 	FILE	*m_LogFile;			// log file for test results
-	CMainFrame	*m_Main;		// pointer to main frame
 	CUndoManager	*m_UndoMgr;	// pointer to undo manager
 	W64UINT	m_Timer;			// timer instance
+	int		m_TimerPeriod;		// timer period, in milliseconds
+	int		m_Cycles;			// number of test cycles
+	int		m_Passes;			// total number of passes
+	int		m_PassEdits;		// number of edits per pass
+	int		m_PassUndos;		// number of undos per pass
+	int		m_MaxEdits;			// maximum number of edits
+	int		m_RandSeed;			// random number generator seed
 	int		m_State;			// current state
 	int		m_CyclesDone;		// number of cycles completed
 	int		m_PassesDone;		// number of passes completed
@@ -104,35 +99,34 @@ protected:
 	int		m_StepsDone;		// number of steps completed
 	int		m_LastResult;		// most recent pass result
 	bool	m_InTimer;			// true if we're in OnTimer
+	bool	m_MakeSnapshots;	// if true, create and test snapshots
 	CDWordArray	m_UndoCode;		// array of undo codes
 	CProgressDlg	m_ProgressDlg;	// progress dialog
 	CString	m_ErrorMsg;			// error message
 	CSnapshotArray	m_Snapshot;	// array of checksums
+	CEditInfoArray	m_EditInfo;	// array of edit properties
+	static	CUndoTest	*m_This;	// pointer to one and only instance
+
+// Overridables
+	virtual	bool	Create();
+	virtual	void	Destroy();
+	virtual	int		ApplyEdit(int UndoCode) = 0;
+	virtual	LONGLONG	GetSnapshot() const;
 
 // Helpers
 	void	Init();
-	bool	Create();
-	void	Destroy();
 	int		LogPrintf(LPCTSTR Format, ...);
 	static	int		Random(int Vals);
 	static	W64INT	RandW64INT(W64INT Vals);
 	static	double	RandomFloat(double Limit);
 	static	int		RandomExcluding(int Vals, int ExcludeVal);
+	static	int		RandomRange(CIntRange Range);
+	static	LONGLONG	Fletcher64(const void *Buffer, DWORD Length);
 	int		GetRandomEdit() const;
-	int		GetRandomPart() const;
-	int		GetRandomInsertPos() const;
-	bool	GetRandomSelection(CIntArrayEx& Sel) const;
-	bool	SelectRandomParts(CString& SelStr);
-	CString	PrintSelection(CIntArrayEx& Sel) const;
-	LONGLONG	GetSnapshot() const;
-	int		ApplyEdit(int UndoCode);
 	bool	LastPass() const;
 	void	SetState(int State);
 	void	OnTimer();
 	int		DoPass();
-	CTabbedDlg	*GetPageControls(CWnd *pParent, CString& PageName, CHWNDArray& Ctrl);
-	bool	DoPageEdit(CWnd *pParent, CString& PageName, CString& CtrlCaption);
-	static	int IntArraySortCompare(const void *arg1, const void *arg2);
 	static	VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 };
 
@@ -143,5 +137,5 @@ inline bool CUndoTest::IsRunning() const
 
 inline bool CUndoTest::LastPass() const
 {
-	return(m_PassesDone >= PASSES - 1);
+	return(m_PassesDone >= m_Passes - 1);
 }

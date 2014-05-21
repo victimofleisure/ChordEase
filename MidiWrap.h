@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		01sep13	initial version
+		01		07may14	in CMMTimer::Create, fix dwUser type
  
 		wrap system MIDI and multimedia timer APIs
  
@@ -201,7 +202,7 @@ public:
 	UINT	GetID() const;
 
 // Operations
-	bool	Create(UINT uDelay, UINT uResolution, LPTIMECALLBACK lpTimeProc, DWORD dwUser, UINT fuEvent);
+	bool	Create(UINT uDelay, UINT uResolution, LPTIMECALLBACK lpTimeProc, W64ULONG dwUser, UINT fuEvent);
 	MMRESULT	Destroy();
 
 protected:

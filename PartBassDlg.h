@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		15may14	remove chromatic checkbox
 
 		part bass dialog
  
@@ -41,6 +42,7 @@ public:
 	void	SetPart(const CPart& Part);
 
 // Operations
+	static	void	GetPowerOfTwoStrings(CStringArray& Str, int LowerExp, int UpperExp);
 	static	void	InitPowerOfTwoCombo(CComboBox& Combo, int LowerExp, int UpperExp);
 
 // Overrides
@@ -59,7 +61,6 @@ protected:
 	CButton	m_SlashChords;
 	CDurationComboBox	m_ApproachLength;
 	CSpinNoteEdit	m_BassLowest;
-	CButton	m_BassChromatic;
 	//}}AFX_DATA
 
 // Generated message map functions

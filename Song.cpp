@@ -10,6 +10,7 @@
         00      28feb91 initial version
 		01		16aug13	start over
  		02		16apr14	add section names; refactor command parsing
+ 		03		01may14	add write
 
 		song container
 
@@ -20,6 +21,7 @@
 #include "Song.h"
 #include "Diatonic.h"
 #include "TokenFile.h"
+#include "SongState.h"
 
 #define WHITESPACE _T(" \t")
 
@@ -34,6 +36,33 @@ void CSong::CChordInfo::Copy(const CChordInfo& Info)
 	m_Scale		= Info.m_Scale;
 	m_Mode		= Info.m_Mode;
 	CopyMemory(m_Comp, Info.m_Comp, sizeof(m_Comp));
+}
+
+bool CSong::CMeter::IsValidMeter() const
+{
+	return(m_Numerator >= MIN_BEATS && m_Numerator <= MAX_BEATS
+		&& m_Denominator >= MIN_UNIT && m_Denominator <= MAX_UNIT
+		&& IsPowerOfTwo(m_Denominator));
+}
+
+int CSong::CSectionArray::FindBeat(int Beat) const
+{
+	int	nSections = GetSize();
+	for (int iSection = 0; iSection < nSections; iSection++) {	// for each section
+		if (GetAt(iSection).ContainsBeat(Beat))
+			return(iSection);
+	}
+	return(-1);
+}
+
+int CSong::CSectionArray::FindImplicit() const
+{
+	int	nSections = GetSize();
+	for (int iSection = 0; iSection < nSections; iSection++) {	// for each section
+		if (GetAt(iSection).Implicit())	// if implicit section
+			return(iSection);
+	}
+	return(-1);
 }
 
 CSong::CSong()
@@ -51,8 +80,12 @@ void CSong::Reset()
 	m_Key = 0;
 	m_Transpose = 0;
 	m_Tempo = 0;
+	m_Chord.RemoveAll();
 	m_BeatMap.SetSize(1);	// avoid divide by zero in GetChordIndex
-	SetEmpty();
+	m_StartBeat.RemoveAll();
+	// don't reset dictionary
+	m_Section.RemoveAll();
+	m_SectionName.RemoveAll();
 }
 
 void CSong::Copy(const CSong& Song)
@@ -63,7 +96,73 @@ void CSong::Copy(const CSong& Song)
 	m_Tempo = Song.m_Tempo;
 	m_Chord = Song.m_Chord;
 	m_BeatMap = Song.m_BeatMap;
+	m_StartBeat = Song.m_StartBeat;
 	m_Dictionary = Song.m_Dictionary;
+	m_Section = Song.m_Section;
+	m_SectionName.Copy(Song.m_SectionName);
+}
+
+bool CSong::IsValid(const CChord& Chord) const
+{
+	// non-zero duration, normalized root and bass note, and type within range
+	return(Chord.m_Duration > 0 
+		&& Chord.m_Root.IsNormal() && Chord.m_Bass.IsNormal()
+		&& Chord.m_Type >= 0 && Chord.m_Type < GetChordTypeCount());
+}
+
+bool CSong::IsValid(const CChordArray& Chord) const
+{
+	int	nChords = Chord.GetSize();
+	for (int iChord = 0; iChord < nChords; iChord++) {	// for each chord
+		if (!IsValid(Chord[iChord]))	// if invalid chord
+			return(FALSE);
+	}
+	return(TRUE);
+}
+
+bool CSong::SetChord(int ChordIdx, const CChord& Chord)
+{
+	if (!IsValid(Chord))	// if invalid chord
+		return(FALSE);
+	int	DurDelta = Chord.m_Duration - m_Chord[ChordIdx].m_Duration;
+	m_Chord[ChordIdx] = Chord;
+	if (DurDelta)	// if chord duration changed
+		UpdateDuration(ChordIdx, DurDelta);	// update sections and beat map
+	return(TRUE);
+}
+
+void CSong::GetState(CSongState& State) const
+{
+	State.m_Chord = m_Chord;
+	State.m_Section = m_Section;
+	State.m_SectionName.Copy(m_SectionName);
+	State.MakeSectionMap();
+}
+
+void CSong::SetState(const CSongState& State)
+{
+	m_Chord = State.m_Chord;
+	m_Section = State.m_Section;
+	m_SectionName.Copy(State.m_SectionName);
+	MakeBeatMap(CountBeats(m_Chord));
+}
+
+void CSong::GetProperties(CProperties& Props) const
+{
+	Props.m_Meter		= m_Meter;
+	Props.m_Key			= m_Key;
+	Props.m_Transpose	= m_Transpose;
+	Props.m_Tempo		= m_Tempo;
+}
+
+void CSong::SetProperties(const CProperties& Props)
+{
+	ASSERT(Props.m_Meter.IsValidMeter());
+	ASSERT(Props.m_Key.IsNormal());
+	m_Meter			= Props.m_Meter;
+	m_Key			= Props.m_Key;
+	m_Transpose		= Props.m_Transpose;
+	m_Tempo			= Props.m_Tempo;
 }
 
 CString	CSong::MakeChordName(CNote Root, CNote Bass, int Type, CNote Key) const
@@ -210,13 +309,7 @@ int CSong::FindChordType(LPCTSTR Name) const
 
 int CSong::FindSection(int BeatIdx) const
 {
-	int	nSections = GetSectionCount();
-	for (int iSection = 0; iSection < nSections; iSection++) {	// for each section
-		const CSection&	sec = m_Section[iSection];
-		if (BeatIdx >= sec.m_Start && BeatIdx < sec.m_Start + sec.m_Length)
-			return(iSection);
-	}
-	return(-1);
+	return(m_Section.FindBeat(BeatIdx));
 }
 
 void CSong::ClosePrevSection(int Beats)
@@ -246,6 +339,22 @@ void CSong::DumpSections() const
 	}
 }
 
+void CSong::DumpChords(const CChordArray& Chord) const
+{
+	int	nChords = Chord.GetSize();
+	_tprintf(_T("chords=%d\n"), nChords);
+	for (int iChord = 0; iChord < nChords; iChord++) {	// for each chord
+		const CChord&	ch = Chord[iChord];
+		_tprintf(_T("%d: %d %s\n"), iChord, ch.m_Duration, 
+			MakeChordName(ch.m_Root, ch.m_Bass, ch.m_Type, m_Key));
+	}
+}
+
+void CSong::DumpChords() const
+{
+	DumpChords(m_Chord);
+}
+
 int CSong::FindCommand(CString Command) const
 {
 	for (int iCmd = 0; iCmd < COMMANDS; iCmd++) {
@@ -253,6 +362,74 @@ int CSong::FindCommand(CString Command) const
 			return(iCmd);
 	}
 	return(-1);
+}
+
+int CSong::CountBeats(const CChordArray& Chord)
+{
+	int	nBeats = 0;
+	int	nChords = Chord.GetSize();
+	for (int iChord = 0; iChord < nChords; iChord++)	// for each chord
+		nBeats += Chord[iChord].m_Duration;
+	return(nBeats);
+}
+
+void CSong::MakeBeatMap(int Beats)
+{
+	m_BeatMap.SetSize(max(Beats, 1));	// avoid divide by zero in GetChordIndex
+	int	chords = GetChordCount();
+	m_StartBeat.SetSize(chords);
+	int	iBeatMap = 0;
+	int	TotalBeats = 0;
+	for (int iChord = 0; iChord < chords; iChord++) {	// for each chord
+		int	dur = m_Chord[iChord].m_Duration;
+		for (int iBeat = 0; iBeat < dur; iBeat++) {	// for each beat of duration
+			m_BeatMap[iBeatMap] = iChord;	// set beat map element to chord index
+			iBeatMap++;
+		}
+		m_StartBeat[iChord] = TotalBeats;	// store chord's starting beat 
+		TotalBeats += dur;
+	}
+}
+
+bool CSong::UpdateDuration(int ChordIdx, int DurDelta)
+{
+	if (!GetChordCount())	// if no chords
+		return(FALSE);
+	MakeBeatMap(GetBeatCount() + DurDelta);	// rebuild beat map
+	// find section containing specified chord
+	int	iSection = FindSection(GetStartBeat(ChordIdx));
+	if (iSection < 0)	// if section not found
+		return(FALSE);
+	m_Section[iSection].m_Length += DurDelta;	// compensate length of section
+	iSection++;	// skip past found section
+	int	nSections = GetSectionCount();
+	for (; iSection < nSections; iSection++)	// for each subsequent section
+		m_Section[iSection].m_Start += DurDelta;	// shift start by same amount
+	return(TRUE);
+}
+
+int CSong::ParseChordSymbol(CString Symbol, CChord& Chord) const
+{
+	CNote	root;
+	int	CharsRead = CDiatonic::ScanNoteName(Symbol, root);	// scan root
+	if (!CharsRead)	// if root not scanned
+		return(IDS_SONG_ERR_BAD_ROOT);
+	Symbol = Symbol.Mid(CharsRead);	// remove root
+	CNote	bass(root);	// bass note defaults to root
+	int	iSlash = Symbol.ReverseFind('/');
+	if (iSlash >= 0) {	// if bass note separator found
+		CString	sBass(Symbol.Mid(iSlash + 1));	// bass note follows
+		if (!CDiatonic::ScanNoteName(sBass, bass))	// if base note not scanned
+			return(IDS_SONG_ERR_BAD_BASS_NOTE);
+		Symbol = Symbol.Left(iSlash);	// remove bass note
+	}
+	int	type = FindChordType(Symbol);
+	if (type < 0)	// if chord type not found
+		return(IDS_SONG_ERR_BAD_CHORD_TYPE);
+	Chord.m_Root = root;
+	Chord.m_Bass = bass;
+	Chord.m_Type = type;
+	return(0);	// success
 }
 
 bool CSong::Read(LPCTSTR Path)
@@ -266,8 +443,7 @@ bool CSong::Read(LPCTSTR Path)
 			ReportError(fp, IDS_SONG_ERR_BAD_SYNTAX);
 			return(FALSE);
 		}
-		if (m_Meter.m_Numerator < 1 || m_Meter.m_Denominator < 1
-		|| !IsPowerOfTwo(m_Meter.m_Denominator)) {	// if bogus time signature 
+		if (!m_Meter.IsValidMeter()) {	// if bogus time signature 
 			ReportError(fp, IDS_SONG_BAD_METER, 
 				m_Meter.m_Numerator, m_Meter.m_Denominator);
 			return(FALSE);
@@ -297,30 +473,13 @@ bool CSong::Read(LPCTSTR Path)
 					return(FALSE);
 				}
 				sTok = sTok.Mid(CharsRead);	// remove duration
-				CNote	root;
-				CharsRead = CDiatonic::ScanNoteName(sTok, root);	// scan root
-				if (!CharsRead) {	// if root not scanned
-					ReportError(fp, IDS_SONG_ERR_BAD_ROOT, sTok);
-					return(FALSE);
-				}
-				sTok = sTok.Mid(CharsRead);	// remove root
-				CNote	bass(root);	// bass note defaults to root
-				int	iSlash = sTok.ReverseFind('/');
-				if (iSlash >= 0) {	// if bass note separator found
-					CString	sBass(sTok.Mid(iSlash + 1));	// bass note follows
-					if (CDiatonic::ScanNoteName(sBass, bass))	// if base note scanned
-						sTok = sTok.Left(iSlash);	// remove bass note
-				}
-				int	type = FindChordType(sTok);
-				if (type < 0) {	// if chord type not found
-					ReportError(fp, IDS_SONG_ERR_BAD_CHORD_TYPE, sTok);
-					return(FALSE);
-				}
 				CChord	chord;
 				chord.m_Duration = dur;
-				chord.m_Root = root;
-				chord.m_Bass = bass;
-				chord.m_Type = type;
+				int	nErrID = ParseChordSymbol(sTok, chord);
+				if (nErrID) {
+					ReportError(fp, nErrID, sTok);
+					return(FALSE);
+				}
 				m_Chord.Add(chord);
 				beats += dur;
 			} else {	// duration not found; token could be a command
@@ -349,7 +508,7 @@ bool CSong::Read(LPCTSTR Path)
 				}
 				switch (iCmd) {	// handle command
 				case CMD_TEMPO:
-					if (_stscanf(sSuffix, _T("%lf"), &m_Tempo) != 1) {
+					if (_stscanf(sSuffix, _T("%lf"), &m_Tempo) != 1 || m_Tempo <= 0) {
 						ReportError(fp, IDS_SONG_ERR_BAD_TEMPO, sSuffix);
 						return(FALSE);
 					}
@@ -409,21 +568,72 @@ bool CSong::Read(LPCTSTR Path)
 		}
 		ClosePrevSection(beats);	// add implicit section if needed
 //		DumpSections();	// debug only
-		// make beat map from chord array
-		m_BeatMap.SetSize(max(beats, 1));	// avoid divide by zero in GetChordIndex
-		int	chords = GetChordCount();
-		m_StartBeat.SetSize(chords);
-		int	iBeatMap = 0;
-		int	TotalBeats = 0;
-		for (int iChord = 0; iChord < chords; iChord++) {	// for each chord
-			int	dur = m_Chord[iChord].m_Duration;
-			for (int iBeat = 0; iBeat < dur; iBeat++) {	// for each beat of duration
-				m_BeatMap[iBeatMap] = iChord;	// set beat map element to chord index
-				iBeatMap++;
-			}
-			m_StartBeat[iChord] = TotalBeats;	// store chord's starting beat 
-			TotalBeats += dur;
+		MakeBeatMap(beats);	// make beat map from chord array
+	}
+	CATCH (CFileException, e) {
+		TCHAR	msg[256];
+		e->GetErrorMessage(msg, _countof(msg));
+		OnError(msg);
+		return(FALSE);
+	}
+	END_CATCH
+	return(TRUE);
+}
+
+bool CSong::Write(LPCTSTR Path)
+{
+	TRY {
+		CStdioFile	fp(Path, CFile::modeCreate | CFile::modeWrite);
+		CString	line, s;
+		s.Format(_T("%d/%d"), m_Meter.m_Numerator, m_Meter.m_Denominator);
+		line = s + ' ' + m_Key.Name();
+		if (m_Tempo) {	// if tempo specified
+			s.Format(_T(" %s=%g"), m_Command[CMD_TEMPO], m_Tempo);
+			line += s;
 		}
+		if (m_Transpose) {	// if transposition specified
+			CNote	TransposedKey(m_Key + m_Transpose);
+			s.Format(_T(" %s=%s"), m_Command[CMD_KEY], TransposedKey.Name());
+			line += s;
+		}
+		fp.WriteString(line + '\n');	// write first line
+		line.Empty();
+		int	nMeasuresPerLine = 4;
+		int	nBeatsPerLine = m_Meter.m_Numerator * nMeasuresPerLine;
+		int	nLineBeats = 0;
+		int	nBeats = 0;
+		int	iSection = 0;
+		int	nChords = GetChordCount();
+		for (int iChord = 0; iChord < nChords; iChord++) {	// for each chord
+			if (nLineBeats)	// if not first chord on line
+				line += ' ';	// add separator
+			const CSection&	sec = m_Section[iSection];
+			// if at start of explicit section, add section start command
+			if (nBeats == sec.m_Start && sec.Explicit())
+				line += m_SectionName[iSection] + m_Command[CMD_SECTION_START] + ' ';
+			int	dur = m_Chord[iChord].m_Duration;	// get chord duration
+			s.Format(_T("%d"), dur);
+			line += s + GetChordName(iChord);	// add chord symbol to line
+			nLineBeats += dur;
+			nBeats += dur;
+			if (nBeats == sec.m_Start + sec.m_Length) {	// if at end of section 
+				if (sec.Explicit()) {	// if explicit section, add section end command
+					line += CString(' ') + m_Command[CMD_SECTION_END];
+					if (sec.m_Repeat) {	// if repeat count specified
+						s.Format(_T("%d"), sec.m_Repeat);
+						line += s;	// add repeat count
+					}
+				}
+				iSection++;	// increment to next section unconditionally
+			}
+			if (nLineBeats >= nBeatsPerLine) {	// if reached max line length
+				fp.WriteString(line + '\n');	// output line
+				line.Empty();	// reset line buffer
+				nLineBeats = 0;	// reset line length
+			}
+		}
+		if (nLineBeats)	// if pending line
+			fp.WriteString(line + '\n');	// output line
 	}
 	CATCH (CFileException, e) {
 		TCHAR	msg[256];

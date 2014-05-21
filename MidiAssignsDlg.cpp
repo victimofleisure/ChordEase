@@ -240,7 +240,7 @@ void CMidiAssignsDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 		CPoint	pt(point);
 		ScreenToClient(&pt);
 		CMenu	menu;
-		menu.LoadMenu(IDR_MIDI_ASSIGNS_CTX);
+		menu.LoadMenu(IDM_MIDI_ASSIGNS_CTX);
 		CMenu	*mp = menu.GetSubMenu(0);
 		mp->TrackPopupMenu(0, point.x, point.y, this);
 	}

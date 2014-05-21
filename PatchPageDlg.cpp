@@ -36,8 +36,7 @@ CPatchPageDlg::CPatchPageDlg(UINT nIDTemplate, CWnd* pParent)
 
 void CPatchPageDlg::UpdateEngine(UINT CtrlID)
 {
-	theApp.GetMain()->NotifyEdit(static_cast<WORD>(CtrlID),
-		UCODE_BASE_PATCH, CUndoable::UE_COALESCE);
+	theApp.GetMain()->NotifyEdit(CtrlID, UCODE_BASE_PATCH, CUndoable::UE_COALESCE);
 	CBasePatch	patch;
 	gEngine.GetBasePatch(patch);
 	GetPatch(patch);
@@ -94,5 +93,5 @@ void CPatchPageDlg::OnChangedDurationCombo(UINT nID, NMHDR* pNMHDR, LRESULT* pRe
 
 BOOL CPatchPageDlg::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 {
-	return CChordEaseApp::OnToolTipNeedText(id, pNMHDR);
+	return theApp.OnToolTipNeedText(id, pNMHDR, pResult);
 }

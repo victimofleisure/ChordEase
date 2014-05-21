@@ -59,7 +59,7 @@ public:
 	int		GetCurPage() const;
 	void	SetCurPage(int PageIdx);
 	int		GetInsertPos();
-	int		GetItemCount() const;
+	int		GetPartCount() const;
 	int		GetSelectedCount() const;
 	int		GetSelectionMark();
 	bool	HasSelection() const;
@@ -182,7 +182,7 @@ inline bool CPartsBar::IsValidInsertPos(int PartIdx)
 	return(PartIdx >= 0 && PartIdx <= gEngine.GetPartCount());
 }
 
-inline int CPartsBar::GetItemCount() const
+inline int CPartsBar::GetPartCount() const
 {
 	return(GetListCtrl().GetItemCount());
 }

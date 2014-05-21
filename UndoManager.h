@@ -16,6 +16,7 @@
 		06		28may10	support insignificant edits
 		07		05dec12	add UndoNoRedo
 		08		11feb13	add OnUpdateTitles and SetPos
+		09		01may14	widen CtrlID and Code to 32-bit
 
         undoable edit interface
  
@@ -65,8 +66,8 @@ public:
 	void	Undo();
 	void	Redo();
 	void	UndoNoRedo();
-	void	NotifyEdit(WORD CtrlID, WORD Code, UINT Flags = 0);
-	void	CancelEdit(WORD CtrlID, WORD Code);
+	void	NotifyEdit(int CtrlID, int Code, UINT Flags = 0);
+	void	CancelEdit(int CtrlID, int Code);
 	void	DiscardAllEdits();
 
 protected:

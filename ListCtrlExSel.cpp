@@ -41,6 +41,14 @@ CListCtrlExSel::~CListCtrlExSel()
 {
 }
 
+void CListCtrlExSel::CreateColumns(const COL_INFO *ColInfo, int Columns)
+{
+	for (int iCol = 0; iCol < Columns; iCol++) {	// for each column
+		const COL_INFO&	info = ColInfo[iCol];
+		InsertColumn(iCol, LDS(info.TitleID), info.Align, info.Width);
+	}
+}
+
 int CListCtrlExSel::GetSelection() const
 {
 	POSITION	pos = GetFirstSelectedItemPosition();

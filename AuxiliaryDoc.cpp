@@ -40,7 +40,7 @@ END_MESSAGE_MAP()
 // CAuxiliaryDoc construction/destruction
 
 CAuxiliaryDoc::CAuxiliaryDoc() :
-	m_DocTpl(IDR_PATCH, RUNTIME_CLASS(CAuxiliaryDoc), NULL, NULL),
+	m_DocTpl(IDR_CHORDEASEPATCH, RUNTIME_CLASS(CAuxiliaryDoc), NULL, NULL),
 	m_RecentFile(0, NULL, NULL, 0)
 {
 	// this ctor has to exist or IMPLEMENT_DYNCREATE won't compile
@@ -48,7 +48,7 @@ CAuxiliaryDoc::CAuxiliaryDoc() :
 }
 
 CAuxiliaryDoc::CAuxiliaryDoc(UINT MruStart, LPCTSTR MruSection, LPCTSTR MruFormat, int MruSize, int MruMaxDispLen) :
-	m_DocTpl(IDR_PATCH, RUNTIME_CLASS(CAuxiliaryDoc), NULL, NULL),
+	m_DocTpl(IDR_CHORDEASEPATCH, RUNTIME_CLASS(CAuxiliaryDoc), NULL, NULL),
 	m_RecentFile(MruStart, MruSection, MruFormat, MruSize, MruMaxDispLen)
 {
 	m_bAutoDelete = FALSE;

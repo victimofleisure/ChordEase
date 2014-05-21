@@ -9,6 +9,7 @@
 		rev		date	comments
         00      12sep13	initial version
 		01		22apr14	add piano dialog
+		02		30apr14	add OnDropFiles
 
 		ChordEase main frame
  
@@ -37,6 +38,7 @@
 #include "ColorStatusBar.h"
 #include "PianoDlg.h"
 #include "ModelessDlgPtr.h"
+#include "OutputNotesBar.h"
 
 class CChordEaseView;
 class CThreadsDlg;
@@ -82,8 +84,8 @@ public:
 // Operations
 public:
 	void	UpdateViews();
-	void	NotifyEdit(WORD CtrlID, WORD Code, UINT Flags = 0);
-	void	CancelEdit(WORD CtrlID, WORD Code);
+	void	NotifyEdit(int CtrlID, int Code, UINT Flags = 0);
+	void	CancelEdit(int CtrlID, int Code);
 	bool	OpenPatch(LPCTSTR Path);
 	void	OnUpdateSong();
 	void	OnSongPositionChange();
@@ -114,18 +116,17 @@ protected:
 	afx_msg void OnClose();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
+	afx_msg void OnDropFiles(HDROP hDropInfo);
 	afx_msg void OnEditCopy();
 	afx_msg void OnEditCut();
-	afx_msg void OnEditDeletePart();
-	afx_msg void OnEditDeselect();
-	afx_msg void OnEditInsertPart();
+	afx_msg void OnEditDelete();
+	afx_msg void OnEditInsert();
 	afx_msg void OnEditOptions();
 	afx_msg void OnEditPaste();
 	afx_msg void OnEditRedo();
 	afx_msg void OnEditRename();
 	afx_msg void OnEditSelectAll();
 	afx_msg void OnEditUndo();
-	afx_msg void OnFileEdit();
 	afx_msg void OnMidiAssignments();
 	afx_msg void OnMidiChaseEvents();
 	afx_msg void OnMidiDevices();
@@ -153,11 +154,11 @@ protected:
 	afx_msg void OnTransportRewind();
 	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditCut(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateEditDeletePart(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateEditDeselect(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditDelete(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditPaste(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditRedo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditRename(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditSelectAll(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditUndo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateMidiChaseEvents(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateMidiDevices(CCmdUI* pCmdUI);
@@ -180,6 +181,8 @@ protected:
 	afx_msg void OnViewPatch();
 	afx_msg void OnViewPiano();
 	afx_msg void OnViewThreads();
+	afx_msg void OnViewOutputNotes();
+	afx_msg void OnUpdateViewOutputNotes(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	afx_msg void OnUpdateIndicatorMeter(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateIndicatorKey(CCmdUI *pCmdUI);
@@ -241,11 +244,6 @@ protected:
 	public:
 		CMidiTargetArray	m_MidiTarget;	// pre-edit MIDI targets
 	};
-	class CSongEditUndoInfo : public CRefObj {
-	public:
-		CString	m_Song;			// pre-edit song text
-		CString	m_Path;			// song file path
-	};
 	class CStatusCache {
 	public:
 		CStatusCache();	// don't forget to add new members to ctor
@@ -267,6 +265,7 @@ protected:
 		CBI_DEVICE,
 		CBI_MIDI_INPUT,
 		CBI_MIDI_OUTPUT,
+		CBI_OUTPUT_NOTES,
 		CONTROL_BARS
 	};
 	enum {	// status bar panes
@@ -302,6 +301,7 @@ protected:
 	CDeviceBar	m_DeviceBar;	// device bar
 	CMidiEventBar	m_MidiInputBar;	// MIDI input bar
 	CMidiEventBar	m_MidiOutputBar;	// MIDI input bar
+	COutputNotesBar	m_OutputNotesBar;	// output notes bar
 	CChordEaseView	*m_View;	// one and only SDI view
 	CPatchDoc	m_PatchDoc;		// patch document
 	COptionsInfo	m_Options;	// options info
@@ -400,12 +400,12 @@ inline const COptionsInfo& CMainFrame::GetOptions() const
 	return(m_Options);
 }
 
-inline void CMainFrame::NotifyEdit(WORD CtrlID, WORD Code, UINT Flags)
+inline void CMainFrame::NotifyEdit(int CtrlID, int Code, UINT Flags)
 {
 	m_UndoMgr.NotifyEdit(CtrlID, Code, Flags);
 }
 
-inline void CMainFrame::CancelEdit(WORD CtrlID, WORD Code)
+inline void CMainFrame::CancelEdit(int CtrlID, int Code)
 {
 	m_UndoMgr.CancelEdit(CtrlID, Code);
 }

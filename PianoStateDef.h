@@ -14,15 +14,15 @@
 */
 
 //				name			default
-PIANOSTATEDEF(	Port,			0			)
-PIANOSTATEDEF(	Channel,		0			)
-PIANOSTATEDEF(	StartNote,		48			)
-PIANOSTATEDEF(	KeyCount,		36			)
-PIANOSTATEDEF(	Velocity,		100			)
-PIANOSTATEDEF(	KeyLabelType,	KL_SHORTCUT	)
-PIANOSTATEDEF(	RotateLabels,	FALSE		)
-PIANOSTATEDEF(	ShowOctaves,	FALSE		)
-PIANOSTATEDEF(	Vertical,		FALSE		)
+PIANOSTATEDEF(	Port,			0				)
+PIANOSTATEDEF(	Channel,		0				)
+PIANOSTATEDEF(	StartNote,		48				)
+PIANOSTATEDEF(	KeyCount,		36				)
+PIANOSTATEDEF(	Velocity,		100				)
+PIANOSTATEDEF(	KeyLabelType,	KL_SHORTCUTS	)
+PIANOSTATEDEF(	RotateLabels,	FALSE			)
+PIANOSTATEDEF(	ShowOctaves,	FALSE			)
+PIANOSTATEDEF(	Vertical,		FALSE			)
 
 #undef PIANOSTATEDEF
 

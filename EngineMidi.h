@@ -149,9 +149,9 @@ inline DWORD CEngineMidi::MakeMidiMsg(int Cmd, int Chan, int P1, int P2)
 	ASSERT(IsMidiParam(P1));
 	ASSERT(IsMidiParam(P2));
 	MIDI_MSG	msg;
-	msg.stat = BYTE(Cmd | Chan);
-	msg.p1 = char(P1);
-	msg.p2 = char(P2);
+	msg.stat = static_cast<BYTE>(Cmd | Chan);
+	msg.p1 = static_cast<char>(P1);
+	msg.p2 = static_cast<char>(P2);
 	return(msg.dw);
 }
 

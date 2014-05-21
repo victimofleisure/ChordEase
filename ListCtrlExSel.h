@@ -52,6 +52,7 @@ public:
 
 // Operations
 public:
+	void	CreateColumns(const COL_INFO *ColInfo, int Columns);
 	void	Select(int ItemIdx);
 	void	SelectOnly(int ItemIdx);
 	void	SelectRange(int FirstItemIdx, int Items);

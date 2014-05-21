@@ -41,7 +41,7 @@ const int CPatchGeneralDlg::m_PPQVal[] = {
 
 CPatchGeneralDlg::CPatchGeneralDlg(CWnd* pParent /*=NULL*/)
 	: CPatchPageDlg(IDD, pParent),
-	m_Tempo(0, CPatch::MAX_TEMPO),
+	m_Tempo(CPatch::MIN_TEMPO, CPatch::MAX_TEMPO),
 	m_TempoMultiple(-1, 1),
 	m_LeadIn(0, INT_MAX),
 	m_Transpose(-NOTE_MAX, NOTE_MAX)

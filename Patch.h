@@ -83,6 +83,7 @@ public:
 
 // Constants
 	enum {
+		MIN_TEMPO = 1,			// minimum tempo in beats per minute
 		MAX_TEMPO = 400,		// maximum tempo in beats per minute
 	};
 

@@ -10,6 +10,7 @@
         00      12sep13	initial version
         01      16apr14	add help
 		02		22apr14	add OnToolTipNeedText
+		03		30apr14	add patch path
 
 		ChordEase application
  
@@ -186,6 +187,11 @@ BOOL CChordEaseApp::InitInstance()
 	CCommandLineInfo cmdInfo;
 	ParseCommandLine(cmdInfo);
 
+	if (IsPatchPath(cmdInfo.m_strFileName)) {
+		m_PatchPath = cmdInfo.m_strFileName;
+		cmdInfo.m_nShellCommand = CCommandLineInfo::FileNew;
+	}
+
 	// Dispatch commands specified on the command line
 	if (!ProcessShellCommand(cmdInfo))
 		return FALSE;
@@ -284,19 +290,16 @@ bool CChordEaseApp::HandleDlgKeyMsg(MSG* pMsg)
 				bool	IsAlpha = VKey >= 'A' && VKey <= 'Z';
 				CEdit	*pEdit = CFocusEdit::GetEdit();
 				if (pEdit != NULL) {	// if an edit control has focus
-					if (((IsAlpha									// if (alpha key
-					|| VKey == VK_SPACE)							// or space key)
+					if (((IsAlpha || VKey == VK_SPACE)				// if ((alpha or space)
 					&& strchr(EditBoxCtrlKeys, VKey) == NULL		// and unused by edit
-					&& (GetKeyState(VK_CONTROL) & GKS_DOWN)))		// and Ctrl is down
-						bTryMainAccels = TRUE;	// give main accelerators a try
-					else if (VKey == VK_SPACE						// if space
-					&& (GetKeyState(VK_SHIFT) & GKS_DOWN))			// and Shift is down
-						bTryMainAccels = TRUE;	// give main accelerators a try
-					else if (IsAlpha								// if alpha
+					&& (GetKeyState(VK_CONTROL) & GKS_DOWN))		// and Ctrl is down)
+					|| (VKey == VK_SPACE							// or (space key
+					&& (GetKeyState(VK_SHIFT) & GKS_DOWN))			// and Shift is down)
+					|| (IsAlpha										// or (alpha key
 					&& pEdit->IsKindOf(RUNTIME_CLASS(CNumEdit))		// and numeric edit
 					&& (VKey > 'G'									// and (key above G
 					|| !pEdit->IsKindOf(RUNTIME_CLASS(CNoteEdit)))	// or not note edit)
-					&& (GetKeyState(VK_SHIFT) & GKS_DOWN))			// and Shift is down
+					&& (GetKeyState(VK_SHIFT) & GKS_DOWN)))			// and Shift is down)
 						bTryMainAccels = TRUE;	// give main accelerators a try
 				} else {	// non-edit control has focus
 					if (IsAlpha										// if alpha key
@@ -416,7 +419,7 @@ void CChordEaseApp::ValidateFolder(CDataExchange* pDX, int CtrlID, const CString
 	}
 }
 
-BOOL CChordEaseApp::OnToolTipNeedText(UINT id, NMHDR* pNMHDR)
+BOOL CChordEaseApp::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 {
 	if (!theApp.GetMain()->GetOptions().m_Other.ShowTooltips)	// if not showing tooltips
 		return(FALSE);
@@ -437,6 +440,11 @@ BOOL CChordEaseApp::OnToolTipNeedText(UINT id, NMHDR* pNMHDR)
 		return(TRUE);
 	}
 	return(FALSE);
+}
+
+bool CChordEaseApp::IsPatchPath(LPCTSTR Path)
+{
+	return(!_tcsicmp(PathFindExtension(Path), PATCH_EXT));
 }
 
 /////////////////////////////////////////////////////////////////////////////

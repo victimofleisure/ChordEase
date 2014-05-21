@@ -87,7 +87,7 @@ LRESULT	CPartMidiTargetDlg::OnMidiRowEdit(WPARAM wParam, LPARAM lParam)
 {
 	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
 	if (CPartsBar::IsValidPartIdx(iPart)) {	// if current part is valid
-		theApp.GetMain()->NotifyEdit(static_cast<WORD>(lParam), 
+		theApp.GetMain()->NotifyEdit(INT64TO32(lParam), 
 			UCODE_PART, CUndoable::UE_COALESCE);
 		CPart	part(gEngine.GetPart(iPart));
 		GetPart(part);

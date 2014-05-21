@@ -9,7 +9,7 @@
 		rev		date	comments
 		00		23aug13	initial version
  
-		diatonic stuff
+		diatonic framework
 
 */
 
@@ -25,6 +25,8 @@ const bool CDiatonic::m_IsDiatonic[NOTES] = {
 //	C	Db	D	Eb	E	F	Gb	G	Ab	A	Bb	B
 	1,	0,	1,	0,	1,	1,	0,	1,	0,	1,	0,	1
 };
+
+const CDiatonic::HEPTATONIC CDiatonic::m_NaturalScale = {C, D, E, F, G, A, B};
 
 #define HEPTATONICDEF(d1, d2, d3, d4, d5, d6, d7, name) {d1, d2, d3, d4, d5, d6, d7},
 const CDiatonic::HEPTATONIC CDiatonic::m_Scale[SCALES] = {

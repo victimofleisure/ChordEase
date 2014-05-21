@@ -9,7 +9,7 @@
 		rev		date	comments
 		00		23aug13	initial version
  
-		diatonic stuff
+		diatonic framework
  
 */
 
@@ -46,6 +46,11 @@ public:
 	static	bool	IsValidMode(int Mode);
 	static	bool	IsValidScale(int Scale);
 	static	bool	IsValidDegree(int Degree);
+	static	bool	IsDiatonic(CNote Note);
+	static	CNote	Quantize(CNote Note);
+	static	CNote	Chromaticize(CNote Note);
+	static	int		GetNoteDegree(CNote Note);
+	static	int		GetNaturalScale(int Degree);
 	static	LPCTSTR	ScaleName(int Scale);
 	static	CString	PrettyScaleName(int Scale);
 	static	int		FindScale(LPCTSTR Name);
@@ -66,15 +71,15 @@ public:
 
 protected:
 // Constants
-	static	const NOTE	m_NoteToDegree[NOTES];
-	static	const bool	m_IsDiatonic[NOTES];
-	static	const HEPTATONIC	m_Scale[SCALES];
-	static	const LPCTSTR	m_ScaleName[SCALES];
-	static	const LPCTSTR	m_ModeName[MODES];
+	static	const NOTE	m_NoteToDegree[NOTES];		// each note's nearest diatonic degree
+	static	const bool	m_IsDiatonic[NOTES];		// for each note, true if it's diatonic
+	static	const HEPTATONIC	m_NaturalScale;		// notes of natural scale (C major)
+	static	const HEPTATONIC	m_Scale[SCALES];	// table of heptatonic scales
+	static	const LPCTSTR	m_ScaleName[SCALES];	// table of scale names
+	static	const LPCTSTR	m_ModeName[MODES];		// table of mode names
 
 // Member data
-	static	CDiatonic	m_Singleton;	// one and only instance
-	static	HEPTATONIC	m_AccidentalTbl[SCALES][KEYS];	// accidental table
+	static	HEPTATONIC	m_AccidentalTbl[SCALES][KEYS];	// table of accidentals
 	static	int		m_ScaleTonality[SCALES];	// tonality of each scale
 
 // Helpers
@@ -96,6 +101,34 @@ inline bool CDiatonic::IsValidScale(int Scale)
 inline bool CDiatonic::IsValidDegree(int Degree)
 {
 	return(Degree >= 0 && Degree < DEGREES);
+}
+
+inline bool CDiatonic::IsDiatonic(CNote Note)
+{
+	ASSERT(Note.IsNormal());
+	return(m_IsDiatonic[Note]);
+}
+
+inline CNote CDiatonic::Quantize(CNote Note)
+{
+	return(Note - !m_IsDiatonic[Note.Normal()]);
+}
+
+inline CNote CDiatonic::Chromaticize(CNote Note)
+{
+	return(Note / DEGREES * OCTAVE + m_NaturalScale.Note[Note % DEGREES]);
+}
+
+inline int CDiatonic::GetNoteDegree(CNote Note)
+{
+	ASSERT(Note.IsNormal());
+	return(m_NoteToDegree[Note]);
+}
+
+inline int CDiatonic::GetNaturalScale(int Degree)
+{
+	ASSERT(IsValidDegree(Degree));
+	return(m_NaturalScale.Note[Degree]);
 }
 
 inline LPCTSTR CDiatonic::ScaleName(int Scale)

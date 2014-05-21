@@ -64,6 +64,7 @@ BOOL CNotepadDlg::OnInitDialog()
 {
 	CPersistDlg::OnInitDialog();
 	
+	SetIcon(AfxGetApp()->LoadIcon(IDR_MAINFRAME), 0);
 	m_Resize.AddControlList(this, m_CtrlList);
 	m_Edit.SetWindowText(m_Text);
 	// the edit control initially selects all which is unhelpful in this case;

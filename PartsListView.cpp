@@ -174,10 +174,7 @@ int CPartsListView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	DWORD	ExStyle = LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES;
 	m_List.SetExtendedStyle(ExStyle);
 	m_List.TrackDropPos(TRUE);
-	for (int iCol = 0; iCol < COLUMNS; iCol++) {	// for each column
-		const CPartsListCtrl::COL_INFO&	info = m_ColInfo[iCol];
-		m_List.InsertColumn(iCol, LDS(info.TitleID), info.Align, info.Width);
-	}
+	m_List.CreateColumns(m_ColInfo, COLUMNS);
 	m_List.LoadColumnWidths(REG_SETTINGS, RK_PARTS_LIST_CW);	
 	EnableToolTips();
 	return 0;
@@ -234,7 +231,7 @@ void CPartsListView::OnListItemchanged(NMHDR* pNMHDR, LRESULT* pResult)
 			if (UndoMgr.IsIdle()) {	// avoid spurious notifications
 				// passing iItem via CtrlID limits undo to 64K parts
 				ASSERT(plv->iItem >= 0 && plv->iItem <= USHRT_MAX);
-				UndoMgr.NotifyEdit(static_cast<WORD>(plv->iItem), 
+				UndoMgr.NotifyEdit(plv->iItem, 
 					UCODE_ENABLE_PART, CUndoable::UE_COALESCE);
 			}
 			int	iItem = plv->iItem;
@@ -251,8 +248,7 @@ void CPartsListView::OnListEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 	if (item.pszText != NULL) {
 		// passing iItem via CtrlID limits undo to 64K parts
 		ASSERT(item.iItem >= 0 && item.iItem <= USHRT_MAX);
-		theApp.GetMain()->GetUndoMgr().NotifyEdit(
-			static_cast<WORD>(item.iItem), UCODE_RENAME);
+		theApp.GetMain()->GetUndoMgr().NotifyEdit(item.iItem, UCODE_RENAME);
 		theApp.GetMain()->GetPartsBar().SetPartName(item.iItem, item.pszText);
 	}
 }
@@ -269,7 +265,7 @@ void CPartsListView::OnContextMenu(CWnd* pWnd, CPoint point)
 	CPoint	pt(point);
 	ScreenToClient(&pt);
 	CMenu	menu;
-	menu.LoadMenu(IDR_PART_LIST_CTX);
+	menu.LoadMenu(IDM_PART_LIST_CTX);
 	CMenu	*mp = menu.GetSubMenu(0);
 	mp->TrackPopupMenu(0, point.x, point.y, theApp.GetMain());
 }

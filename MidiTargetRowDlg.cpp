@@ -192,5 +192,5 @@ void CMidiTargetRowDlg::OnLButtonDown(UINT nFlags, CPoint point)
 
 BOOL CMidiTargetRowDlg::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 {
-	return CChordEaseApp::OnToolTipNeedText(id, pNMHDR);
+	return theApp.OnToolTipNeedText(id, pNMHDR, pResult);
 }

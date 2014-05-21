@@ -85,7 +85,7 @@ BOOL CPatchMidiTargetDlg::OnInitDialog()
 
 LRESULT	CPatchMidiTargetDlg::OnMidiRowEdit(WPARAM wParam, LPARAM lParam)
 {
-	theApp.GetMain()->NotifyEdit(static_cast<WORD>(lParam), 
+	theApp.GetMain()->NotifyEdit(INT64TO32(lParam), 
 		UCODE_BASE_PATCH, CUndoable::UE_COALESCE);
 	CBasePatch	patch;
 	gEngine.GetBasePatch(patch);

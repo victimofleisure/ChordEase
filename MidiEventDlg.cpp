@@ -287,17 +287,17 @@ BOOL CMidiEventDlg::OnInitDialog()
 		m_SysStatName[iSysSt].LoadString(m_SysStatID[iSysSt]);
 	InitDeviceNames();	// initialize device name array
 	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT);	// init list control
+	m_List.CreateColumns(m_ColInfo, COLUMNS);	// create list columns
 	CFont	*pFont = GetFont();
-	// create list columns and filter combos
+	// create list filter combos
 	for (int iCol = 0; iCol < COLUMNS; iCol++) {	// for each column
 		const CListCtrlExSel::COL_INFO&	info = m_ColInfo[iCol];
-		m_List.InsertColumn(iCol, LDS(info.TitleID), info.Align, info.Width);
 		CComboBox&	filter = m_FilterCombo[iCol];
 		UINT	style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL 
 			| CBS_DROPDOWNLIST;
 		if (!filter.Create(style, CRect(0, 0, 0, DROP_HEIGHT), this, iCol + FILTER_ID))
 			AfxThrowResourceException();
-		filter.SetFont(pFont);
+		filter.SetFont(pFont);	// set filter font same as ours
 		InitFilter(iCol);
 	}
 	CRect	rCombo;
@@ -434,7 +434,7 @@ void CMidiEventDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 	if (rList.PtInRect(pt)) {	// if point within list
 		ScreenToClient(&pt);
 		CMenu	menu;
-		menu.LoadMenu(IDR_MIDI_EVENT_CTX);
+		menu.LoadMenu(IDM_MIDI_EVENT_CTX);
 		CMenu	*mp = menu.GetSubMenu(0);
 		CPersistDlg::UpdateMenu(this, mp);
 		mp->TrackPopupMenu(0, point.x, point.y, this);

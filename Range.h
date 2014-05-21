@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00		21nov12	initial version
+		01		06may14	add inclusive methods
 
 		range template
 
@@ -26,6 +27,7 @@ public:
 
 // Attributes
 	T		Length() const;
+	T		LengthInclusive() const;
 	void	SetEmpty();
 	bool	IsEmpty() const;
 	bool	IsNormalized() const;
@@ -33,6 +35,7 @@ public:
 // Operations
 	void	Normalize();
 	bool	InRange(T Val) const;
+	bool	InRangeInclusive(T Val) const;
 	bool	Intersect(const CRange& Range1, const CRange& Range2);
 	bool	Union(const CRange& Range1, const CRange& Range2);
 
@@ -91,6 +94,12 @@ inline T CRange<T>::Length() const
 }
 
 template<class T>
+inline T CRange<T>::LengthInclusive() const
+{
+	return(End - Start + 1);
+}
+
+template<class T>
 inline void CRange<T>::SetEmpty()
 {
 	Start = 0;
@@ -123,6 +132,12 @@ template<class T>
 inline bool CRange<T>::InRange(T Val) const
 {
 	return(Val >= Start && Val < End);
+}
+
+template<class T>
+inline bool CRange<T>::InRangeInclusive(T Val) const
+{
+	return(Val >= Start && Val <= End);
 }
 
 template<class T>

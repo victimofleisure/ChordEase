@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      12sep13	initial version
+        01      02may14	add undo manager
 
 		ChordEase document
  
@@ -24,19 +25,43 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "UndoManager.h"
+
 class CChordEaseDoc : public CDocument
 {
 protected: // create from serialization only
 	CChordEaseDoc();
 	DECLARE_DYNCREATE(CChordEaseDoc)
 
+public:
+// Types
+	class CMyUndoManager : public CUndoManager {
+	public:
+		virtual	void	OnModify(bool Modified);
+		CChordEaseDoc	*m_pDocument;
+	};
+
+// Constants
+	enum {	// update hints
+		HINT_SONG_TEXT,		// song text edit
+		HINT_CHART,			// chart view edit
+		UPDATE_HINTS
+	};
+
+// Public data
+	CMyUndoManager	m_UndoMgr;	// undo manager
+
 // Attributes
-	CString	GetSong() const;
-	bool	SetSong(CString Song);
+	CString	GetSongText() const;
+	bool	SetSongText(CString Text);
 
 // Operations
 public:
+	void	UpdateAllViews(CView* pSender, LPARAM lHint = 0L, CObject* pHint = NULL);
 	bool	Edit();
+	bool	UpdateSongText();
+	static	void	ReadSongText(CFile& File, CString& Text);
+	static	void	WriteSongText(CFile& File, const CString& Text);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -64,12 +89,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 // Data members
-	CString	m_Song;		// song text
+	CString	m_SongText;		// song text
 };
 
-inline CString	CChordEaseDoc::GetSong() const
+inline CString	CChordEaseDoc::GetSongText() const
 {
-	return(m_Song);
+	return(m_SongText);
 }
 
 /////////////////////////////////////////////////////////////////////////////

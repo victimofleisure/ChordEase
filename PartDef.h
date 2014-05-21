@@ -8,7 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		14sep13	initial version
- 
+		01		15may14	replace bass chromatic with non-diatonic rules
+
 		part definitions
 
 */
@@ -23,6 +24,7 @@ PARTDEF(	In.ZoneLow,					0)
 PARTDEF(	In.ZoneHigh,				MIDI_NOTE_MAX)
 PARTDEF(	In.Transpose,				0)
 PARTDEF(	In.VelOffset,				0)
+PARTDEF(	In.NonDiatonic,				CPart::INPUT::NDR_ALLOW)
 PARTDEF(	Out.Inst.Port,				0)
 PARTDEF(	Out.Inst.Chan,				0)
 PARTDEF(	Out.Patch,					-1)
@@ -45,7 +47,6 @@ PARTDEF(	Comp.Arp.Order,				CPart::COMP::ARP_DEFAULT)
 PARTDEF(	Comp.Arp.Repeat,			FALSE)
 PARTDEF(	Comp.ChordResetsAlt,		TRUE)
 PARTDEF(	Bass.LowestNote,			24 + E)	// E1
-PARTDEF(	Bass.Chromatic,				TRUE)
 PARTDEF(	Bass.SlashChords,			TRUE)
 PARTDEF(	Bass.ApproachLength,		0)
 PARTDEF(	Bass.TargetAlignment,		0)

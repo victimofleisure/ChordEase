@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		15may14	add non-diatonic rule combo
 
 		part input dialog
  
@@ -46,6 +47,7 @@ void CPartInputDlg::GetPart(CPart& Part) const
 	Part.m_In.ZoneHigh = m_ZoneHigh.GetIntVal();
 	Part.m_In.Transpose = m_Transpose.GetIntVal();
 	Part.m_In.VelOffset = m_VelOffset.GetIntVal();
+	Part.m_In.NonDiatonic = m_NonDiatonic.GetCurSel();
 }
 
 void CPartInputDlg::SetPart(const CPart& Part)
@@ -56,6 +58,7 @@ void CPartInputDlg::SetPart(const CPart& Part)
 	m_ZoneHigh.SetVal(Part.m_In.ZoneHigh);
 	m_Transpose.SetVal(Part.m_In.Transpose);
 	m_VelOffset.SetVal(Part.m_In.VelOffset);
+	m_NonDiatonic.SetCurSel(Part.m_In.NonDiatonic);
 	UpdateDeviceName(Part.m_In.Inst.Port);
 }
 
@@ -68,6 +71,7 @@ void CPartInputDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CPartPageDlg::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CPartInputDlg)
+	DDX_Control(pDX, IDC_PART_IN_NON_DIATONIC, m_NonDiatonic);
 	DDX_Control(pDX, IDC_PART_IN_DEVICE_NAME, m_DeviceName);
 	DDX_Control(pDX, IDC_PART_IN_VEL_OFFSET, m_VelOffset);
 	DDX_Control(pDX, IDC_PART_IN_PORT, m_Port);

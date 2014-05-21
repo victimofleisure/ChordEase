@@ -23,6 +23,7 @@
 		13		28may10	support insignificant edits
 		14		05dec12	add UndoNoRedo
 		15		11feb13	add OnUpdateTitles and SetPos
+		16		01may14	widen CtrlID and Code to 32-bit
 
         undoable edit interface
  
@@ -137,7 +138,7 @@ void CUndoManager::SwapState(int Pos)
 #endif
 }
 
-void CUndoManager::NotifyEdit(WORD CtrlID, WORD Code, UINT Flags)
+void CUndoManager::NotifyEdit(int CtrlID, int Code, UINT Flags)
 {
 	ASSERT(CtrlID != UNDO_CTRL_ID_INSIGNIFICANT);	// reserved control ID
 	if (IsIdle()) {
@@ -181,7 +182,7 @@ void CUndoManager::NotifyEdit(WORD CtrlID, WORD Code, UINT Flags)
 	}
 }
 
-void CUndoManager::CancelEdit(WORD CtrlID, WORD Code)
+void CUndoManager::CancelEdit(int CtrlID, int Code)
 {
 #if UNDO_NATTER
 	_tprintf(_T("CancelEdit CtrlID=%d Code=%d\n"), CtrlID, Code);

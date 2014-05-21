@@ -693,6 +693,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ChartUndoCodeData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ChartUndoCodes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ChartUndoTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ChartUndoTest.h"
+				>
+			</File>
+			<File
 				RelativePath="ChildDlg.cpp"
 				>
 				<FileConfiguration
@@ -969,6 +985,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ChordSubmenuDef.h"
+				>
+			</File>
+			<File
 				RelativePath="ChordVoicingDef.h"
 				>
 			</File>
@@ -1065,6 +1085,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DeviceDlgColDef.h"
+				>
+			</File>
+			<File
 				RelativePath="Diatonic.cpp"
 				>
 				<FileConfiguration
@@ -1142,6 +1166,14 @@
 			</File>
 			<File
 				RelativePath=".\DurationComboBox.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DurationDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DurationDlg.h"
 				>
 			</File>
 			<File
@@ -1462,6 +1494,14 @@
 			</File>
 			<File
 				RelativePath="IniFile.h"
+				>
+			</File>
+			<File
+				RelativePath=".\InsertChordDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\InsertChordDlg.h"
 				>
 			</File>
 			<File
@@ -2161,6 +2201,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\OutputNotesBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\OutputNotesBar.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OutputNotesStateDef.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OutputNotesSubmenuDef.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Part.cpp"
 				>
 			</File>
@@ -2373,6 +2429,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PatchUndoTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PatchUndoTest.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PathStr.cpp"
 				>
 			</File>
@@ -2410,6 +2474,10 @@
 			</File>
 			<File
 				RelativePath=".\PianoDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PianoSizeDef.h"
 				>
 			</File>
 			<File
@@ -2688,6 +2756,26 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SectionListColDef.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SectionListDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SectionListDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SectionPropsDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SectionPropsDlg.h"
+				>
+			</File>
+			<File
 				RelativePath="sizecbar.cpp"
 				>
 				<FileConfiguration
@@ -2804,6 +2892,22 @@
 			</File>
 			<File
 				RelativePath=".\SongCommandDef.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SongPropsDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SongPropsDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SongState.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SongState.h"
 				>
 			</File>
 			<File

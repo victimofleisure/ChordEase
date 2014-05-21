@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 imagehlp.lib version.lib shlwapi.lib winmm.lib comctl32.lib htmlhelp.lib /nologo /subsystem:windows /debug /machine:I386
+# ADD LINK32 imagehlp.lib version.lib shlwapi.lib winmm.lib comctl32.lib htmlhelp.lib /nologo /subsystem:windows /map /debug /machine:I386
 
 !ELSEIF  "$(CFG)" == "ChordEase - Win32 Debug"
 
@@ -128,6 +128,22 @@ SOURCE=.\BoundArray.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ChartUndoCodeData.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChartUndoCodes.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChartUndoTest.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChartUndoTest.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ChildDlg.cpp
 # End Source File
 # Begin Source File
@@ -161,6 +177,10 @@ SOURCE=.\ChordEaseView.cpp
 # Begin Source File
 
 SOURCE=.\ChordEaseView.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChordSubmenuDef.h
 # End Source File
 # Begin Source File
 
@@ -248,6 +268,14 @@ SOURCE=.\DurationComboBox.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DurationDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DurationDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Engine.cpp
 # End Source File
 # Begin Source File
@@ -325,6 +353,14 @@ SOURCE=.\IniFile.cpp
 # Begin Source File
 
 SOURCE=.\IniFile.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\InsertChordDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\InsertChordDlg.h
 # End Source File
 # Begin Source File
 
@@ -640,6 +676,22 @@ SOURCE=.\OptsRecordDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\OutputNotesBar.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\OutputNotesBar.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\OutputNotesStateDef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\OutputNotesSubmenuDef.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Part.cpp
 # End Source File
 # Begin Source File
@@ -852,6 +904,14 @@ SOURCE=.\PatchPortIterator.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\PatchUndoTest.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\PatchUndoTest.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\PathStr.cpp
 # End Source File
 # Begin Source File
@@ -889,6 +949,10 @@ SOURCE=.\PianoDlg.cpp
 # Begin Source File
 
 SOURCE=.\PianoDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PianoSizeDef.h
 # End Source File
 # Begin Source File
 
@@ -1020,6 +1084,26 @@ SOURCE=.\ScrollDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\SectionListColDef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SectionListDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\SectionListDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SectionPropsDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\SectionPropsDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\sizecbar.cpp
 # End Source File
 # Begin Source File
@@ -1037,6 +1121,22 @@ SOURCE=.\Song.h
 # Begin Source File
 
 SOURCE=.\SongCommandDef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SongPropsDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\SongPropsDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SongState.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\SongState.h
 # End Source File
 # Begin Source File
 
@@ -1197,6 +1297,10 @@ SOURCE=.\Wrapx64.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\res\chordeas.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\ChordEase.ico
 # End Source File
 # Begin Source File
@@ -1209,6 +1313,10 @@ SOURCE=.\res\ChordEaseDoc.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\ChordEasePatch.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\dragmulti.cur
 # End Source File
 # Begin Source File
@@ -1217,7 +1325,19 @@ SOURCE=.\res\dragsingle.cur
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\gear.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\header_sort.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icon1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icon2.ico
 # End Source File
 # Begin Source File
 

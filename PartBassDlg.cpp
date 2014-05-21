@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		15may14	remove chromatic checkbox
 
 		part bass dialog
  
@@ -42,7 +43,6 @@ CPartBassDlg::CPartBassDlg(CWnd* pParent /*=NULL*/)
 void CPartBassDlg::GetPart(CPart& Part) const
 {
 	Part.m_Bass.LowestNote = m_BassLowest.GetIntVal();
-	Part.m_Bass.Chromatic = m_BassChromatic.GetCheck() != 0;
 	Part.m_Bass.SlashChords = m_SlashChords.GetCheck() != 0;
 	Part.m_Bass.ApproachLength = m_ApproachLength.GetVal();
 	Part.m_Bass.TargetAlignment = m_TargetAlignment.GetCurSel() + CPart::BASS::TARGET_ALIGN_MIN;
@@ -51,16 +51,17 @@ void CPartBassDlg::GetPart(CPart& Part) const
 void CPartBassDlg::SetPart(const CPart& Part)
 {
 	m_BassLowest.SetVal(Part.m_Bass.LowestNote);
-	m_BassChromatic.SetCheck(Part.m_Bass.Chromatic);
 	m_SlashChords.SetCheck(Part.m_Bass.SlashChords);
 	m_ApproachLength.SetVal(Part.m_Bass.ApproachLength);
 	m_TargetAlignment.SetCurSel(Part.m_Bass.TargetAlignment - CPart::BASS::TARGET_ALIGN_MIN);
 }
 
-void CPartBassDlg::InitPowerOfTwoCombo(CComboBox& Combo, int LowerExp, int UpperExp)
+void CPartBassDlg::GetPowerOfTwoStrings(CStringArray& Str, int LowerExp, int UpperExp)
 {
-	CString	s;
-	for (int iExp = LowerExp; iExp <= UpperExp; iExp++) {
+	int	nItems = UpperExp - LowerExp + 1;
+	Str.SetSize(nItems);
+	for (int iItem = 0; iItem < nItems; iItem++) {
+		int	iExp = iItem + LowerExp;
 		int	shift = iExp;
 		LPCTSTR	fmt;
 		if (iExp < 0) {
@@ -68,9 +69,17 @@ void CPartBassDlg::InitPowerOfTwoCombo(CComboBox& Combo, int LowerExp, int Upper
 			shift = -shift;
 		} else
 			fmt = _T("%d");
-		s.Format(fmt, 1 << shift);
-		Combo.AddString(s);
+		Str[iItem].Format(fmt, 1 << shift);
 	}
+}
+
+void CPartBassDlg::InitPowerOfTwoCombo(CComboBox& Combo, int LowerExp, int UpperExp)
+{
+	CStringArray	str;
+	GetPowerOfTwoStrings(str, LowerExp, UpperExp);
+	int	nItems = INT64TO32(str.GetSize());
+	for (int iItem = 0; iItem < nItems; iItem++)
+		Combo.AddString(str[iItem]);
 }
 
 void CPartBassDlg::DoDataExchange(CDataExchange* pDX)
@@ -81,7 +90,6 @@ void CPartBassDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_PART_BASS_SLASH_CHORDS, m_SlashChords);
 	DDX_Control(pDX, IDC_PART_BASS_APPROACH_LENGTH, m_ApproachLength);
 	DDX_Control(pDX, IDC_PART_BASS_LOWEST, m_BassLowest);
-	DDX_Control(pDX, IDC_PART_BASS_CHROMATIC, m_BassChromatic);
 	//}}AFX_DATA_MAP
 }
 

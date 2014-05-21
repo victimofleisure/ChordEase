@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      23sep13	initial version
+		01		03may14	in OnParentNotify, event is low word of message
 
 		grid control
  
@@ -189,7 +190,7 @@ void CGridCtrl::OnParentNotify(UINT message, LPARAM lParam)
 	CDragVirtualListCtrl::OnParentNotify(message, lParam);
 	// the following ensures left-clicking in header control ends edit
 	if (IsEditing()) {
-		switch (message) {
+		switch (LOWORD(message)) {	// high word may contain child window ID
 		case WM_LBUTTONDOWN:
 			{
 				CPoint	pt;

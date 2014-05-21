@@ -68,6 +68,7 @@ CEngine::CPartState::CPartState()
 	m_BassApproachTrigger = FALSE;
 	m_BassTargetChord = 0;
 	m_BassTargetTime = INT_MIN;
+	m_CtrlrInputNote = 0;
 }
 
 void CEngine::CPartState::Reset()
@@ -123,6 +124,7 @@ CEngine::CEngine()
 	m_Tick = 0;
 	m_Elapsed = 0;
 	m_TicksPerBeat = 1;
+	m_TicksPerMeasure = 1;
 	m_StartTick = 0;
 	m_IsRunning = FALSE;
 	m_IsPlaying = FALSE;
@@ -419,6 +421,49 @@ void CEngine::SetTick(int Tick)
 	UpdateSection();
 }
 
+void CEngine::OnSongEdit()
+{
+	ASSERT(!IsRunning());	// engine must be stopped for thread safety
+	MakeHarmony();	// harmony array may be reallocated
+	if (m_Tick >= GetTickCount())	// if past end of song
+		m_Tick = 0;	// rewind to start of song
+	UpdateSection();
+}
+
+bool CEngine::SetChord(int ChordIdx, const CSong::CChord& Chord)
+{
+	if (Chord.m_Duration != GetChord(ChordIdx).m_Duration) {	// if duration changed
+		STOP_ENGINE(*this);	// for thread safety
+		if (!m_Song.SetChord(ChordIdx, Chord))
+			return(FALSE);
+		OnSongEdit();
+	} else {	// duration didn't change
+		if (!m_Song.SetChord(ChordIdx, Chord))
+			return(FALSE);
+		MakeHarmony();	// thread-safe provided song length is unchanged
+	}
+	return(TRUE);
+}
+
+bool CEngine::SetSongState(const CSongState& State)
+{
+	STOP_ENGINE(*this);	// for thread safety
+	m_Song.SetState(State);
+	OnSongEdit();
+	return(TRUE);
+}
+
+bool CEngine::SetSongProperties(const CSong::CProperties& Props)
+{
+	{
+		STOP_ENGINE(*this);	// for thread safety
+		m_Song.SetProperties(Props);
+		OnNewSong();
+	}
+	OnTimeChange();
+	return(TRUE);
+}
+
 void CEngine::GetPatchWithDeviceIDs(CPatch& Patch) const
 {
 	Patch = m_Patch;	// copy patch
@@ -512,11 +557,35 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				case CPart::MIDI_TARGET_PART_FUNCTION:
 					UMT(part.m_Function, NormParamToEnum(pos, CPart::FUNCTIONS));
 					break;
+				case CPart::MIDI_TARGET_INPUT_ZONE_LOW:
+					UMT(part.m_In.ZoneLow, round(pos * MIDI_NOTE_MAX));
+					break;
+				case CPart::MIDI_TARGET_INPUT_ZONE_HIGH:
+					UMT(part.m_In.ZoneHigh, round(pos * MIDI_NOTE_MAX));
+					break;
 				case CPart::MIDI_TARGET_INPUT_TRANSPOSE:
 					UMT(part.m_In.Transpose, round((pos * 2 - 1) * OCTAVE));
 					break;
 				case CPart::MIDI_TARGET_INPUT_VEL_OFFSET:
 					UMT(part.m_In.VelOffset, round((pos * 2 - 1) * MIDI_NOTE_MAX));
+					break;
+				case CPart::MIDI_TARGET_INPUT_NON_DIATONIC:
+					UMT(part.m_In.NonDiatonic, NormParamToEnum(pos, CPart::INPUT::NON_DIATONIC_RULES));
+					break;
+				case CPart::MIDI_TARGET_INPUT_NOTE:
+					{
+						CNote	note(round(pos * MIDI_NOTE_MAX));
+						int	iRule = part.m_In.NonDiatonic;
+						if (iRule == CPart::INPUT::NDR_DISABLE
+						&& !ApplyNonDiatonicRule(iRule, note))
+							continue;
+						CNote	PrevNote = m_PartState[iPart].m_CtrlrInputNote;
+						if (note != PrevNote) {
+							OnNoteOff(Inst, PrevNote);
+							OnNoteOn(Inst, note, 64);
+							m_PartState[iPart].m_CtrlrInputNote = note;
+						}
+					}
 					break;
 				case CPart::MIDI_TARGET_OUTPUT_PATCH:
 					UMT(part.m_Out.Patch, round(pos * MIDI_NOTE_MAX));
@@ -682,6 +751,7 @@ void CEngine::OnTimeChange()
 		int	ticks = m_Patch.m_PPQ * 4 / m_Song.GetMeter().m_Denominator;
 		ASSERT(ticks > 0);	// insufficient resolution
 		m_TicksPerBeat = max(ticks, 1);	// avoid divide by zero
+		m_TicksPerMeasure = m_TicksPerBeat * m_Song.GetMeter().m_Numerator;
 		m_Section.OnTimeChange(m_TicksPerBeat);
 	}
 	int	parts = m_PartState.GetSize();
@@ -689,23 +759,36 @@ void CEngine::OnTimeChange()
 		m_PartState[iPart].OnTimeChange(m_Patch.m_Part[iPart], m_Patch.m_PPQ);
 }
 
-CString CEngine::GetTickString() const
+CString CEngine::GetTickString(int Tick) const
 {
 	CString	s;
 	if (!m_Song.IsEmpty()) {
-		int	iTick = m_Tick;	// current position is volatile, so only read it once
 		CSong::CMeter	meter = m_Song.GetMeter();
 		int	MeasureNum, BeatNum;
-		if (iTick >= 0) {
-			int	iBeat = iTick / m_TicksPerBeat;
-			MeasureNum = iBeat / meter.m_Numerator + 1;
-			BeatNum = CNote::Mod(iBeat, meter.m_Numerator) + 1;
+		if (Tick >= 0) {
+			int	Beat = Tick / m_TicksPerBeat;
+			MeasureNum = Beat / meter.m_Numerator + 1;
+			BeatNum = CNote::Mod(Beat, meter.m_Numerator) + 1;
 		} else {
-			int	iBeat = (iTick + 1) / m_TicksPerBeat;
-			MeasureNum = iBeat / meter.m_Numerator;
-			BeatNum = CNote::Mod(iBeat - 1, meter.m_Numerator) + 1;
+			int	Beat = (Tick + 1) / m_TicksPerBeat;
+			MeasureNum = Beat / meter.m_Numerator;
+			BeatNum = CNote::Mod(Beat - 1, meter.m_Numerator) + 1;
 		}
-		int	TickRem = CNote::Mod(iTick, m_TicksPerBeat);
+		int	TickRem = CNote::Mod(Tick, m_TicksPerBeat);
+		s.Format(_T("%d:%d:%03d"), MeasureNum, BeatNum, TickRem);
+	}
+	return(s);
+}
+
+CString CEngine::GetTickSpanString(int TickSpan) const
+{
+	CString	s;
+	if (!m_Song.IsEmpty() && TickSpan >= 0) {
+		CSong::CMeter	meter = m_Song.GetMeter();
+		int	Beat = TickSpan / m_TicksPerBeat;
+		int	MeasureNum = Beat / meter.m_Numerator;
+		int	BeatNum = CNote::Mod(Beat, meter.m_Numerator);
+		int	TickRem = CNote::Mod(TickSpan, m_TicksPerBeat);
 		s.Format(_T("%d:%d:%03d"), MeasureNum, BeatNum, TickRem);
 	}
 	return(s);
@@ -1026,8 +1109,7 @@ CNote CEngine::GetBassNote(CNote Note, int PartIdx) const
 	iNote += iShift;
 	iNote = CNote::Mod(iNote, CDiatonic::DEGREES);
 	CNote	OutNote = ChordScale[iNote];
-	if (part.m_Bass.Chromatic)
-		OutNote += Deviation;
+	OutNote += Deviation;	// compensate for non-diatonic input
 	// if root above or equal normalized lowest note
 	CNote	root(ChordScale[iShift]);
 	if (root >= NormLowestNote) {
@@ -1058,14 +1140,14 @@ void CEngine::SetBassApproachTarget(int PartIdx)
 	int	NowBeat = NowTick / m_TicksPerBeat % m_Song.GetBeatCount();
 	int	iChord = m_Song.GetChordIndex(NowBeat);
 	int	BeatsToNextChord = m_Song.GetStartBeat(iChord) 
-		+ m_Song.GetChord(iChord).m_Duration - NowBeat;
+		+ GetChord(iChord).m_Duration - NowBeat;
 	iChord = m_Song.GetNextChord(iChord);	// proceed to next chord
 	// initial target is next chord; compute distance to it in ticks
 	int	TicksToTarget = BeatsToNextChord * m_TicksPerBeat - NowRem;
 	CPartState&	ps = m_PartState[PartIdx];
 	// if distance to next chord is within harmonic anticipation window
 	if (TicksToTarget <= ps.m_Anticipation) {
-		TicksToTarget += m_Song.GetChord(iChord).m_Duration * m_TicksPerBeat;
+		TicksToTarget += GetChord(iChord).m_Duration * m_TicksPerBeat;
 		iChord = m_Song.GetNextChord(iChord);	// proceed to next chord
 	}
 	int	quant = ShiftBySigned(m_Song.GetMeter().m_Numerator, 
@@ -1075,7 +1157,7 @@ void CEngine::SetBassApproachTarget(int PartIdx)
 		// try to find suitably aligned chord, but limit iterations
 		while (m_Song.GetStartBeat(iChord) % quant && SkipBeats < quant) {
 //			_tprintf(_T("skipping %s\n"), m_Song.GetChordName(iChord));
-			SkipBeats += m_Song.GetChord(iChord).m_Duration;
+			SkipBeats += GetChord(iChord).m_Duration;
 			iChord = m_Song.GetNextChord(iChord);	// proceed to next chord
 		}
 		TicksToTarget += SkipBeats * m_TicksPerBeat;	// skip unaligned chords
@@ -1153,15 +1235,40 @@ inline void CEngine::SortChord(CScale& Chord, int ArpOrder, bool& Descending)
 	}
 }
 
+bool CEngine::ApplyNonDiatonicRule(int Rule, CNote& Note)
+{
+	switch (Rule) {
+	case CPart::INPUT::NDR_QUANTIZE:
+		Note = CDiatonic::Quantize(Note);
+		break;
+	case CPart::INPUT::NDR_DISABLE:
+		if (!CDiatonic::IsDiatonic(Note.Normal()))
+			return(FALSE);	// disable non-diatonic input note
+		break;
+	case CPart::INPUT::NDR_SKIP:
+		// map diatonic scale to chromatic scale; offset so middle C is correct
+		Note -= CDiatonic::DEGREES * 3 + 4;
+		if (Note < 0)	// if input note is negative
+			return(FALSE);	// reject it
+		Note = CDiatonic::Chromaticize(Note);
+		break;
+	}
+	return(TRUE);
+}
+
 inline void CEngine::OnNoteOn(CMidiInst Inst, CNote Note, int Vel)
 {
 //	_tprintf(_T("OnNoteOn %d:%d %s %d\n"), Inst.Port, Inst.Chan, Note.MidiName(), Vel);
 	int	parts = GetPartCount();
 	for (int iPart = 0; iPart < parts; iPart++) {
 		const CPart&	part = m_Patch.m_Part[iPart];
-		if (Inst == part.m_In.Inst && part.m_Enable
-		&& Note >= part.m_In.ZoneLow && Note <= part.m_In.ZoneHigh) {
+		if (part.NoteMatches(Inst, Note)) {	// if input note matches part's criteria
 			CNote	TransNote = Note + part.m_In.Transpose;
+			int	iRule = part.m_In.NonDiatonic;
+			if (iRule != CPart::INPUT::NDR_ALLOW) {	// if non-diatonic rule
+				if (!ApplyNonDiatonicRule(iRule, TransNote))
+					continue;	// suppress input note
+			}
 			if (TransNote < 0 || TransNote > MIDI_NOTE_MAX)
 				continue;	// transposed note out of range, so skip it
 			Vel += part.m_In.VelOffset;
@@ -1409,8 +1516,7 @@ inline int CEngine::GetChordIndex(int Tick) const
 	if (Tick < 0)	// if before start of song
 		return(-1);
 	int	iBeat = Tick / m_TicksPerBeat;	// convert tick to beat
-	// if beat outside current section
-	if (iBeat < m_Section.m_Start || iBeat >= m_Section.m_Start + m_Section.m_Length)
+	if (!m_Section.ContainsBeat(iBeat))	// if beat outside current section
 		iBeat = WrapBeat(iBeat);	// handle beat wraparound; non-inline method
 	return(m_Song.GetChordIndex(iBeat));	// convert beat to chord index
 }
@@ -1450,7 +1556,7 @@ void CEngine::MakeHarmony()
 		int	chords = m_Song.GetChordCount();
 		SetHarmonyCount(chords);
 		for (int iChord = 0; iChord < chords; iChord++)	// for each chord
-			GetHarmony(m_Song.GetChord(iChord), m_Harmony[iChord]);
+			GetHarmony(GetChord(iChord), m_Harmony[iChord]);
 	}
 }
 
@@ -1469,10 +1575,8 @@ inline void CEngine::TimerWork()
 		bool	IsChordChange = FALSE;
 		if (IsPlaying() && !IsPaused()) {	// if time is running
 			if (m_Patch.m_Metronome.Enable) {
-				if (!(m_Tick % m_Patch.m_PPQ)) {	// if on metronome beat
-					int	TicksPerMeasure = m_TicksPerBeat * m_Song.GetMeter().m_Numerator;
-					OutputMetronome(!(m_Tick % TicksPerMeasure));
-				}
+				if (!(m_Tick % m_Patch.m_PPQ))	// if on metronome beat
+					OutputMetronome(!(m_Tick % m_TicksPerMeasure));
 			}
 			if (!IsLeadIn()) {	// if not doing lead-in
 				int	iChord = GetChordIndex(m_Tick);

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      22apr14	initial version
+		01		18may14	add m_PrevStartNote
 
 		piano control
 
@@ -46,6 +47,11 @@ public:
 		PS_ROTATE_LABELS	= 0x0010,	// rotate labels 90 degrees counter-clockwise;
 										// supported in horizontal orientation only
 	};
+	enum {	// key sources
+		KS_INTERNAL			= 0x01,		// key triggered internally
+		KS_EXTERNAL			= 0x02,		// key triggered externally 
+		KS_ALL				= KS_INTERNAL | KS_EXTERNAL,
+	};
 
 // Types
 
@@ -70,7 +76,7 @@ public:
 	int		FindKey(CPoint pt) const;
 	void	Update(CSize Size);
 	void	Update();
-	void	ReleaseAllKeys();
+	void	ReleaseKeys(UINT KeySourceMask);
 	void	RemoveKeyLabels();
 
 // Overrides
@@ -103,7 +109,7 @@ protected:
 		int		WhiteIndex;		// index of nearest white key; range is [0..6]
 		int		BlackOffset;	// if black key, its offset from C in Savard units
 	};
-	class CKey {
+	class CKey : public WObject {
 	public:
 		CRgn	m_Rgn;			// key's polygonal area
 		bool	m_IsBlack;		// true if key is black
@@ -146,6 +152,7 @@ protected:
 	HFONT	m_Font;				// window font handle, or NULL for key label font
 	CFont	m_KeyLabelFont;		// auto-scaled key label font; used if m_Font is NULL
 	int		m_StartNote;		// MIDI note number of keyboard's first note
+	int		m_PrevStartNote;	// previous start note, for detecting changes
 	int		m_Keys;				// total number of keys on keyboard
 	int		m_CurKey;			// index of current key, or -1 if none
 	CSize	m_BlackKeySize;		// black key dimensions, in pixels

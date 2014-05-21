@@ -17,7 +17,7 @@
 //
 
 #include "stdafx.h"
-#include "ChordEase.h"
+#include "Resource.h"
 #include "ThreadsDlg.h"
 #include "TlHelp32.h"
 
@@ -179,7 +179,7 @@ BOOL CThreadsDlg::OnInitDialog()
 		m_pOpenThread = reinterpret_cast<LPOPENTHREAD>(pFunc);
 	}
 #endif
-	SetIcon(theApp.LoadIcon(IDR_MAINFRAME), 0);
+	SetIcon(AfxGetApp()->LoadIcon(IDR_MAINFRAME), 0);
 	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 	m_List.SetColumns(COLUMNS, m_ColInfo);
 	m_List.InitControl(0, CReportCtrl::SORT_ARROWS);

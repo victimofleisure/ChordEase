@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		12sep13	initial version
+		01		15may14	replace bass chromatic with non-diatonic rules
  
 		part container
 
@@ -79,7 +80,6 @@ public:
 			TARGET_ALIGN_RANGE = TARGET_ALIGN_MAX - TARGET_ALIGN_MIN + 1,
 		};
 		int		LowestNote;		// lowest note
-		bool	Chromatic;		// true to enable chromaticism
 		bool	SlashChords;	// true if respecting non-root bass notes
 		double	ApproachLength;	// approach length, as fraction of whole note
 		int		TargetAlignment;	// alignment of triggered approach target,
@@ -91,11 +91,19 @@ public:
 		int		Velocity;		// autoplay velocity
 	};
 	struct INPUT {
+		enum {	// non-diatonic rules
+			NDR_ALLOW,			// normal operation, enabling chromaticism
+			NDR_QUANTIZE,		// input is quantized to nearest diatonic note
+			NDR_DISABLE,		// non-diatonic input notes are disabled
+			NDR_SKIP,			// non-diatonic input notes are skipped
+			NON_DIATONIC_RULES
+		};
 		MIDI_INST	Inst;		// MIDI instrument
 		int		ZoneLow;		// lowest input note
 		int		ZoneHigh;		// highest input note
 		int		Transpose;		// transposition, in half steps
 		int		VelOffset;		// input velocity offset
+		int		NonDiatonic;	// rule for handling non-diatonic notes; see enum
 	};
 	struct OUTPUT {
 		MIDI_INST	Inst;		// MIDI instrument
@@ -126,6 +134,7 @@ public:
 
 // Attributes
 	void	SetBaseInfo(const CBasePart& Part);
+	bool	NoteMatches(CMidiInst Inst, CNote Note) const;
 
 // Operations
 	bool	operator==(const CPart& Part) const;
@@ -168,6 +177,13 @@ inline bool CPart::operator!=(const CPart& Part) const
 inline bool CPart::CompareTargets(const CPart& Part) const
 {
 	return(!memcmp(&m_MidiTarget, &Part.m_MidiTarget, sizeof(m_MidiTarget)));	// binary comparison
+}
+
+inline bool CPart::NoteMatches(CMidiInst Inst, CNote Note) const
+{
+	// true if matching port and channel, and part enabled, and note within zone
+	return(Inst == m_In.Inst && m_Enable
+		&& Note >= m_In.ZoneLow && Note <= m_In.ZoneHigh);
 }
 
 typedef CArrayEx<CPart, CPart&> CPartArray;

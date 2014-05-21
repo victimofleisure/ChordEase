@@ -43,7 +43,7 @@ void CPartPageDlg::UpdateEngine(UINT CtrlID)
 {
 	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
 	if (CPartsBar::IsValidPartIdx(iPart)) {	// if current part is valid
-		theApp.GetMain()->NotifyEdit(static_cast<WORD>(CtrlID), 
+		theApp.GetMain()->NotifyEdit(INT64TO32(CtrlID), 
 			UCODE_PART, CUndoable::UE_COALESCE);
 		CPart	part(gEngine.GetPart(iPart));
 		GetPart(part);

@@ -10,6 +10,7 @@
         00      28feb91 initial version
 		01		16aug13	start over
 		02		16apr14	add section names; refactor command parsing
+ 		03		01may14	add write
  
 		song container
 
@@ -22,6 +23,7 @@
 #include "Scale.h"
 
 class CTokenFile;
+class CSongState;
 
 class CSong : public WObject {
 public:
@@ -64,12 +66,21 @@ public:
 	typedef CArrayEx<CChordInfo, CChordInfo&> CChordInfoArray;
 	class CMeter {	// binary copy OK
 	public:
+		enum {
+			MIN_BEATS = 1,		// minimum numerator
+			MAX_BEATS = 256,	// maximum numerator
+			MIN_UNIT_EXP = 0,	// minimum denominator exponent
+			MAX_UNIT_EXP = 6,	// maximum denominator exponent
+			MIN_UNIT = 1 << MIN_UNIT_EXP,	// minimum denominator
+			MAX_UNIT = 1 << MAX_UNIT_EXP,	// maximum denominator
+		};
 		CMeter();
 		CMeter(int Numerator, int Denominator);
 		bool	operator==(const CMeter& Meter) const;
 		bool	operator!=(const CMeter& Meter) const;
 		int		m_Numerator;
 		int		m_Denominator;
+		bool	IsValidMeter() const;
 	};
 	class CSection {	// binary copy OK
 	public:
@@ -82,8 +93,23 @@ public:
 		int		m_Length;		// length, in beats
 		int		m_Repeat;		// repeat count, or zero for indefinite
 		UINT	m_Flags;		// optional flags; see enum above
+		int		End() const;
+		bool	ContainsBeat(int Beat) const;
+		bool	Implicit() const;
+		bool	Explicit() const;
 	};
-	typedef CArrayEx<CSection, CSection&> CSectionArray;
+	class CSectionArray : public CArrayEx<CSection, CSection&> {
+	public:
+		int		FindBeat(int Beat) const;
+		int		FindImplicit() const;
+	};
+	class CProperties {	// binary copy OK
+	public:
+		CMeter	m_Meter;		// meter
+		CNote	m_Key;			// key signature
+		int		m_Transpose;	// transposition in half steps
+		double	m_Tempo;		// tempo in beats per minute
+	};
 
 // Attributes
 	CMeter	GetMeter() const;
@@ -93,7 +119,12 @@ public:
 	bool	IsEmpty() const;
 	int		GetChordCount() const;
 	int		GetBeatCount() const;
+	bool	IsValid(const CChord& Chord) const;
+	bool	IsValid(const CChordArray& Chord) const;
 	const CChord&	GetChord(int ChordIdx) const;
+	bool	SetChord(int ChordIdx, const CChord& Chord);
+	void	GetState(CSongState& State) const;
+	void	SetState(const CSongState& State);
 	int		GetChordIndex(int BeatIdx) const;
 	int		GetStartBeat(int ChordIdx) const;
 	int		GetNextChord(int ChordIdx) const;
@@ -107,6 +138,8 @@ public:
 	const CSection&	GetSection(int SectionIdx) const;
 	CString	GetSectionName(int SectionIdx) const;
 	int		FindSection(int BeatIdx) const;
+	void	GetProperties(CProperties& Props) const;
+	void	SetProperties(const CProperties& Props);
 
 // Operations
 	CString	MakeChordName(CNote Root, CNote Bass, int Type, CNote Key = C) const;
@@ -116,12 +149,15 @@ public:
 	bool	ReadChordDictionary(LPCTSTR Path);
 	void	CreateDefaultChordDictionary();
 	int		FindChordType(LPCTSTR Name) const;
+	int		ParseChordSymbol(CString Symbol, CChord& Chord) const;
 	bool	Read(LPCTSTR Path);
+	bool	Write(LPCTSTR Path);
 	void	DumpSections() const;
+	void	DumpChords(const CChordArray& Chord) const;
+	void	DumpChords() const;
+	static	int		CountBeats(const CChordArray& Chord);
 
 protected:
-// Types
-
 // Constants
 	enum {	// commands
 		#define SONGCOMMANDDEF(name, str) CMD_##name,
@@ -152,6 +188,8 @@ protected:
 	void	ReportError(CTokenFile& File, int MsgFmtID, ...);
 	int		FindCommand(CString Command) const;
 	void	ClosePrevSection(int Beats);
+	void	MakeBeatMap(int Beats);
+	bool	UpdateDuration(int ChordIdx, int DurDelta);
 };
 
 inline CSong::CChord::CChord()
@@ -190,6 +228,26 @@ inline CSong::CSection::CSection(int Start, int Length, int Repeat, UINT Flags)
 	m_Length = Length;
 	m_Repeat = Repeat;
 	m_Flags = Flags;
+}
+
+inline int CSong::CSection::End() const
+{
+	return(m_Start + m_Length - 1);
+}
+
+inline bool CSong::CSection::ContainsBeat(int Beat) const
+{
+	return(Beat >= m_Start && Beat < m_Start + m_Length);
+}
+
+inline bool CSong::CSection::Implicit() const
+{
+	return((m_Flags & F_IMPLICIT) != 0);
+}
+
+inline bool CSong::CSection::Explicit() const
+{
+	return(!Implicit());
 }
 
 inline bool CSong::CMeter::operator==(const CMeter& Meter) const

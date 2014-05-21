@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      22apr14	initial version
+		01		18may14	in Update, preserve key states
 
 		piano control
 
@@ -93,6 +94,7 @@ CPianoCtrl::CPianoCtrl()
 {
 	m_Font = NULL;
 	m_StartNote = 0;
+	m_PrevStartNote = 0;
 	m_Keys = 12;
 	m_CurKey = -1;
 	m_BlackKeySize = CSize(0, 0);
@@ -127,15 +129,24 @@ void CPianoCtrl::Update(CSize Size)
 	// compute number of white keys
 	int	nWhites = 0;
 	int	iKey;
-	int	nKeys = GetKeyCount();
+	int	nKeys = m_Key.GetSize();
+	for (iKey = 0; iKey < nKeys; iKey++)	// for each key array element
+		m_Key[iKey].m_Rgn.DeleteObject();	// delete key's polygonal area
+	nKeys = GetKeyCount();
+	m_Key.SetSize(nKeys);	// resize key array, possibly reallocating it
 	for (iKey = 0; iKey < nKeys; iKey++) {	// for each key
 		int	iKeyInfo = (m_StartNote + iKey) % NOTES;	// account for start note
 		if (!m_KeyInfo[iKeyInfo].BlackOffset)	// if key is black
 			nWhites++;
 	}
+	if (m_StartNote != m_PrevStartNote) {	// if start note changed
+		for (iKey = 0; iKey < nKeys; iKey++) {	// for each key
+			m_Key[iKey].m_IsPressed = FALSE;	// reset key states
+			m_Key[iKey].m_IsExternal = FALSE;
+		}
+		m_PrevStartNote = m_StartNote;
+	}
 	// build array of key regions, one per key
-	m_Key.RemoveAll();	// delete all regions
-	m_Key.SetSize(m_Keys);
 	double	WhiteWidth;
 	CSize	BlackSize;
 	DWORD	dwStyle = GetStyle();
@@ -201,7 +212,6 @@ void CPianoCtrl::Update(CSize Size)
 	if (dwStyle & (PS_SHOW_SHORTCUTS | PS_USE_SHORTCUTS)) {
 		memset(m_ScanCodeToKey, -1, sizeof(m_ScanCodeToKey));
 		int	iScanCode = 0;
-		int	nKeys = GetKeyCount();
 		for (int iKey = 0; iKey < nKeys; iKey++) {	// for each key
 			// if key is white, and first key or previous key is white
 			if (!IsBlack(iKey) && (!iKey || !IsBlack(iKey - 1)))
@@ -356,12 +366,14 @@ bool CPianoCtrl::IsShorcutScanCode(int ScanCode) const
 	return(FALSE);
 }
 
-void CPianoCtrl::ReleaseAllKeys()
+void CPianoCtrl::ReleaseKeys(UINT KeySourceMask)
 {
 	int	nKeys = GetKeyCount();
 	for (int iKey = 0; iKey < nKeys; iKey++) {	// for each key
 		const CKey&	key = m_Key[iKey];
-		if (key.m_IsPressed && !key.m_IsExternal)	// if key pressed by us
+		UINT	KeyBit = key.m_IsExternal ? KS_EXTERNAL : KS_INTERNAL;
+		// if key pressed and its source matches caller's mask
+		if (key.m_IsPressed && (KeyBit & KeySourceMask))
 			SetPressed(iKey, FALSE);	// reset key to avoid stuck notes
 	}
 }

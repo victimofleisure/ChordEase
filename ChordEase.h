@@ -10,6 +10,7 @@
         00      12sep13	initial version
         01      16apr14	add help
 		02		22apr14	add OnToolTipNeedText
+		03		30apr14	add patch path
 
 		ChordEase application
  
@@ -32,6 +33,11 @@
 #include "resource.h"       // main symbols
 #include "WinAppCK.h"
 #include "Engine.h"
+
+// MFC6 may not define DWORD_PTR, needed by WinHelpInternal override
+#if _MFC_VER < 0x0700 && !defined(_WIN64) && !defined(DWORD_PTR)
+#define DWORD_PTR DWORD	// 32-bit only
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // CChordEaseApp:
@@ -63,11 +69,13 @@ public:
 
 // Public data
 	CAppEngine	m_Engine;		// one and only engine
+	CString		m_PatchPath;	// patch file path specified on command line
 
 // Attributes
 	CMainFrame	*GetMain();
 	CString	GetDataFolderPath();
 	CString	MakeDataFolderPath(LPCTSTR FileName, bool DefaultToAppFolder = FALSE);
+	static	bool	IsPatchPath(LPCTSTR Path);
 
 // Operations
 	bool	HandleDlgKeyMsg(MSG* pMsg);
@@ -76,7 +84,7 @@ public:
 	static	void	SnakeToUpperCamelCase(CString& str);
 	void	MakeAbsolutePath(CString& Path);
 	static	void	ValidateFolder(CDataExchange* pDX, int CtrlID, const CString& Path);
-	static	BOOL	OnToolTipNeedText(UINT id, NMHDR* pNMHDR);
+	BOOL	OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

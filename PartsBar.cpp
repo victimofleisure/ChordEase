@@ -72,7 +72,7 @@ void CPartsBar::SetPart(int PartIdx, const CPart& Part)
 
 void CPartsBar::OnListItemSelect(int PartIdx)
 {
-	ASSERT(PartIdx < GetItemCount());
+	ASSERT(PartIdx < GetPartCount());
 	if (PartIdx >= 0)
 		m_PageView->SetPart(gEngine.GetPart(PartIdx));
 	m_PageView->EnableControls(PartIdx >= 0);
@@ -218,7 +218,7 @@ int CPartsBar::GetInsertPos()
 	int	iItem = GetListCtrl().GetSelection();
 	if (iItem >= 0)
 		return(iItem);
-	return(GetItemCount());
+	return(GetPartCount());
 }
 
 CString CPartsBar::MakePartName() const

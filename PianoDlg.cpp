@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      22apr14	initial version
+		01		15may14	in UpdateKeyLabels, add non-diatonic rules
 
 		piano dialog
 
@@ -20,6 +21,7 @@
 #include "ChordEase.h"
 #include "PianoDlg.h"
 #include "Note.h"
+#include "Diatonic.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -73,9 +75,8 @@ void CPianoDlg::PlayNote(int Note, bool Enable)
 	if (Note < 0 || Note > MIDI_NOTE_MAX)	// if note outside MIDI range
 		return;	// ignore unplayable notes
 	MIDI_MSG	msg;
-	msg.stat = static_cast<BYTE>(NOTE_ON + m_State.Channel);
-	msg.p1 = static_cast<char>(Note);
-	msg.p2 = static_cast<char>(Enable ? m_State.Velocity : 0);
+	msg.dw = CEngineMidi::MakeMidiMsg(NOTE_ON, m_State.Channel,
+		Note, Enable ? m_State.Velocity : 0);
 	gEngine.InputMidi(m_State.Port, msg);
 }
 
@@ -123,13 +124,14 @@ void CPianoDlg::UpdateKeyLabelType()
 		m_Piano.ModifyStyle(CPianoCtrl::PS_SHOW_SHORTCUTS, 0);	// hide shortcuts
 		m_Piano.RemoveKeyLabels();
 		break;
-	case KL_SHORTCUT:
+	case KL_SHORTCUTS:
 		m_Piano.ModifyStyle(0, CPianoCtrl::PS_SHOW_SHORTCUTS);	// show shortcuts
 		m_Piano.Update();
 		break;
-	case KL_INPUT_NOTE:
-	case KL_OUTPUT_NOTE:
-	case KL_CHORD_TONE:
+	case KL_INPUT_NOTES:
+	case KL_OUTPUT_NOTES:
+	case KL_INTERVALS:
+	case KL_SCALE_TONES:
 		m_Piano.ModifyStyle(CPianoCtrl::PS_SHOW_SHORTCUTS, 0);	// hide shortcuts
 		UpdateKeyLabels();
 		break;
@@ -141,7 +143,7 @@ void CPianoDlg::UpdateKeyLabelType()
 void CPianoDlg::UpdateKeyLabels()
 {
 	switch (m_State.KeyLabelType) {
-	case KL_INPUT_NOTE:
+	case KL_INPUT_NOTES:
 		{
 			int	nKeys = m_Piano.GetKeyCount();
 			m_KeyLabel.SetSize(nKeys);
@@ -161,8 +163,9 @@ void CPianoDlg::UpdateKeyLabels()
 			m_Piano.SetKeyLabels(m_KeyLabel);
 		}
 		break;
-	case KL_OUTPUT_NOTE:
-	case KL_CHORD_TONE:
+	case KL_OUTPUT_NOTES:
+	case KL_INTERVALS:
+	case KL_SCALE_TONES:
 		{
 			enum {	// reserved note values used for mapping exceptions
 				NOTE_UNMAPPED = -1,			// note isn't mapped
@@ -177,13 +180,18 @@ void CPianoDlg::UpdateKeyLabels()
 			for (int iKey = 0; iKey < nKeys; iKey++) {	// for each key
 				CNote	InNote(StartNote + iKey);	// convert key to input note
 				CNote	OutNote = NOTE_UNMAPPED;	// default to unmapped
+				// emulate behavior of CEngine::OnNoteOn
 				int	iPart;
 				for (iPart = 0; iPart < nParts; iPart++) {	// for each part
 					const CPart&	part = gEngine.GetPart(iPart);
-					// if piano note matches part's input criteria
-					if (inst == part.m_In.Inst && part.m_Enable
-					&& InNote >= part.m_In.ZoneLow && InNote <= part.m_In.ZoneHigh) {
+					// if input note matches part's criteria
+					if (part.NoteMatches(inst, InNote)) {
 						CNote	TransNote = InNote + part.m_In.Transpose;
+						int	iRule = part.m_In.NonDiatonic;
+						if (iRule != CPart::INPUT::NDR_ALLOW) {	// if non-diatonic rule
+							if (!CEngine::ApplyNonDiatonicRule(iRule, TransNote))
+								continue;	// suppress input note
+						}
 						if (TransNote < 0 || TransNote > MIDI_NOTE_MAX)
 							continue;	// transposed note out of range, so skip it
 						switch (part.m_Function) {
@@ -207,15 +215,26 @@ void CPianoDlg::UpdateKeyLabels()
 				if (OutNote >= 0) {	// if input note is mapped to a single note
 					int	iHarmony = gEngine.GetPartHarmonyIndex(iPart);
 					const CEngine::CHarmony&	harm = gEngine.GetHarmony(iHarmony);
-					if (m_State.KeyLabelType == KL_CHORD_TONE) {
+					switch (m_State.KeyLabelType) {
+					case KL_OUTPUT_NOTES:
+						if (m_State.ShowOctaves)	// if showing octaves
+							label = OutNote.MidiName(harm.m_Key);
+						else	// not showing octaves
+							label = OutNote.Name(harm.m_Key);
+						break;
+					case KL_INTERVALS:
 						label = harm.m_ChordScale[0].IntervalName(
 							OutNote, harm.m_ChordScale.GetTonality());
-					} else {	// show output note
-						int	KeySig = harm.m_Key;
-						if (m_State.ShowOctaves)	// if showing octaves
-							label = OutNote.MidiName(KeySig);
-						else	// not showing octaves
-							label = OutNote.Name(KeySig);
+						break;
+					case KL_SCALE_TONES:
+						{
+							int iTone = harm.m_ChordScale.Find(OutNote.Normal());
+							if (iTone >= 0)	// if output note found in chord scale
+								label.Format(_T("%d"), iTone + 1);	// one-origin
+							else	// output note isn't a scale tone
+								label.Empty();
+						}
+						break;
 					}
 				} else {	// input note isn't mapped one-to-one
 					if (OutNote == NOTE_MAPPED_TO_CHORD)	// if mapped to chord
@@ -239,8 +258,9 @@ void CPianoDlg::TimerHook()
 {
 	// key label types that should update in sync with chord changes
 	switch (m_State.KeyLabelType) {
-	case KL_OUTPUT_NOTE:
-	case KL_CHORD_TONE:
+	case KL_OUTPUT_NOTES:
+	case KL_INTERVALS:
+	case KL_SCALE_TONES:
 		UpdateKeyLabels();
 		break;
 	}
@@ -259,6 +279,11 @@ void CPianoDlg::OnMidiIn(int Port, DWORD MidiMsg)
 			}
 		}
 	}
+}
+
+void CPianoDlg::OnPanic()
+{
+	m_Piano.ReleaseKeys(CPianoCtrl::KS_ALL);
 }
 
 void CPianoDlg::DoDataExchange(CDataExchange* pDX)
@@ -299,8 +324,8 @@ BEGIN_MESSAGE_MAP(CPianoDlg, CModelessDlg)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnToolTipNeedText)
 	ON_MESSAGE(UWM_PIANOKEYCHANGE, OnPianoKeyChange)
-	ON_COMMAND_RANGE(ID_PIANO_KEY_LABEL_TYPE, ID_PIANO_KEY_LABEL_TYPE5, OnKeyLabelType)
-	ON_UPDATE_COMMAND_UI_RANGE(ID_PIANO_KEY_LABEL_TYPE, ID_PIANO_KEY_LABEL_TYPE5, OnUpdateKeyLabelType)
+	ON_COMMAND_RANGE(ID_PIANO_KEY_LABEL_TYPE, ID_PIANO_KEY_LABEL_TYPE6, OnKeyLabelType)
+	ON_UPDATE_COMMAND_UI_RANGE(ID_PIANO_KEY_LABEL_TYPE, ID_PIANO_KEY_LABEL_TYPE6, OnUpdateKeyLabelType)
 	ON_WM_EXITMENULOOP()
 END_MESSAGE_MAP()
 
@@ -322,7 +347,7 @@ BOOL CPianoDlg::OnInitDialog()
 	UINT	dwStyle = WS_CHILD | WS_VISIBLE	// initial style
 		| CPianoCtrl::PS_HIGHLIGHT_PRESS
 		| CPianoCtrl::PS_USE_SHORTCUTS;
-	if (m_State.KeyLabelType == KL_SHORTCUT)
+	if (m_State.KeyLabelType == KL_SHORTCUTS)
 		dwStyle |= CPianoCtrl::PS_SHOW_SHORTCUTS;
 	if (m_State.RotateLabels)
 		dwStyle |= CPianoCtrl::PS_ROTATE_LABELS;
@@ -334,7 +359,7 @@ BOOL CPianoDlg::OnInitDialog()
 	m_Piano.SetRange(m_State.StartNote, m_State.KeyCount);
 	if (!m_Piano.Create(dwStyle, rPiano, this, 0))
 		AfxThrowResourceException();
-	if (m_State.KeyLabelType > KL_SHORTCUT)
+	if (m_State.KeyLabelType > KL_SHORTCUTS)
 		UpdateKeyLabelType();
 	EnableToolTips();
 
@@ -381,12 +406,13 @@ void CPianoDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 {
 	CModelessDlg::OnActivate(nState, pWndOther, bMinimized);
 	if (nState == WA_INACTIVE)	// if deactivated
-		m_Piano.ReleaseAllKeys();	// release all keys to avoid stuck notes
+		// release internally triggered keys to avoid stuck notes
+		m_Piano.ReleaseKeys(CPianoCtrl::KS_INTERNAL);
 }
 
 BOOL CPianoDlg::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 {
-	return CChordEaseApp::OnToolTipNeedText(id, pNMHDR);
+	return theApp.OnToolTipNeedText(id, pNMHDR, pResult);
 }
 
 LRESULT CPianoDlg::OnPianoKeyChange(WPARAM wParam, LPARAM lParam)
@@ -423,7 +449,7 @@ void CPianoDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 	CPoint	pt(point);
 	ScreenToClient(&pt);
 	CMenu	menu;
-	menu.LoadMenu(IDR_PIANO_CTX);
+	menu.LoadMenu(IDM_PIANO_CTX);
 	CMenu	*mp = menu.GetSubMenu(0);
 	CPersistDlg::UpdateMenu(this, mp);
 	mp->TrackPopupMenu(0, point.x, point.y, this);
@@ -552,5 +578,3 @@ void CPianoDlg::OnExitMenuLoop(BOOL bIsTrackPopupMenu)
 	if (bIsTrackPopupMenu)	// if exiting context menu, restore status idle message
 		AfxGetMainWnd()->SendMessage(WM_SETMESSAGESTRING, AFX_IDS_IDLEMESSAGE, 0);
 }
-
-

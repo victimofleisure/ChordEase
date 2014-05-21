@@ -94,13 +94,19 @@ public:
 	void	SetCurPart(int PartIdx);
 	const CSong&	GetSong() const;
 	CNote	GetSongKey() const;
+	const CSong::CChord&	GetChord(int ChordIdx) const;
+	bool	SetChord(int ChordIdx, const CSong::CChord& Chord);
 	int		GetTick() const;
 	void	SetTick(int Tick);
-	CString	GetTickString() const;
 	int		GetBeat() const;
 	void	SetBeat(int Beat);
 	int		GetTicksPerBeat() const;
+	int		GetTicksPerMeasure() const;
+	int		GetTickCount() const;
 	int		GetElapsedTime() const;
+	CString	GetTickString() const;
+	CString	GetTickString(int Tick) const;
+	CString GetTickSpanString(int TickSpan) const;
 	void	SetRepeat(bool Enable);
 	const CSong::CSection&	GetCurSection() const;
 	int		GetSectionIndex() const;
@@ -112,10 +118,15 @@ public:
 	int		GetHarmonyIndex() const;
 	int		GetPartHarmonyIndex(int PartIdx) const;
 	void	GetNoteMap(CNoteMapArray& NoteMap);
+	void	GetSongState(CSongState& State) const;
+	bool	SetSongState(const CSongState& State);
+	void	GetSongProperties(CSong::CProperties& Props) const;
+	bool	SetSongProperties(const CSong::CProperties& Props);
 
 // Operations
 	bool	ReadChordDictionary(LPCTSTR Path);
 	bool	ReadSong(LPCTSTR Path);
+	bool	WriteSong(LPCTSTR Path);
 	bool	ResetSong();
 	virtual	bool	Run(bool Enable);
 	bool	Play(bool Enable, bool Record = FALSE);
@@ -127,6 +138,7 @@ public:
 	void	Panic();
 	bool	OnDeviceChange();
 	void	InputMidi(int Port, MIDI_MSG Msg);
+	static	bool	ApplyNonDiatonicRule(int Rule, CNote& Note);
 
 protected:
 // Types
@@ -166,6 +178,7 @@ protected:
 		bool	m_BassApproachTrigger;	// true if triggered bass approach in progress
 		volatile	int		m_BassTargetChord;	// triggered bass approach target chord index
 		volatile	int		m_BassTargetTime;	// triggered bass approach target time, in elapsed ticks
+		CNote	m_CtrlrInputNote;	// note input via continuous controller
 		void	Reset();
 		void	OnTimeChange(const CPart& Part, int PPQ);
 		static	int		DurationToTicks(double Duration, int PPQ);
@@ -226,6 +239,7 @@ protected:
 	volatile int	m_Tick;		// current position in ticks
 	volatile int	m_Elapsed;	// elapsed time since start of play, in ticks
 	int		m_TicksPerBeat;		// number of ticks per beat
+	int		m_TicksPerMeasure;	// number of ticks per measure
 	int		m_StartTick;		// starting position, in elapsed ticks
 	bool	m_IsRunning;		// true if engine is running
 	bool	m_IsPlaying;		// true if engine is playing
@@ -285,6 +299,7 @@ protected:
 	void	SetHarmonyCount(int Count);
 	void	MakeHarmony();
 	void	OnNewSong();
+	void	OnSongEdit();
 	void	OnMidiIn(int Port, MIDI_MSG Msg);
 	void	TimerWork();
 	bool	RunTimer(bool Enable);
@@ -424,7 +439,17 @@ inline const CSong& CEngine::GetSong() const
 
 inline CNote CEngine::GetSongKey() const
 {
-	return(GetSong().GetKey() + m_Patch.m_Transpose);	// not normalized
+	return(m_Song.GetKey() + m_Patch.m_Transpose);	// not normalized
+}
+
+inline const CSong::CChord& CEngine::GetChord(int ChordIdx) const
+{
+	return(m_Song.GetChord(ChordIdx));
+}
+
+inline bool CEngine::WriteSong(LPCTSTR Path)
+{
+	return(m_Song.Write(Path));
 }
 
 inline int CEngine::GetTick() const
@@ -442,9 +467,24 @@ inline int CEngine::GetTicksPerBeat() const
 	return(m_TicksPerBeat);
 }
 
+inline int CEngine::GetTicksPerMeasure() const
+{
+	return(m_TicksPerMeasure);
+}
+
+inline int CEngine::GetTickCount() const
+{
+	return(m_Song.GetBeatCount() * m_TicksPerBeat);
+}
+
 inline int CEngine::GetElapsedTime() const
 {
 	return(m_Elapsed);
+}
+
+inline CString CEngine::GetTickString() const
+{
+	return(GetTickString(m_Tick));
 }
 
 inline const CSong::CSection& CEngine::GetCurSection() const
@@ -480,6 +520,16 @@ inline int CEngine::GetHarmonyIndex() const
 inline int CEngine::GetPartHarmonyIndex(int PartIdx) const
 {
 	return(m_PartState[PartIdx].m_HarmIdx);
+}
+
+inline void CEngine::GetSongState(CSongState& State) const
+{
+	m_Song.GetState(State);
+}
+
+inline void CEngine::GetSongProperties(CSong::CProperties& Props) const
+{
+	m_Song.GetProperties(Props);
 }
 
 #define STOP_ENGINE(Engine)							\

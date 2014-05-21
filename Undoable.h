@@ -11,6 +11,7 @@
         01      22nov06 derive from WObject
 		02		18mar08	remove key support
 		03		28may10	add CtrlID to notify and cancel
+		04		01may14	widen CtrlID and Code to 32-bit
 
         undoable edit interface
  
@@ -44,8 +45,8 @@ public:
 	bool	IsRedoing() const;
 
 // Operations
-	void	NotifyUndoableEdit(WORD CtrlID, WORD Code, UINT Flags = 0);
-	void	CancelUndoableEdit(WORD CtrlID, WORD Code);
+	void	NotifyUndoableEdit(int CtrlID, int Code, UINT Flags = 0);
+	void	CancelUndoableEdit(int CtrlID, int Code);
 	void	ClearUndoHistory();
 
 // Overridables
@@ -73,12 +74,12 @@ inline void CUndoable::SetUndoManager(CUndoManager *Mgr)
 	m_UndoManager = Mgr;
 }
 
-inline void CUndoable::NotifyUndoableEdit(WORD CtrlID, WORD Code, UINT Flags)
+inline void CUndoable::NotifyUndoableEdit(int CtrlID, int Code, UINT Flags)
 {
 	m_UndoManager->NotifyEdit(CtrlID, Code, Flags);
 }
 
-inline void CUndoable::CancelUndoableEdit(WORD CtrlID, WORD Code)
+inline void CUndoable::CancelUndoableEdit(int CtrlID, int Code)
 {
 	m_UndoManager->CancelEdit(CtrlID, Code);
 }

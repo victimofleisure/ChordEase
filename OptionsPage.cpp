@@ -67,5 +67,5 @@ LRESULT COptionsPage::OnKickIdle(WPARAM, LPARAM)
 
 BOOL COptionsPage::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 {
-	return CChordEaseApp::OnToolTipNeedText(id, pNMHDR);
+	return theApp.OnToolTipNeedText(id, pNMHDR, pResult);
 }

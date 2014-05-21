@@ -10,6 +10,7 @@
         00      12sep13	initial version
 		01		22apr14	add piano dialog
 		02		28apr14	in OnEngineNotify, add device state change handler
+		03		30apr14	add OnDropFiles
 
 		ChordEase main frame
  
@@ -295,7 +296,10 @@ bool CMainFrame::CreateEngine()
 		return(FALSE);
 	CString	ChordDictPath(theApp.MakeDataFolderPath(CHORD_DICTIONARY_FILE_NAME, TRUE));
 	gEngine.ReadChordDictionary(ChordDictPath);	// read chord dictionary
-	m_PatchDoc.New();	// initialize patch document
+	if (!theApp.m_PatchPath.IsEmpty())	// if patch specified on command line
+		OpenPatch(theApp.m_PatchPath);
+	else	// patch not specified
+		m_PatchDoc.New();	// initialize patch document
 	CPatch	patch;
 	CString	PatchPath(theApp.MakeDataFolderPath(PATCH_INI_FILE_NAME, TRUE));
 	if (PathFileExists(PatchPath)) {	// if patch file exists
@@ -439,8 +443,7 @@ void CMainFrame::OnSongPositionChange()
 	m_View->TimerHook();
 	int	pos = gEngine.GetTick();
 	if (pos != m_StatusCache.m_Pos) {
-		m_StatusBar.SetPaneText(SBP_POSITION, 
-			gEngine.GetTickString());
+		m_StatusBar.SetPaneText(SBP_POSITION, gEngine.GetTickString());
 		m_StatusCache.m_Pos = pos;
 	}
 }
@@ -454,7 +457,8 @@ void CMainFrame::UpdateHookMidiInput()
 
 void CMainFrame::UpdateHookMidiOutput()
 {
-	gEngine.SetHookMidiOutput(m_MidiOutputBar.IsWindowVisible() != 0);
+	gEngine.SetHookMidiOutput(m_MidiOutputBar.IsWindowVisible() != 0
+		|| m_OutputNotesBar.IsWindowVisible() != 0);
 }
 
 void CMainFrame::ApplyOptions(const COptionsInfo& PrevOpts, bool ForceUpdate)
@@ -622,16 +626,8 @@ void CMainFrame::SaveUndoState(CUndoState& State)
 			State.SetObj(uip);
 		}
 		break;
-	case UCODE_SONG_EDIT:
-		{
-			CRefPtr<CSongEditUndoInfo>	uip;
-			uip.CreateObj();
-			CChordEaseDoc	*pDoc = m_View->GetDocument();
-			uip->m_Song = pDoc->GetSong();
-			uip->m_Path = pDoc->GetPathName();
-			State.SetObj(uip);
-		}
-		break;
+	default:
+		NODEFAULTCASE;
 	}
 }
 
@@ -726,15 +722,8 @@ void CMainFrame::RestoreUndoState(const CUndoState& State)
 			SetBasePatchAndParts(patch);
 		}
 		break;
-	case UCODE_SONG_EDIT:
-		{
-			const CSongEditUndoInfo	*uip = 
-				static_cast<CSongEditUndoInfo *>(State.GetObj());
-			CChordEaseDoc	*pDoc = m_View->GetDocument();
-			if (pDoc->GetPathName() == uip->m_Path)
-				pDoc->SetSong(uip->m_Song);
-		}
-		break;
+	default:
+		NODEFAULTCASE;
 	}
 }
 
@@ -788,18 +777,17 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CLOSE()
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
+	ON_WM_DROPFILES()
 	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
 	ON_COMMAND(ID_EDIT_CUT, OnEditCut)
-	ON_COMMAND(ID_EDIT_DELETE_PART, OnEditDeletePart)
-	ON_COMMAND(ID_EDIT_DESELECT, OnEditDeselect)
-	ON_COMMAND(ID_EDIT_INSERT_PART, OnEditInsertPart)
+	ON_COMMAND(ID_EDIT_DELETE, OnEditDelete)
+	ON_COMMAND(ID_EDIT_INSERT, OnEditInsert)
 	ON_COMMAND(ID_EDIT_OPTIONS, OnEditOptions)
 	ON_COMMAND(ID_EDIT_PASTE, OnEditPaste)
 	ON_COMMAND(ID_EDIT_REDO, OnEditRedo)
 	ON_COMMAND(ID_EDIT_RENAME, OnEditRename)
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
 	ON_COMMAND(ID_EDIT_UNDO, OnEditUndo)
-	ON_COMMAND(ID_FILE_EDIT, OnFileEdit)
 	ON_COMMAND(ID_MIDI_ASSIGNMENTS, OnMidiAssignments)
 	ON_COMMAND(ID_MIDI_CHASE_EVENTS, OnMidiChaseEvents)
 	ON_COMMAND(ID_MIDI_DEVICES, OnMidiDevices)
@@ -827,11 +815,11 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_TRANSPORT_REWIND, OnTransportRewind)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateEditCut)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE_PART, OnUpdateEditDeletePart)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_DESELECT, OnUpdateEditDeselect)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditDelete)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdateEditPaste)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_RENAME, OnUpdateEditRename)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, OnUpdateEditSelectAll)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_CHASE_EVENTS, OnUpdateMidiChaseEvents)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_DEVICES, OnUpdateMidiDevices)
@@ -854,6 +842,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_VIEW_PATCH, OnViewPatch)
 	ON_COMMAND(ID_VIEW_PIANO, OnViewPiano)
 	ON_COMMAND(ID_VIEW_THREADS, OnViewThreads)
+	ON_COMMAND(ID_VIEW_OUTPUT_NOTES, OnViewOutputNotes)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_OUTPUT_NOTES, OnUpdateViewOutputNotes)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_METER, OnUpdateIndicatorMeter)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_KEY, OnUpdateIndicatorKey)
@@ -919,6 +909,21 @@ void CMainFrame::OnClose()
 			return;	// cancel close
 	}
 	CFrameWnd::OnClose();
+}
+
+void CMainFrame::OnDropFiles(HDROP hDropInfo) 
+{
+	UINT	Files = DragQueryFile(hDropInfo, 0xFFFFFFFF, 0, 0);
+	TCHAR	Path[MAX_PATH];
+	CStringArray	PathList;
+	for (UINT i = 0; i < Files; i++) {	// for each dropped file
+		DragQueryFile(hDropInfo, i, Path, MAX_PATH);
+		if (CChordEaseApp::IsPatchPath(Path))	// if patch file
+			OpenPatch(Path);
+		else	// not patch file; assume song file
+			theApp.OpenDocumentFile(Path);
+	};
+	SetForegroundWindow();
 }
 
 void CMainFrame::OnTimer(W64UINT nIDEvent) 
@@ -1061,6 +1066,9 @@ LRESULT	CMainFrame::OnHideSizingBar(WPARAM wParam, LPARAM lParam)
 		} else if (pBar == &m_MidiOutputBar) {	// if bar is MIDI output
 			UpdateHookMidiOutput();
 			m_MidiOutputBar.OnShowBar(FALSE);
+		} else if (pBar == &m_OutputNotesBar) {	// if bar is output notes
+			UpdateHookMidiOutput();
+			m_OutputNotesBar.OnShowBar(FALSE);
 		}
 	}
 	return(0);
@@ -1234,8 +1242,11 @@ LRESULT CMainFrame::OnMidiInputData(WPARAM wParam, LPARAM lParam)
 
 LRESULT CMainFrame::OnMidiOutputData(WPARAM wParam, LPARAM lParam)
 {
-	if (m_MidiOutputBar.IsWindowVisible()) {	// if MIDI event dialog exists
-		m_MidiOutputBar.AddEvent(wParam, lParam);	// relay event to dialog
+	if (m_MidiOutputBar.IsWindowVisible()) {	// if MIDI output bar exists
+		m_MidiOutputBar.AddEvent(wParam, lParam);	// relay event to bar
+	}
+	if (m_OutputNotesBar.IsWindowVisible()) {	// if output notes bar exists
+		m_OutputNotesBar.AddEvent(wParam, lParam);	// relay event to bar
 	}
 	return(0);
 }
@@ -1289,17 +1300,6 @@ void CMainFrame::OnAppDemo()
 	}
 }
 
-void CMainFrame::OnFileEdit() 
-{
-	BOOL	PatchWasModified = m_PatchDoc.IsModified();
-	NotifyEdit(0, UCODE_SONG_EDIT);
-	if (!m_View->GetDocument()->Edit())	// edit song
-		CancelEdit(0, UCODE_SONG_EDIT);
-	// song edit doesn't count as patch modification
-	if (!PatchWasModified)	// if patch was unmodified prior to song edit
-		m_PatchDoc.SetModifiedFlag(FALSE);	// unmodify patch
-}
-
 void CMainFrame::OnEditUndo() 
 {
 	m_UndoMgr.Undo();
@@ -1328,16 +1328,14 @@ void CMainFrame::OnUpdateEditRedo(CCmdUI* pCmdUI)
 
 void CMainFrame::OnEditCopy() 
 {
-	if (!CFocusEdit::Copy()) {
+	if (!CFocusEdit::Copy())
 		m_PartsBar.Copy();
-	}
 }
 
 void CMainFrame::OnUpdateEditCopy(CCmdUI* pCmdUI) 
 {
-	if (!CFocusEdit::UpdateCopy(pCmdUI)) {
+	if (!CFocusEdit::UpdateCopy(pCmdUI))
 		pCmdUI->Enable(m_PartsBar.HasSelection());
-	}
 }
 
 void CMainFrame::OnEditCut() 
@@ -1350,9 +1348,8 @@ void CMainFrame::OnEditCut()
 
 void CMainFrame::OnUpdateEditCut(CCmdUI* pCmdUI) 
 {
-	if (!CFocusEdit::UpdateCut(pCmdUI)) {
+	if (!CFocusEdit::UpdateCut(pCmdUI))
 		pCmdUI->Enable(m_PartsBar.HasSelection());
-	}
 }
 
 void CMainFrame::OnEditPaste() 
@@ -1367,12 +1364,11 @@ void CMainFrame::OnEditPaste()
 
 void CMainFrame::OnUpdateEditPaste(CCmdUI* pCmdUI) 
 {
-	if (!CFocusEdit::UpdatePaste(pCmdUI)) {
+	if (!CFocusEdit::UpdatePaste(pCmdUI))
 		pCmdUI->Enable(m_PartsBar.CanPaste());
-	}
 }
 
-void CMainFrame::OnEditInsertPart() 
+void CMainFrame::OnEditInsert() 
 {
 	int	UndoPos = m_UndoMgr.GetPos();
 	NotifyEdit(0, UCODE_INSERT);
@@ -1380,30 +1376,30 @@ void CMainFrame::OnEditInsertPart()
 	UpdateClipboardUndoInfo(UndoPos);
 }
 
-void CMainFrame::OnEditDeletePart() 
+void CMainFrame::OnEditDelete() 
 {
-	NotifyEdit(0, UCODE_DELETE);
-	m_PartsBar.DeleteSelectedParts();
+	if (!CFocusEdit::Delete()) {
+		NotifyEdit(0, UCODE_DELETE);
+		m_PartsBar.DeleteSelectedParts();
+	}
 }
 
-void CMainFrame::OnUpdateEditDeletePart(CCmdUI* pCmdUI) 
+void CMainFrame::OnUpdateEditDelete(CCmdUI* pCmdUI) 
 {
-	pCmdUI->Enable(m_PartsBar.GetSelectedCount());
+	if (!CFocusEdit::UpdateDelete(pCmdUI))
+		pCmdUI->Enable(m_PartsBar.GetSelectedCount());
 }
 
 void CMainFrame::OnEditSelectAll() 
 {
-	m_PartsBar.SelectAll();
+	if (!CFocusEdit::SelectAll())
+		m_PartsBar.SelectAll();
 }
 
-void CMainFrame::OnEditDeselect() 
+void CMainFrame::OnUpdateEditSelectAll(CCmdUI* pCmdUI) 
 {
-	m_PartsBar.Deselect();
-}
-
-void CMainFrame::OnUpdateEditDeselect(CCmdUI* pCmdUI) 
-{
-	pCmdUI->Enable(m_PartsBar.HasSelection());
+	if (!CFocusEdit::UpdateSelectAll(pCmdUI))
+		pCmdUI->Enable(m_PartsBar.GetPartCount());
 }
 
 void CMainFrame::OnEditRename() 
@@ -1544,7 +1540,7 @@ void CMainFrame::OnUpdateTransportNextSection(CCmdUI* pCmdUI)
 	bool	HasSections = gEngine.GetSong().GetSectionCount() > 1;
 	pCmdUI->Enable(gEngine.IsPlaying() && HasSections);
 	pCmdUI->SetCheck(gEngine.SectionLastPass() && HasSections 
-		&& !(gEngine.GetCurSection().m_Flags & CSong::CSection::F_IMPLICIT));
+		&& gEngine.GetCurSection().Explicit());
 }
 
 void CMainFrame::OnTransportNextChord() 
@@ -1641,6 +1637,8 @@ void CMainFrame::OnMidiResetAll()
 void CMainFrame::OnMidiPanic() 
 {
 	gEngine.Panic();
+	if (!m_PianoDlg.IsEmpty())
+		m_PianoDlg->OnPanic();
 }
 
 void CMainFrame::OnViewPatch() 
@@ -1701,4 +1699,17 @@ void CMainFrame::OnViewPiano()
 void CMainFrame::OnUpdateViewPiano(CCmdUI* pCmdUI) 
 {
 	pCmdUI->SetCheck(!m_PianoDlg.IsEmpty());
+}
+
+void CMainFrame::OnViewOutputNotes() 
+{
+	bool	bShow = !m_OutputNotesBar.IsWindowVisible();
+	ShowControlBar(&m_OutputNotesBar, bShow, 0);
+	UpdateHookMidiOutput();
+	m_OutputNotesBar.OnShowBar(bShow);
+}
+
+void CMainFrame::OnUpdateViewOutputNotes(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_OutputNotesBar.IsWindowVisible());
 }

@@ -14,6 +14,7 @@
 		04		03jan08	replace CSmartBuf with CRefPtr
 		05		18mar08	make CRefPtr a template
 		06		28may10	add IsInsignificant
+		07		01may14	widen CtrlID and Code to 32-bit
 
         undo state container
  
@@ -36,7 +37,7 @@ class CUndoManager;
 		{ return(State.m_Val.member); }
 
 // reserved control ID for insignificant edits
-#define UNDO_CTRL_ID_INSIGNIFICANT 0x8000
+#define UNDO_CTRL_ID_INSIGNIFICANT INT_MAX
 
 class CUndoState : public CRefPtr<CRefObj> {
 public:
@@ -75,9 +76,9 @@ public:
 	VALUE	m_Val;
 
 // Attributes
-	WORD	GetCtrlID() const;
-	WORD	GetCode() const;
-	bool	IsMatch(WORD CtrlID, WORD Code) const;
+	int		GetCtrlID() const;
+	int		GetCode() const;
+	bool	IsMatch(int CtrlID, int Code) const;
 	bool	IsSignificant() const;
 
 // Construction
@@ -91,9 +92,9 @@ public:
 
 private:
 // Member data
-	WORD	m_CtrlID;	// ID of notifying control; UNDO_ID_INSIGNIFICANT
+	int		m_CtrlID;	// ID of notifying control; UNDO_CTRL_ID_INSIGNIFICANT
 						// is reserved for flagging insignificant edits
-	WORD	m_Code;		// edit function code
+	int		m_Code;		// edit function code
 
 // Helpers
 	void	Copy(const CUndoState& State);
@@ -107,17 +108,17 @@ inline CUndoState::CUndoState()
 {
 }
 
-inline WORD CUndoState::GetCtrlID() const
+inline int CUndoState::GetCtrlID() const
 {
 	return(m_CtrlID);
 }
 
-inline WORD CUndoState::GetCode() const
+inline int CUndoState::GetCode() const
 {
 	return(m_Code);
 }
 
-inline bool CUndoState::IsMatch(WORD CtrlID, WORD Code) const
+inline bool CUndoState::IsMatch(int CtrlID, int Code) const
 {
 	return(CtrlID == m_CtrlID && Code == m_Code);
 }

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		13mar14	initial version
+		01		23may14	add UpdateDevices
 
         MIDI event bar
  
@@ -48,6 +49,11 @@ void CMidiEventBar::OnShowBar(bool Show)
 		m_Dlg.UpdateDevices();
 	else
 		m_Dlg.RemoveAllEvents();
+}
+
+void CMidiEventBar::UpdateDevices()
+{
+	m_Dlg.UpdateDevices();
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      23sep13	initial version
+		01		31may14	add OnItemChange
 
 		grid control
  
@@ -79,6 +80,7 @@ protected:
 
 // Overrideables
 	virtual	CWnd	*CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID);
+	virtual	void	OnItemChange(int Row, int Col, LPCTSTR Text);
 
 // Helpers
 	void	GotoSubitem(int DeltaRow, int DeltaCol);

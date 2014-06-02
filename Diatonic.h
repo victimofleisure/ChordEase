@@ -48,7 +48,7 @@ public:
 	static	bool	IsValidDegree(int Degree);
 	static	bool	IsDiatonic(CNote Note);
 	static	CNote	Quantize(CNote Note);
-	static	CNote	Chromaticize(CNote Note);
+	static	CNote	MapChromatic(CNote Note);
 	static	int		GetNoteDegree(CNote Note);
 	static	int		GetNaturalScale(int Degree);
 	static	LPCTSTR	ScaleName(int Scale);
@@ -114,7 +114,7 @@ inline CNote CDiatonic::Quantize(CNote Note)
 	return(Note - !m_IsDiatonic[Note.Normal()]);
 }
 
-inline CNote CDiatonic::Chromaticize(CNote Note)
+inline CNote CDiatonic::MapChromatic(CNote Note)
 {
 	return(Note / DEGREES * OCTAVE + m_NaturalScale.Note[Note % DEGREES]);
 }

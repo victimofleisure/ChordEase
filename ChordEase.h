@@ -76,6 +76,7 @@ public:
 	CString	GetDataFolderPath();
 	CString	MakeDataFolderPath(LPCTSTR FileName, bool DefaultToAppFolder = FALSE);
 	static	bool	IsPatchPath(LPCTSTR Path);
+	static	CString	GetFileTitle(const CString& Path);
 
 // Operations
 	bool	HandleDlgKeyMsg(MSG* pMsg);

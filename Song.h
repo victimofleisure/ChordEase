@@ -11,7 +11,8 @@
 		01		16aug13	start over
 		02		16apr14	add section names; refactor command parsing
  		03		01may14	add write
- 
+ 		04		26may14	preserve comments
+
 		song container
 
 */
@@ -103,12 +104,17 @@ public:
 		int		FindBeat(int Beat) const;
 		int		FindImplicit() const;
 	};
-	class CProperties {	// binary copy OK
+	class CProperties : public WObject {
 	public:
+		CProperties();
+		CProperties(const CProperties& Props);
+		CProperties&	operator=(const CProperties& Props);
 		CMeter	m_Meter;		// meter
 		CNote	m_Key;			// key signature
 		int		m_Transpose;	// transposition in half steps
 		double	m_Tempo;		// tempo in beats per minute
+		CString	m_Comments;		// one or more comment lines, CRLF terminated
+		void	Copy(const CProperties& Props);
 	};
 
 // Attributes
@@ -140,6 +146,8 @@ public:
 	int		FindSection(int BeatIdx) const;
 	void	GetProperties(CProperties& Props) const;
 	void	SetProperties(const CProperties& Props);
+	CString	GetComments() const;
+	void	SetComments(const CString& Comments);
 
 // Operations
 	CString	MakeChordName(CNote Root, CNote Bass, int Type, CNote Key = C) const;
@@ -178,6 +186,7 @@ protected:
 	CChordInfoArray	m_Dictionary;	// array of chord info, one per chord type
 	CSectionArray	m_Section;	// array of sections
 	CStringArray	m_SectionName;	// array of section names
+	CString	m_Comments;		// one or more newline-terminated comments
 
 // Overrideables
 	virtual	void	OnError(LPCTSTR Msg);
@@ -282,6 +291,21 @@ inline CSong::CChordInfo::CChordInfo(const CChordInfo& Info)
 inline CSong::CChordInfo& CSong::CChordInfo::operator=(const CChordInfo& Info)
 {
 	Copy(Info);
+	return(*this);
+}
+
+inline CSong::CProperties::CProperties()
+{
+}
+
+inline CSong::CProperties::CProperties(const CProperties& Props)
+{
+	Copy(Props);
+}
+
+inline CSong::CProperties& CSong::CProperties::operator=(const CProperties& Props)
+{
+	Copy(Props);
 	return(*this);
 }
 

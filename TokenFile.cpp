@@ -49,8 +49,10 @@ CString CTokenFile::ReadToken(LPCTSTR Delimiters)
 				break;
 			if (!m_CommentDelimiter.IsEmpty()) {	// if comment delimiter defined
 				int	iCommDelim = m_Line.Find(m_CommentDelimiter);
-				if (iCommDelim >= 0)	// if comment delimiter found
+				if (iCommDelim >= 0) {	// if comment delimiter found
+					m_Comments += m_Line.Mid(iCommDelim) + '\n';	// save comment
 					m_Line = m_Line.Left(iCommDelim);	// trim comment
+				}
 			}
 			m_LinePos = 0;	// reset line position
 			m_LinesRead++;	// increment number of lines read

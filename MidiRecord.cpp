@@ -14,6 +14,7 @@
 */
 
 #include "stdafx.h"
+#include "Resource.h"
 #include "MidiRecord.h"
 #include "Midi.h"
 #include "MidiFile.h"
@@ -28,6 +29,20 @@ CMidiRecord::CMidiRecord()
 	m_IsRecording = FALSE;
 	m_EventCount = 0;
 	m_BufferSize = 1000000;	// default size, in events
+}
+
+void CMidiRecord::RemoveAllEvents()
+{
+	ASSERT(!m_IsRecording);
+	m_Event.RemoveAll();
+	m_EventCount = 0;
+}
+
+void CMidiRecord::SetEvent(const CEventArray& Event)
+{
+	ASSERT(!m_IsRecording);
+	m_Event = Event;
+	m_EventCount = Event.GetSize();
 }
 
 void CMidiRecord::SetRecord(bool Enable)
@@ -78,7 +93,9 @@ bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPatch& Patch, short PPQ) c
 {
 	CPartInfoArray	PartInfo;
 	GetPartInfo(Patch, PartInfo);
-	return(ExportMidiFile(Path, PartInfo, Patch.GetTempo(), PPQ));
+	LARGE_INTEGER	PerfFreq;
+	QueryPerformanceFrequency(&PerfFreq);
+	return(ExportMidiFile(Path, PartInfo, Patch.GetTempo(), PPQ, PerfFreq));
 }
 
 #endif // EXCLUDE_PATCH_DEPENDENCIES
@@ -104,8 +121,12 @@ bool CMidiRecord::Read(LPCTSTR Path, FILE_HEADER& Header, CPartInfoArray& PartIn
 	TRY {
 		CFile	fp(Path, CFile::modeRead);
 		fp.Read(&Header, sizeof(Header));
-		if (Header.ID != FILE_ID || Header.Version > FILE_VERSION)
+		if (Header.ID != FILE_ID || Header.Version > FILE_VERSION) {
+			CString	msg;
+			AfxFormatString1(msg, IDS_MIDI_REC_BAD_FORMAT, Path);
+			AfxMessageBox(msg);
 			return(FALSE);
+		}
 		ReadPartInfo(fp, PartInfo);
 		m_Event.SetSize(Header.Events);
 		fp.Read(m_Event.GetData(), Header.Events * sizeof(EVENT));
@@ -194,7 +215,7 @@ void CMidiRecord::GetMidiTracks(const CPartInfoArray& PartInfo, CMidiTrackArray&
 	}
 }
 
-bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, double Tempo, short PPQ) const
+bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, double Tempo, short PPQ, LARGE_INTEGER PerfFreq) const
 {
 	int	nEvents = m_Event.GetSize();
 	if (!nEvents)
@@ -206,8 +227,6 @@ bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, d
 	qsort(track.GetData(), nTracks, sizeof(MIDI_TRACK), TrackSortByInst);
 	short	wTracks = static_cast<short>(nTracks);	// cast to 16-bit
 	double	PPQPerSec = Tempo / 60 * PPQ;
-	LARGE_INTEGER	PerfFreq;
-	QueryPerformanceFrequency(&PerfFreq);
 	LONGLONG	PerfOrigin = m_Event[0].Time.QuadPart;
 	TRY {
 		CMidiFile	fp(Path, CFile::modeCreate | CFile::modeWrite);
@@ -228,7 +247,7 @@ bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, d
 					// from real pulse time; prevents rounding error from accumulating
 					int	DeltaPulses = round(fPulses - PrevPulses);
 					if (DeltaPulses < 0) {
-						AfxMessageBox(_T("Recorded events out of order."));
+						AfxMessageBox(IDS_MIDI_REC_OUT_OF_ORDER);
 						return(FALSE);
 					}
 					MIDI_EVENT&	TrkEvt = TrackEvent[iTrackEvent];

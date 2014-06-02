@@ -1441,6 +1441,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IconButton.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\IconButton.h"
+				>
+			</File>
+			<File
 				RelativePath="IniFile.cpp"
 				>
 				<FileConfiguration
@@ -2525,6 +2533,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RecordPlayerColDef.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RecordPlayerDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RecordPlayerDlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\RefPtr.h"
 				>
 			</File>
@@ -3042,6 +3062,14 @@
 			</File>
 			<File
 				RelativePath="StdAfx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SteadyStatic.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SteadyStatic.h"
 				>
 			</File>
 			<File

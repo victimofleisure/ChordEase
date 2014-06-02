@@ -173,13 +173,13 @@ void CMidiNoteMapDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 			}
 			break;
 		case COL_PART_NAME:
-			_tcscpy(item.pszText, part.m_Name);
+			_tcsncpy(item.pszText, part.m_Name, item.cchTextMax);
 			break;
 		case COL_FUNCTION:
-			_tcscpy(item.pszText, CPartsListView::GetFunctionName(part.m_Function));
+			_tcsncpy(item.pszText, CPartsListView::GetFunctionName(part.m_Function), item.cchTextMax);
 			break;
 		case COL_IN_DEVICE:
-			_tcscpy(item.pszText, gEngine.GetSafeInputDeviceName(part.m_In.Inst.Port));
+			_tcsncpy(item.pszText, gEngine.GetSafeInputDeviceName(part.m_In.Inst.Port), item.cchTextMax);
 			break;
 		case COL_IN_PORT:
 			_stprintf(item.pszText, _T("%d"), part.m_In.Inst.Port);
@@ -194,7 +194,7 @@ void CMidiNoteMapDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 			_tcscpy(item.pszText, CNote(part.m_In.ZoneHigh).MidiName());
 			break;
 		case COL_OUT_DEVICE:
-			_tcscpy(item.pszText, gEngine.GetSafeOutputDeviceName(part.m_Out.Inst.Port));
+			_tcsncpy(item.pszText, gEngine.GetSafeOutputDeviceName(part.m_Out.Inst.Port), item.cchTextMax);
 			break;
 		case COL_OUT_PORT:
 			_stprintf(item.pszText, _T("%d"), part.m_Out.Inst.Port);

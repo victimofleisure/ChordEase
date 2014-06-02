@@ -192,5 +192,9 @@ void CMidiTargetRowDlg::OnLButtonDown(UINT nFlags, CPoint point)
 
 BOOL CMidiTargetRowDlg::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 {
+	// if tool is for target name, allow derived dialog to override tip
+	UINT	nID = ::GetDlgCtrlID(HWND(pNMHDR->idFrom));
+	if (nID == IDS_MIDI_TARG_ROW_NAME)	
+		GetTargetDlg()->GetTargetToolTip(m_RowIdx, id, pNMHDR);
 	return theApp.OnToolTipNeedText(id, pNMHDR, pResult);
 }

@@ -43,6 +43,9 @@ public:
 	int		GetCurSel() const;
 	void	SetCurSel(int RowIdx);
 
+// Overrideables
+	virtual	void	GetTargetToolTip(int RowIdx, int id, NMHDR* pNMHDR);
+
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMidiTargetDlg)
@@ -81,7 +84,6 @@ protected:
 	CMidiRowView	*m_View;	// pointer to MIDI row view
 	int		m_CurSel;			// currently selected row, or -1 if none
 
-// Overrideables
 // Helpers
 	CMidiTargetRowDlg	*GetRow(int Idx);
 	const CMidiTargetRowDlg	*GetRow(int Idx) const;

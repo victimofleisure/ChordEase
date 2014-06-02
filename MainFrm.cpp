@@ -34,6 +34,7 @@
 #include "ThreadsDlg.h"
 #include "MidiEventDlg.h"
 #include "MessageBoxCheck.h"
+#include "RecordPlayerDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -75,6 +76,7 @@ const int CMainFrame::m_UndoTitleID[UNDO_CODES] = {
 
 #define RK_MAIN_FRAME		_T("MainFrame")
 #define RK_SONG_REPEAT		_T("SongRepeat")
+#define RK_AUTO_REWIND		_T("AutoRewind")
 
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame construction/destruction
@@ -94,6 +96,7 @@ CMainFrame::~CMainFrame()
 {
 	m_Options.Store();
 	theApp.WriteProfileInt(REG_SETTINGS, RK_SONG_REPEAT, gEngine.IsRepeating());
+	theApp.WriteProfileInt(REG_SETTINGS, RK_AUTO_REWIND, gEngine.GetAutoRewind());
 }
 
 CMainFrame::CStatusCache::CStatusCache() : m_Meter(INT_MAX, INT_MAX)
@@ -292,6 +295,7 @@ void CMainFrame::SaveToolDialogState()
 bool CMainFrame::CreateEngine()
 {
 	gEngine.SetRepeat(theApp.GetProfileInt(REG_SETTINGS, RK_SONG_REPEAT, TRUE) != 0);
+	gEngine.SetAutoRewind(theApp.GetProfileInt(REG_SETTINGS, RK_AUTO_REWIND, TRUE) != 0);
 	if (!gEngine.Create())	// create engine
 		return(FALSE);
 	CString	ChordDictPath(theApp.MakeDataFolderPath(CHORD_DICTIONARY_FILE_NAME, TRUE));
@@ -424,15 +428,6 @@ bool CMainFrame::OpenPatch(LPCTSTR Path)
 	return(m_PatchDoc.Open(Path) != 0);
 }
 
-void CMainFrame::Play(bool Enable, bool Record)
-{
-	if (m_Options.m_Record.AlwaysRecord)	// if always recording
-		Record = TRUE;	// override record argument
-	gEngine.Play(Enable, Record);
-	if (!Enable)	// if stopped
-		OnTransportRewind();	// rewind
-}
-
 void CMainFrame::OnUpdateSong()
 {
 	m_PatchBar.SetPatch(gEngine.GetPatch());
@@ -463,10 +458,14 @@ void CMainFrame::UpdateHookMidiOutput()
 
 void CMainFrame::ApplyOptions(const COptionsInfo& PrevOpts, bool ForceUpdate)
 {
+	// if chart measures per line or font changed
 	if (m_Options.m_Chart.MeasuresPerLine != PrevOpts.m_Chart.MeasuresPerLine
 	|| memcmp(&m_Options.m_Chart.Font, &PrevOpts.m_Chart.Font, sizeof(LOGFONT)))
-		m_View->UpdateChart();
+		m_View->UpdateChart();	// update chart
 	gEngine.SetRecordBufferSize(m_Options.m_Record.BufferSize);
+	// if always record option changed
+	if (m_Options.m_Record.AlwaysRecord != PrevOpts.m_Record.AlwaysRecord)
+		gEngine.Record(m_Options.m_Record.AlwaysRecord != 0);	// update record state
 }
 
 bool CMainFrame::CheckForUpdates(bool Explicit)
@@ -805,6 +804,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_PREV_PANE, OnPrevPane)
 	ON_WM_SHOWWINDOW()
 	ON_WM_TIMER()
+	ON_COMMAND(ID_TRANSPORT_AUTO_REWIND, OnTransportAutoRewind)
 	ON_COMMAND(ID_TRANSPORT_NEXT_CHORD, OnTransportNextChord)
 	ON_COMMAND(ID_TRANSPORT_NEXT_SECTION, OnTransportNextSection)
 	ON_COMMAND(ID_TRANSPORT_PAUSE, OnTransportPause)
@@ -826,6 +826,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_INPUT, OnUpdateMidiInput)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_LEARN, OnUpdateMidiLearn)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_OUTPUT, OnUpdateMidiOutput)
+	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_AUTO_REWIND, OnUpdateTransportAutoRewind)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_NEXT_CHORD, OnUpdateTransportNextChord)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_NEXT_SECTION, OnUpdateTransportNextSection)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_PAUSE, OnUpdateTransportPause)
@@ -834,16 +835,17 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_RECORD, OnUpdateTransportRecord)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_REPEAT, OnUpdateTransportRepeat)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_REWIND, OnUpdateTransportRewind)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_OUTPUT_NOTES, OnUpdateViewOutputNotes)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PARTS, OnUpdateViewParts)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PATCH, OnUpdateViewPatch)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PIANO, OnUpdateViewPiano)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_THREADS, OnUpdateViewThreads)
+	ON_COMMAND(ID_VIEW_OUTPUT_NOTES, OnViewOutputNotes)
 	ON_COMMAND(ID_VIEW_PARTS, OnViewParts)
 	ON_COMMAND(ID_VIEW_PATCH, OnViewPatch)
 	ON_COMMAND(ID_VIEW_PIANO, OnViewPiano)
 	ON_COMMAND(ID_VIEW_THREADS, OnViewThreads)
-	ON_COMMAND(ID_VIEW_OUTPUT_NOTES, OnViewOutputNotes)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_OUTPUT_NOTES, OnUpdateViewOutputNotes)
+	ON_COMMAND(ID_VIEW_RECORD_PLAYER, OnViewRecordPlayer)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_METER, OnUpdateIndicatorMeter)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_KEY, OnUpdateIndicatorKey)
@@ -1107,10 +1109,10 @@ LRESULT	CMainFrame::OnEngineNotify(WPARAM wParam, LPARAM lParam)
 			m_DeviceBar.OnDeviceStateChange();
 		break;
 	case CEngine::NC_MIDI_PLAY:
-		Play(TRUE);
+		gEngine.Play(TRUE);
 		break;
 	case CEngine::NC_MIDI_STOP:
-		Play(FALSE);
+		gEngine.Play(FALSE);
 		break;
 	case CEngine::NC_MIDI_PAUSE:
 		gEngine.Pause(TRUE);
@@ -1255,6 +1257,10 @@ LRESULT	CMainFrame::OnDeviceNodeChange(WPARAM wParam, LPARAM lParam)
 {
 	if (gEngine.OnDeviceChange()) {	// if device actually changed
 		UpdateViews();
+		if (m_MidiInputBar.IsWindowVisible())
+			m_MidiInputBar.UpdateDevices();
+		if (m_MidiOutputBar.IsWindowVisible())
+			m_MidiOutputBar.UpdateDevices();
 	}
 	return(0);
 }
@@ -1296,7 +1302,7 @@ void CMainFrame::OnAppDemo()
 	if (OpenPatch(PatchPath) && theApp.OpenDocumentFile(SongPath)) {
 		if (m_PianoDlg.IsEmpty())	// if piano hidden
 			OnViewPiano();	// display it
-		Play(TRUE);	// start playing demo song
+		gEngine.Play(TRUE);	// start playing demo song
 	}
 }
 
@@ -1455,7 +1461,7 @@ void CMainFrame::OnUpdatePatchMru(CCmdUI* pCmdUI)
 
 void CMainFrame::OnTransportPlay() 
 {
-	Play(!gEngine.IsPlaying());	// toggle play
+	gEngine.Play(!gEngine.IsPlaying());	// toggle play
 }
 
 void CMainFrame::OnUpdateTransportPlay(CCmdUI* pCmdUI) 
@@ -1505,10 +1511,9 @@ void CMainFrame::OnTransportRecord()
 		return;	// nothing else to do
 	}
 	if (gEngine.IsRecording()) {	// if recording
-		Play(FALSE);	// stop
+		gEngine.Record(FALSE);	// stop
 	} else {	// not recording
-		ASSERT(!gEngine.IsPlaying());	// must be stopped, else logic error
-		if (m_Options.m_Record.PromptFilename) {
+		if (m_Options.m_Record.PromptFilename) {	// if prompting for record filename
 			CString	filter(LPCTSTR(IDS_MIDI_FILE_FILTER));
 			CString	title(LPCTSTR(IDS_RECORD_AS));
 			CPathStr	filename(m_View->GetDocument()->GetTitle());
@@ -1519,14 +1524,12 @@ void CMainFrame::OnTransportRecord()
 				return;	// file dialog canceled or failed
 			m_RecordFilePath = fd.GetPathName();
 		}
-		Play(TRUE, TRUE);	// start recording
+		gEngine.Record(TRUE);	// start recording
 	}
 }
 
 void CMainFrame::OnUpdateTransportRecord(CCmdUI* pCmdUI) 
 {
-	pCmdUI->Enable(gEngine.GetSong().GetChordCount() 
-		&& (!gEngine.IsPlaying() || gEngine.IsRecording()));
 	pCmdUI->SetCheck(m_Options.m_Record.AlwaysRecord || gEngine.IsRecording());
 }
 
@@ -1563,6 +1566,16 @@ void CMainFrame::OnTransportPrevChord()
 void CMainFrame::OnUpdateTransportPrevChord(CCmdUI* pCmdUI) 
 {
 	pCmdUI->Enable(gEngine.GetSong().GetChordCount() > 1);
+}
+
+void CMainFrame::OnTransportAutoRewind() 
+{
+	gEngine.SetAutoRewind(!gEngine.GetAutoRewind());
+}
+
+void CMainFrame::OnUpdateTransportAutoRewind(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(gEngine.GetAutoRewind());
 }
 
 void CMainFrame::OnMidiAssignments() 
@@ -1639,6 +1652,7 @@ void CMainFrame::OnMidiPanic()
 	gEngine.Panic();
 	if (!m_PianoDlg.IsEmpty())
 		m_PianoDlg->OnPanic();
+	m_OutputNotesBar.RemoveAllNotes();
 }
 
 void CMainFrame::OnViewPatch() 
@@ -1712,4 +1726,10 @@ void CMainFrame::OnViewOutputNotes()
 void CMainFrame::OnUpdateViewOutputNotes(CCmdUI* pCmdUI) 
 {
 	pCmdUI->SetCheck(m_OutputNotesBar.IsWindowVisible());
+}
+
+void CMainFrame::OnViewRecordPlayer() 
+{
+	CRecordPlayerDlg	dlg;
+	dlg.DoModal();
 }

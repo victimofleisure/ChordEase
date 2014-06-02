@@ -142,7 +142,7 @@ void CDeviceDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 			_stprintf(item.pszText, _T("%d"), item.iItem);
 			break;
 		case COL_NAME:
-			_tcscpy(item.pszText, m_DeviceName[iDevType][item.iItem]);
+			_tcsncpy(item.pszText, m_DeviceName[iDevType][item.iItem], item.cchTextMax);
 			break;
 		case COL_STATE:
 			{

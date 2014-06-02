@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		13mar14	initial version
+		01		23may14	add UpdateDevices
 
         MIDI event bar
  
@@ -42,6 +43,7 @@ public:
 public:
 	void	AddEvent(WPARAM wParam, LPARAM lParam);
 	void	OnShowBar(bool Show);
+	void	UpdateDevices();
 
 // Overrides
 	// ClassWizard generated virtual function overrides

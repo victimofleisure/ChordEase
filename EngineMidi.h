@@ -71,6 +71,10 @@ public:
 	void	OutputChannelAftertouch(MIDI_INST Inst, int Val);
 	void	OutputChord(MIDI_INST Inst, const CScale& Chord, int Vel);
 	void	OutputMetronome(bool Accent);
+	bool	OpenInputDevice(int InDevIdx);
+	bool	OpenOutputDevice(int OutDevIdx);
+	bool	CloseInputDevice(int InDevIdx);
+	bool	CloseOutputDevice(int OutDevIdx);
 	void	ShowDevices() const;
 	bool	OpenDevices();
 	bool	CloseDevices();
@@ -120,10 +124,6 @@ protected:
 
 // Helpers
 	void	ReportError(int MsgFmtID, ...);
-	bool	OpenInputDevice(int InDevIdx);
-	bool	OpenOutputDevice(int OutDevIdx);
-	bool	CloseInputDevice(int InDevIdx);
-	bool	CloseOutputDevice(int OutDevIdx);
 	void	UpdateMidiAssigns();
 };
 

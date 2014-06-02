@@ -105,7 +105,8 @@ void CChordEaseApp::CAppEngine::OnMidiOutputData(int DeviceIdx, W64UINT MidiMess
 
 void CChordEaseApp::CAppEngine::OnEndRecording()
 {
-	const COptionsInfo&	opts = theApp.GetMain()->GetOptions();
+	CMainFrame	*pMain = theApp.GetMain();
+	const COptionsInfo&	opts = pMain->GetOptions();
 	CPathStr	path;
 	// if always recording, or not prompting for filename
 	if (opts.m_Record.AlwaysRecord || !opts.m_Record.PromptFilename) {
@@ -116,16 +117,20 @@ void CChordEaseApp::CAppEngine::OnEndRecording()
 		theApp.MakeAbsolutePath(path);	// make path absolute
 		if (!PathFileExists(path))	// if output folder doesn't exist
 			theApp.CreateFolder(path);	// create it
-		CPathStr	title(theApp.GetMain()->GetView()->GetDocument()->GetTitle());
-		title.RemoveExtension();
-		path.Append(title);
+		CString	DocPath;
+		if (pMain != NULL && pMain->GetView() != NULL)	// extra cautious here
+			DocPath = pMain->GetView()->GetDocument()->GetPathName();
+		CPathStr	title(GetFileTitle(DocPath));
+		title.RemoveExtension();	// title may include extension; remove it
+		path.Append(title);	// append title to record folder path
 		path += ' ';
-		path += CTime::GetCurrentTime().Format(_T("%Y-%m-%d %H-%M-%S"));
+		path += CTime::GetCurrentTime().Format(_T("%Y-%m-%d %H-%M-%S"));	// append timestamp
 		path += MIDI_FILE_EXT;
+		pMain->SetRecordFilePath(path);
 	} else	// assume user was prompted for filename
-		path = theApp.GetMain()->GetRecordFilePath();
+		path = pMain->GetRecordFilePath();	// get path from main frame
 	m_Record.ExportMidiFile(path, m_Patch, opts.m_Record.MidiFilePPQ);
-	path.RenameExtension(_T(".cemr"));
+	path.RenameExtension(MIDI_RECORD_EXT);
 	m_Record.Write(path, m_Patch);
 }
 
@@ -318,6 +323,8 @@ bool CChordEaseApp::HandleDlgKeyMsg(MSG* pMsg)
 		}
 		break;
 	case WM_SYSKEYDOWN:
+		if (GetKeyState(VK_SHIFT) & GKS_DOWN)	// if context menu
+			return(FALSE);	// keep dispatching
 		Main->SetFocus();	// main frame must have focus to display menus
 		Main->SendMessage(pMsg->message, pMsg->wParam, pMsg->lParam);	// enter menu mode
 		return(TRUE);	// message was translated, stop dispatching
@@ -445,6 +452,19 @@ BOOL CChordEaseApp::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 bool CChordEaseApp::IsPatchPath(LPCTSTR Path)
 {
 	return(!_tcsicmp(PathFindExtension(Path), PATCH_EXT));
+}
+
+CString CChordEaseApp::GetFileTitle(const CString& Path)
+{
+	CString	sTitle;
+	if (Path.IsEmpty())	// if path is empty
+		sTitle.LoadString(AFX_IDS_UNTITLED);	// untitled
+	else {	// path not empty
+		LPTSTR	pTitle = sTitle.GetBuffer(MAX_PATH);
+		::GetFileTitle(Path, pTitle, MAX_PATH);	// get title from path
+		sTitle.ReleaseBuffer();
+	}
+	return(sTitle);
 }
 
 /////////////////////////////////////////////////////////////////////////////

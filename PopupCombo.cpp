@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		23sep13	initial version
+		01		31may14	in Create, add vertical scroll to default style
 
 		popup combo box control
 
@@ -41,13 +42,25 @@ CPopupCombo::~CPopupCombo()
 
 BOOL CPopupCombo::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID)
 {
-	if (!dwStyle)	// if style not specified
-		dwStyle = WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST;
+	if (!dwStyle)	// if style not specified, use default style
+		dwStyle = WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST;
 	if (!CComboBox::Create(dwStyle, rect, pParentWnd, nID))	// create control
 		return(FALSE);	// control creation failed
 	SetFont(pParentWnd->GetFont());	// set font same as parent
 	SetFocus();	// give control focus
 	return(TRUE);
+}
+
+CPopupCombo *CPopupCombo::Factory(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, int DropHeight)
+{
+	CPopupCombo	*pCombo = new CPopupCombo;	// allocate instance
+	CRect	r(rect);
+	r.bottom += DropHeight;
+	if (!pCombo->Create(dwStyle, r, pParentWnd, nID)) {	// if create fails
+		delete pCombo;	// destroy instance
+		pCombo = NULL;
+	}
+	return(pCombo);
 }
 
 void CPopupCombo::EndEdit()

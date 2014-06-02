@@ -11,6 +11,7 @@
 		01		13mar14	convert from modeless to child
 		02		20mar14	add output flag
 		03		22apr14	add context menu
+		04		23may14	add controller names
 
         MIDI event dialog
  
@@ -49,6 +50,8 @@ public:
 	bool	IsOutput() const;
 	bool	IsFiltered() const;
 	bool	IsPaused() const;
+	bool	GetShowCtrlrNames() const;
+	void	SetShowCtrlrNames(bool Enable);
 
 // Operations
 	void	AddEvent(WPARAM wParam, LPARAM lParam);
@@ -83,9 +86,13 @@ protected:
 	afx_msg void OnClearHistory();
 	afx_msg void OnPause();
 	afx_msg void OnUpdatePause(CCmdUI* pCmdUI);
+	afx_msg void OnShowCtrlrNames();
+	afx_msg void OnUpdateShowCtrlrNames(CCmdUI* pCmdUI);
+	afx_msg void OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu);
 	//}}AFX_MSG
 	afx_msg void OnSelChangeCombo(UINT nID);
     afx_msg LRESULT OnResizeFilters(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnExitMenuLoop(BOOL bIsTrackPopupMenu);
 	DECLARE_MESSAGE_MAP()
 
 // Types
@@ -126,6 +133,7 @@ protected:
 	int		m_FilterSel[COLUMNS];	// array of filter combo box selections
 	bool	m_Filtering;			// true if one or more columns are filtered
 	bool	m_IsOutput;				// true if output events, else input events
+	bool	m_ShowCtrlrNames;		// true if showing controller names
 	CIntArrayEx	m_PassEventIdx;		// array of indices of events that pass filters
 	int		m_PauseEventIdx;		// index of event at which display was paused
 
@@ -149,6 +157,16 @@ inline bool CMidiEventDlg::IsOutput() const
 inline bool CMidiEventDlg::IsFiltered() const
 {
 	return(m_Filtering);
+}
+
+inline bool CMidiEventDlg::GetShowCtrlrNames() const
+{
+	return(m_ShowCtrlrNames);
+}
+
+inline void CMidiEventDlg::SetShowCtrlrNames(bool Enable)
+{
+	m_ShowCtrlrNames = Enable;
 }
 
 inline WPARAM CMidiEventDlg::MakeParam(DWORD Device, W64UINT MidiMsg)

@@ -188,13 +188,13 @@ void CMidiAssignsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 	if (item.mask & LVIF_TEXT) {
 		switch (item.iSubItem) {
 		case COL_DEVICE:
-			_tcscpy(item.pszText, ass.m_DeviceName);
+			_tcsncpy(item.pszText, ass.m_DeviceName, item.cchTextMax);
 			break;
 		case COL_PORT:
 			_stprintf(item.pszText, _T("%d"), ass.m_Inst.Port);
 			break;
 		case COL_EVENT:
-			_tcscpy(item.pszText, CMidiTarget::GetEventTypeName(ass.m_Event));
+			_tcsncpy(item.pszText, CMidiTarget::GetEventTypeName(ass.m_Event), item.cchTextMax);
 			break;
 		case COL_CHANNEL:
 			_stprintf(item.pszText, _T("%d"), ass.m_Inst.Chan + 1);
@@ -202,12 +202,7 @@ void CMidiAssignsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 		case COL_CONTROL:
 			switch (ass.m_Event) {
 			case CMidiTarget::EVT_CONTROL:
-				{
-					LPCTSTR	pName = CMidiTarget::GetControllerName(ass.m_Control);
-					if (pName == NULL)
-						pName = _T("Undefined");
-					_stprintf(item.pszText, _T("%d (%s)"), ass.m_Control, pName);
-				}
+				CMidiTarget::GetControllerName(item.pszText, item.cchTextMax, ass.m_Control);
 				break;
 			}
 			break;
@@ -215,10 +210,10 @@ void CMidiAssignsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 			_stprintf(item.pszText, _T("%d"), ass.m_PartIdx);
 			break;
 		case COL_PART_NAME:
-			_tcscpy(item.pszText, ass.m_PartName);
+			_tcsncpy(item.pszText, ass.m_PartName, item.cchTextMax);
 			break;
 		case COL_TARGET:
-			_tcscpy(item.pszText, ass.m_TargetName);
+			_tcsncpy(item.pszText, ass.m_TargetName, item.cchTextMax);
 			break;
 		default:
 			NODEFAULTCASE;
@@ -237,8 +232,6 @@ void CMidiAssignsDlg::OnSize(UINT nType, int cx, int cy)
 void CMidiAssignsDlg::OnContextMenu(CWnd* pWnd, CPoint point) 
 {
 	if (point.x >= 0 && point.y >= 0) {
-		CPoint	pt(point);
-		ScreenToClient(&pt);
 		CMenu	menu;
 		menu.LoadMenu(IDM_MIDI_ASSIGNS_CTX);
 		CMenu	*mp = menu.GetSubMenu(0);

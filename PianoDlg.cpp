@@ -446,8 +446,6 @@ void CPianoDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 		GetWindowRect(rDlg);
 		point = rDlg.CenterPoint();
 	}
-	CPoint	pt(point);
-	ScreenToClient(&pt);
 	CMenu	menu;
 	menu.LoadMenu(IDM_PIANO_CTX);
 	CMenu	*mp = menu.GetSubMenu(0);

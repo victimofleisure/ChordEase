@@ -1,4 +1,4 @@
-// Copyleft 2013 Chris Korda
+]// Copyleft 2013 Chris Korda
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or any later version.
@@ -68,7 +68,8 @@ CEngine::CPartState::CPartState()
 	m_BassApproachTrigger = FALSE;
 	m_BassTargetChord = 0;
 	m_BassTargetTime = INT_MIN;
-	m_CtrlrInputNote = 0;
+	m_InputCCNote = 0;
+	m_InputCCNoteVel = 100;
 }
 
 void CEngine::CPartState::Reset()
@@ -130,6 +131,7 @@ CEngine::CEngine()
 	m_IsPlaying = FALSE;
 	m_IsPaused = FALSE;
 	m_IsRepeating = TRUE;
+	m_AutoRewind = TRUE;
 	m_PatchBackup.Tempo = 0;
 	m_PatchBackup.Transpose = INT_MAX;
 	ZeroMemory(&m_PatchTrigger, sizeof(m_PatchTrigger));
@@ -177,12 +179,14 @@ bool CEngine::Create()
 	CMidiIn::GetDeviceNames(m_MidiInName);	// get device names
 	CMidiOut::GetDeviceNames(m_MidiOutName);
 	m_MidiDevID.Create();	// get current device IDs
+	MakeHarmony();	// set default harmony
 	return(TRUE);
 }
 
 bool CEngine::Destroy()
 {
 	Play(FALSE);
+	Record(FALSE);
 	if (IsRunning())
 		ResetDevices();
 	if (!Run(FALSE))
@@ -255,11 +259,11 @@ bool CEngine::Run(bool Enable)
 	return(TRUE);
 }
 
-inline void CEngine::UpdateDevices()
+inline void CEngine::FastUpdateDevices()
 {
 	// only update if we're running; all devices are closed during stop
 	if (IsRunning())
-		CEngineMidi::UpdateDevices();	// call base class
+		UpdateDevices();	// call base class
 }
 
 bool CEngine::UpdateTempo()
@@ -328,7 +332,7 @@ void CEngine::AutoPlayNotesOff()
 	}
 }
 
-bool CEngine::Play(bool Enable, bool Record)
+bool CEngine::Play(bool Enable)
 {
 	if (Enable == IsPlaying())	// if already in requested state
 		return(TRUE);	// nothing to do
@@ -343,14 +347,10 @@ bool CEngine::Play(bool Enable, bool Record)
 			return(FALSE);
 		}
 		PlayInit();
-		if (Record)
-			m_Record.SetRecord(TRUE);
 	} else {	// stopping
-		if (m_Record.IsRecording()) {	// if recording in progress
-			m_Record.SetRecord(FALSE);
-			OnEndRecording();
-			if (m_Record.GetEventCount() >= m_Record.GetBufferSize())
-				PostError(IDS_ENGERR_RECORDING_TRUNCATED);
+		if (m_AutoRewind) {	// if automatically rewinding song
+			AutoPlayNotesOff();	// avoid glitch from fixing held auto-play notes
+			SetBeat(0);	// rewind song
 		}
 	}
 	m_IsPaused = FALSE;	// reset pause
@@ -361,6 +361,20 @@ bool CEngine::Play(bool Enable, bool Record)
 void CEngine::Pause(bool Enable)
 {
 	m_IsPaused = Enable;
+}
+
+void CEngine::Record(bool Enable)
+{
+	if (Enable == IsRecording())	// if already in requested state
+		return;	// nothing to do
+	m_Record.SetRecord(Enable);
+	if (!Enable) {	// if stopping
+		if (m_Record.GetEventCount()) {	// if at least one event recorded
+			OnEndRecording();
+			if (m_Record.GetEventCount() >= m_Record.GetBufferSize())
+				PostError(IDS_ENGERR_RECORDING_TRUNCATED);
+		}
+	}
 }
 
 void CEngine::NextSection()
@@ -419,6 +433,7 @@ void CEngine::SetTick(int Tick)
 	m_Tick = Tick;
 	m_StartTick = 0;	// disable lead-in
 	UpdateSection();
+	FixHeldNotes();	// correct held notes for new harmony
 }
 
 void CEngine::OnSongEdit()
@@ -486,7 +501,7 @@ void CEngine::SetBasePatch(const CBasePatch& Patch)
 	}
 	if (Patch.m_Transpose != PrevPatch.m_Transpose)	// if transpose changed
 		MakeHarmony();	// update harmony array
-	UpdateDevices();
+	FastUpdateDevices();
 	UpdatePatch(Patch, &PrevPatch);
 	if (!Patch.CompareTargets(PrevPatch) && IsRunning())	// if MIDI targets changed
 		UpdateMidiAssigns();
@@ -516,7 +531,7 @@ void CEngine::SetPart(int PartIdx, const CPart& Part)
 //	_tprintf(_T("CEngine::SetPart PartIdx=%d\n"), PartIdx);
 	CPart	PrevPart(m_Patch.m_Part[PartIdx]);
 	m_Patch.m_Part[PartIdx] = Part;
-	UpdateDevices();
+	FastUpdateDevices();
 	UpdatePartPatch(Part, &PrevPart);
 	m_PartState[PartIdx].OnTimeChange(Part, m_Patch.m_PPQ);
 	if (!Part.CompareTargets(PrevPart) && IsRunning())	// if MIDI targets changed
@@ -551,51 +566,66 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				double	pos = targ.GetNormPos(Val);
 				bool	TargetChanged = FALSE;
 				switch (iTarg) {
-				case CPart::MIDI_TARGET_PART_ENABLE:
+				case CPart::MIDI_TARGET_ENABLE:
 					UMT(part.m_Enable, pos > 0);
 					break;
-				case CPart::MIDI_TARGET_PART_FUNCTION:
+				case CPart::MIDI_TARGET_FUNCTION:
 					UMT(part.m_Function, NormParamToEnum(pos, CPart::FUNCTIONS));
 					break;
-				case CPart::MIDI_TARGET_INPUT_ZONE_LOW:
+				case CPart::MIDI_TARGET_IN_ZONE_LOW:
 					UMT(part.m_In.ZoneLow, round(pos * MIDI_NOTE_MAX));
 					break;
-				case CPart::MIDI_TARGET_INPUT_ZONE_HIGH:
+				case CPart::MIDI_TARGET_IN_ZONE_HIGH:
 					UMT(part.m_In.ZoneHigh, round(pos * MIDI_NOTE_MAX));
 					break;
-				case CPart::MIDI_TARGET_INPUT_TRANSPOSE:
+				case CPart::MIDI_TARGET_IN_TRANSPOSE:
 					UMT(part.m_In.Transpose, round((pos * 2 - 1) * OCTAVE));
 					break;
-				case CPart::MIDI_TARGET_INPUT_VEL_OFFSET:
+				case CPart::MIDI_TARGET_IN_VEL_OFFSET:
 					UMT(part.m_In.VelOffset, round((pos * 2 - 1) * MIDI_NOTE_MAX));
 					break;
-				case CPart::MIDI_TARGET_INPUT_NON_DIATONIC:
+				case CPart::MIDI_TARGET_IN_NON_DIATONIC:
 					UMT(part.m_In.NonDiatonic, NormParamToEnum(pos, CPart::INPUT::NON_DIATONIC_RULES));
 					break;
-				case CPart::MIDI_TARGET_INPUT_NOTE:
+				case CPart::MIDI_TARGET_IN_CC_NOTE:
 					{
+						// convert continuous controller position to input note
 						CNote	note(round(pos * MIDI_NOTE_MAX));
+						// if non-diatonic rule is disable, apply rule to input note
 						int	iRule = part.m_In.NonDiatonic;
 						if (iRule == CPart::INPUT::NDR_DISABLE
 						&& !ApplyNonDiatonicRule(iRule, note))
-							continue;
-						CNote	PrevNote = m_PartState[iPart].m_CtrlrInputNote;
-						if (note != PrevNote) {
-							OnNoteOff(Inst, PrevNote);
-							OnNoteOn(Inst, note, 64);
-							m_PartState[iPart].m_CtrlrInputNote = note;
+							continue;	// reject disabled non-diatonic note
+						CNote	PrevNote = m_PartState[iPart].m_InputCCNote;
+						if (note != PrevNote) {	// if note changed
+							int	vel = m_PartState[iPart].m_InputCCNoteVel;
+							// emulate note event on part's input port/channel
+							const CMidiInst&	inst = part.m_In.Inst;
+							OnNoteOff(inst, PrevNote);	// turn off previous note
+							OnNoteOn(inst, note, vel);	// turn on new note
+							m_PartState[iPart].m_InputCCNote = note;
+							if (m_HookMidiIn) {	// if hooking MIDI input
+								DWORD	now = timeGetTime();	// get timestamp
+								OnMidiInputData(inst.Port,	// pass note off to hook
+									MakeMidiMsg(NOTE_ON, inst.Chan, PrevNote, 0), now);
+								OnMidiInputData(inst.Port,	// pass note on to hook
+									MakeMidiMsg(NOTE_ON, inst.Chan, note, vel), now);
+							}
 						}
 					}
 					break;
-				case CPart::MIDI_TARGET_OUTPUT_PATCH:
+				case CPart::MIDI_TARGET_IN_CC_NOTE_VEL:
+					m_PartState[iPart].m_InputCCNoteVel = round(pos * MIDI_NOTE_MAX);
+					break;
+				case CPart::MIDI_TARGET_OUT_PATCH:
 					UMT(part.m_Out.Patch, round(pos * MIDI_NOTE_MAX));
 					OutputPatch(part.m_Out.Inst, part.m_Out.Patch);
 					break;
-				case CPart::MIDI_TARGET_OUTPUT_VOLUME:
+				case CPart::MIDI_TARGET_OUT_VOLUME:
 					UMT(part.m_Out.Volume, round(pos * MIDI_NOTE_MAX));
 					OutputControl(part.m_Out.Inst, VOLUME, part.m_Out.Volume);
 					break;
-				case CPart::MIDI_TARGET_HARM_ANTICIPATION:
+				case CPart::MIDI_TARGET_OUT_ANTICIPATION:
 					UMT(part.m_Out.Anticipation, pos);
 					break;
 				case CPart::MIDI_TARGET_LEAD_HARM_INTERVAL:
@@ -1246,11 +1276,11 @@ bool CEngine::ApplyNonDiatonicRule(int Rule, CNote& Note)
 			return(FALSE);	// disable non-diatonic input note
 		break;
 	case CPart::INPUT::NDR_SKIP:
-		// map diatonic scale to chromatic scale; offset so middle C is correct
-		Note -= CDiatonic::DEGREES * 3 + 4;
+		// offset input note so middle C is correct: 3 octaves plus a fifth
+		Note -= CDiatonic::DEGREES * 3 + CDiatonic::D5;	// in diatonic degrees
 		if (Note < 0)	// if input note is negative
-			return(FALSE);	// reject it
-		Note = CDiatonic::Chromaticize(Note);
+			return(FALSE);	// reject note; MapChromatic doesn't handle negatives
+		Note = CDiatonic::MapChromatic(Note);	// map diatonic scale to chromatic scale
 		break;
 	}
 	return(TRUE);

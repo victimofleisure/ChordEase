@@ -142,6 +142,12 @@ void COutputNotesBar::UpdateKeyLabels()
 	m_Piano.SetKeyLabels(KeyLabel);
 }
 
+void COutputNotesBar::RemoveAllNotes()
+{
+	m_Piano.ReleaseKeys(CPianoCtrl::KS_ALL);
+	ZeroMemory(&m_NoteOns, sizeof(m_NoteOns));
+}
+
 void COutputNotesBar::ResetState()
 {
 	#define OUTNOTESSTATEDEF(name, defval) m_##name = defval;
@@ -172,6 +178,8 @@ BEGIN_MESSAGE_MAP(COutputNotesBar, CMySizingControlBar)
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_OUT_NOTES_SHOW_KEY_LABELS, OnShowKeyLabels)
 	ON_UPDATE_COMMAND_UI(ID_OUT_NOTES_SHOW_KEY_LABELS, OnUpdateShowKeyLabels)
+	ON_COMMAND(ID_OUT_NOTES_ROTATE_LABELS, OnRotateLabels)
+	ON_UPDATE_COMMAND_UI(ID_OUT_NOTES_ROTATE_LABELS, OnUpdateRotateLabels)
 	ON_COMMAND(ID_OUT_NOTES_SHOW_METRONOME, OnShowMetronome)
 	ON_UPDATE_COMMAND_UI(ID_OUT_NOTES_SHOW_METRONOME, OnUpdateShowMetronome)
 	ON_WM_MENUSELECT()
@@ -220,8 +228,6 @@ void COutputNotesBar::OnContextMenu(CWnd* pWnd, CPoint point)
 		GetWindowRect(rWnd);
 		point = rWnd.CenterPoint();	// center of window in screen coords
 	}
-	CPoint	pt(point);
-	ScreenToClient(&pt);
 	CMenu	menu;
 	menu.LoadMenu(IDM_OUTPUT_NOTES_CTX);
 	CMenu	*mp = menu.GetSubMenu(0);
@@ -318,6 +324,18 @@ void COutputNotesBar::OnShowKeyLabels()
 void COutputNotesBar::OnUpdateShowKeyLabels(CCmdUI *pCmdUI)
 {
 	pCmdUI->SetCheck(m_ShowKeyLabels);
+}
+
+void COutputNotesBar::OnRotateLabels()
+{
+	m_RotateLabels ^= 1;
+	m_Piano.SetStyle(CPianoCtrl::PS_ROTATE_LABELS, m_RotateLabels);
+}
+
+void COutputNotesBar::OnUpdateRotateLabels(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetCheck(m_RotateLabels);
+	pCmdUI->Enable(!(m_Piano.GetStyle() & CPianoCtrl::PS_VERTICAL));
 }
 
 void COutputNotesBar::OnShowMetronome()

@@ -11,6 +11,7 @@
 		01		13mar14	convert from modeless to child
 		02		20mar14	add output flag
 		03		22apr14	add context menu
+		04		23may14	add controller names
 
         device dialog
  
@@ -67,6 +68,7 @@ CMidiEventDlg::CMidiEventDlg(bool IsOutput, CWnd* pParent /*=NULL*/)
 	ZeroMemory(m_FilterSel, sizeof(m_FilterSel));
 	m_Filtering = FALSE;
 	m_IsOutput = IsOutput;
+	m_ShowCtrlrNames = FALSE;
 	m_PauseEventIdx = 0;
 }
 
@@ -239,6 +241,7 @@ void CMidiEventDlg::UpdateDevices()
 	InitDeviceNames();
 	InitFilter(COL_DEVICE);
 	InitFilter(COL_PORT);
+	m_List.Invalidate();
 }
 
 bool CMidiEventDlg::IsPaused() const
@@ -265,9 +268,13 @@ BEGIN_MESSAGE_MAP(CMidiEventDlg, CChildDlg)
 	ON_COMMAND(ID_MIDI_EVENT_CLEAR_HISTORY, OnClearHistory)
 	ON_COMMAND(ID_MIDI_EVENT_PAUSE, OnPause)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_EVENT_PAUSE, OnUpdatePause)
+	ON_COMMAND(ID_MIDI_EVENT_SHOW_CTRLR_NAMES, OnShowCtrlrNames)
+	ON_UPDATE_COMMAND_UI(ID_MIDI_EVENT_SHOW_CTRLR_NAMES, OnUpdateShowCtrlrNames)
+	ON_WM_MENUSELECT()
 	//}}AFX_MSG_MAP
 	ON_CONTROL_RANGE(CBN_SELCHANGE, 0, USHRT_MAX, OnSelChangeCombo)
 	ON_MESSAGE(UWM_RESIZE_FILTERS, OnResizeFilters)
+	ON_WM_EXITMENULOOP()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -338,9 +345,9 @@ void CMidiEventDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 			break;
 		case COL_DEVICE:
 			if (iDevice < m_DeviceName.GetSize())
-				_tcscpy(item.pszText, m_DeviceName[iDevice]);
+				_tcsncpy(item.pszText, m_DeviceName[iDevice], item.cchTextMax);
 			else
-				_tcscpy(item.pszText, m_NullDeviceName);
+				_tcsncpy(item.pszText, m_NullDeviceName, item.cchTextMax);
 			break;
 		case COL_PORT:
 			_stprintf(item.pszText, _T("%d"), iDevice);
@@ -367,6 +374,12 @@ void CMidiEventDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 			case KEY_AFT:
 				// show p1 as MIDI note name, in song's transposed key signature
 				_tcscpy(item.pszText, CNote(msg.p1).MidiName(gEngine.GetSongKey()));
+				break;
+			case CONTROL:
+				if (m_ShowCtrlrNames)
+					CMidiTarget::GetControllerName(item.pszText, item.cchTextMax, msg.p1);
+				else
+					_stprintf(item.pszText, _T("%d"), msg.p1);
 				break;
 			default:
 				_stprintf(item.pszText, _T("%d"), msg.p1);
@@ -427,12 +440,10 @@ LRESULT CMidiEventDlg::OnResizeFilters(WPARAM wParam, LPARAM lParam)
 
 void CMidiEventDlg::OnContextMenu(CWnd* pWnd, CPoint point) 
 {
-	CPoint	pt(point);
-	m_List.FixContextMenuPoint(pt);
+	m_List.FixContextMenuPoint(point);
 	CRect	rList;
 	m_List.GetWindowRect(rList);
-	if (rList.PtInRect(pt)) {	// if point within list
-		ScreenToClient(&pt);
+	if (rList.PtInRect(point)) {	// if point within list
 		CMenu	menu;
 		menu.LoadMenu(IDM_MIDI_EVENT_CTX);
 		CMenu	*mp = menu.GetSubMenu(0);
@@ -454,4 +465,27 @@ void CMidiEventDlg::OnPause()
 void CMidiEventDlg::OnUpdatePause(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(IsPaused());
+}
+
+void CMidiEventDlg::OnShowCtrlrNames()
+{
+	m_ShowCtrlrNames ^= 1;
+	m_List.Invalidate();
+}
+
+void CMidiEventDlg::OnUpdateShowCtrlrNames(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_ShowCtrlrNames);
+}
+
+void CMidiEventDlg::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu)
+{
+	if (!(nFlags & MF_SYSMENU))	// if not system menu item
+		AfxGetMainWnd()->SendMessage(WM_SETMESSAGESTRING, nItemID, 0);	// set status hint
+}
+
+void CMidiEventDlg::OnExitMenuLoop(BOOL bIsTrackPopupMenu)
+{
+	if (bIsTrackPopupMenu)	// if exiting context menu, restore status idle message
+		AfxGetMainWnd()->SendMessage(WM_SETMESSAGESTRING, AFX_IDS_IDLEMESSAGE, 0);
 }

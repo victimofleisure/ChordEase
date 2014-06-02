@@ -39,6 +39,7 @@ public:
 	static	CString	GetEventTypeName(int EventType);
 	bool	IsMatch(CMidiInst Inst, int Event, int Ctrl) const;
 	static	LPCTSTR	GetControllerName(int Ctrl);
+	static	int		GetControllerName(LPTSTR Text, int TextMax, int Ctrl);
 
 // Operations
 	void	Reset();

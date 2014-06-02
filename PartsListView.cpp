@@ -262,8 +262,6 @@ void CPartsListView::OnListReorder(NMHDR* pNMHDR, LRESULT* pResult)
 void CPartsListView::OnContextMenu(CWnd* pWnd, CPoint point) 
 {
 	m_List.FixContextMenuPoint(point);
-	CPoint	pt(point);
-	ScreenToClient(&pt);
 	CMenu	menu;
 	menu.LoadMenu(IDM_PART_LIST_CTX);
 	CMenu	*mp = menu.GetSubMenu(0);
@@ -285,12 +283,12 @@ BOOL CPartsListView::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 		switch (hti.iSubItem) {
 		case COL_PART_NAME:
 			if (hti.flags & LVHT_ONITEMSTATEICON)	// if cursor on checkbox
-				nID = IDS_PARTS_TIP_ENABLE;
+				nID = IDC_PART_ENABLE;
 			else
-				nID = IDS_PARTS_TIP_NAME;
+				nID = IDC_PART_NAME;
 			break;
 		case COL_FUNCTION:
-			nID = IDS_PARTS_TIP_FUNCTION;
+			nID = IDC_PART_FUNCTION;
 			break;
 		default:
 			nID = 0;

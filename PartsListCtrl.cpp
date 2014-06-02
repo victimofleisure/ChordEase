@@ -46,21 +46,32 @@ CPartsListCtrl::~CPartsListCtrl()
 CWnd *CPartsListCtrl::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID)
 {
 	if (m_EditCol == CPartsListView::COL_FUNCTION) {
-		CPopupCombo	*pCombo = new CPopupCombo;
-		dwStyle |= CBS_DROPDOWNLIST;
-		CRect	r(rect);
-		r.bottom += 100;
-		if (!pCombo->Create(dwStyle, r, this, nID)) {
-			delete pCombo;
-			return(NULL);
+		int	DropHeight = 100;
+		CPopupCombo	*pCombo = CPopupCombo::Factory(0, rect, pParentWnd, nID, DropHeight);
+		if (pCombo != NULL) {
+			for (int iFunc = 0; iFunc < CPartsListView::FUNCTIONS; iFunc++)
+				pCombo->AddString(CPartsListView::GetFunctionName(iFunc));
+			pCombo->SetCurSel(pCombo->FindString(0, Text));
+			pCombo->ShowDropDown();
 		}
-		for (int iFunc = 0; iFunc < CPartsListView::FUNCTIONS; iFunc++)
-			pCombo->AddString(CPartsListView::GetFunctionName(iFunc));
-		pCombo->SetCurSel(pCombo->FindString(0, Text));
-		pCombo->ShowDropDown();
 		return(pCombo);
 	}
 	return CGridCtrl::CreateEditCtrl(Text, dwStyle, rect, pParentWnd, nID);
+}
+
+void CPartsListCtrl::OnItemChange(int Row, int Col, LPCTSTR Text)
+{
+	ASSERT(m_EditCol == CPartsListView::COL_FUNCTION);
+	CPopupCombo	*pCombo = STATIC_DOWNCAST(CPopupCombo, m_EditCtrl);
+	int	iFunc = pCombo->FindString(0, Text);
+	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
+	ASSERT(iPart >= 0);
+	theApp.GetMain()->NotifyEdit(IDS_PARTS_COL_FUNCTION, 
+		UCODE_PART, CUndoable::UE_COALESCE);
+	CPart	part(gEngine.GetPart(iPart));
+	part.m_Function = iFunc;
+	gEngine.SetPart(iPart, part);
+	CGridCtrl::OnItemChange(Row, Col, Text);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -69,23 +80,7 @@ CWnd *CPartsListCtrl::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& re
 BEGIN_MESSAGE_MAP(CPartsListCtrl, CGridCtrl)
 	//{{AFX_MSG_MAP(CPartsListCtrl)
 	//}}AFX_MSG_MAP
-	ON_MESSAGE(CPopupEdit::UWM_TEXT_CHANGE, OnTextChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CPartsListCtrl message handlers
-
-LRESULT CPartsListCtrl::OnTextChange(WPARAM wParam, LPARAM lParam)
-{
-	ASSERT(m_EditCol == CPartsListView::COL_FUNCTION);
-	CPopupCombo	*pCombo = STATIC_DOWNCAST(CPopupCombo, m_EditCtrl);
-	int	iFunc = pCombo->FindString(0, LPCTSTR(wParam));
-	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
-	ASSERT(iPart >= 0);
-	theApp.GetMain()->NotifyEdit(IDS_PARTS_COL_FUNCTION, 
-		UCODE_PART, CUndoable::UE_COALESCE);
-	CPart	part(gEngine.GetPart(iPart));
-	part.m_Function = iFunc;
-	gEngine.SetPart(iPart, part);
-	return CGridCtrl::OnTextChange(wParam, lParam);
-}

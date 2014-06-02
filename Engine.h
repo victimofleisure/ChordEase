@@ -81,6 +81,10 @@ public:
 	bool	IsRepeating() const;
 	bool	IsRecording() const;
 	bool	IsLeadIn() const;
+	bool	GetRepeat() const;
+	void	SetRepeat(bool Enable);
+	bool	GetAutoRewind() const;
+	void	SetAutoRewind(bool Enable);
 	const CPatch&	GetPatch() const;
 	void	GetPatchWithDeviceIDs(CPatch& Patch) const;
 	bool	SetPatch(const CPatch& Patch, bool UpdatePorts = FALSE);
@@ -107,7 +111,6 @@ public:
 	CString	GetTickString() const;
 	CString	GetTickString(int Tick) const;
 	CString GetTickSpanString(int TickSpan) const;
-	void	SetRepeat(bool Enable);
 	const CSong::CSection&	GetCurSection() const;
 	int		GetSectionIndex() const;
 	bool	SectionLastPass() const;
@@ -129,8 +132,9 @@ public:
 	bool	WriteSong(LPCTSTR Path);
 	bool	ResetSong();
 	virtual	bool	Run(bool Enable);
-	bool	Play(bool Enable, bool Record = FALSE);
+	bool	Play(bool Enable);
 	void	Pause(bool Enable);
+	void	Record(bool Enable);
 	void	NextSection();
 	void	NextChord();
 	void	PrevChord();
@@ -178,7 +182,8 @@ protected:
 		bool	m_BassApproachTrigger;	// true if triggered bass approach in progress
 		volatile	int		m_BassTargetChord;	// triggered bass approach target chord index
 		volatile	int		m_BassTargetTime;	// triggered bass approach target time, in elapsed ticks
-		CNote	m_CtrlrInputNote;	// note input via continuous controller
+		CNote	m_InputCCNote;	// note input via continuous controller
+		int		m_InputCCNoteVel;	// velocity of continuous controller input note
 		void	Reset();
 		void	OnTimeChange(const CPart& Part, int PPQ);
 		static	int		DurationToTicks(double Duration, int PPQ);
@@ -245,6 +250,7 @@ protected:
 	bool	m_IsPlaying;		// true if engine is playing
 	bool	m_IsPaused;			// true if engine is paused
 	bool	m_IsRepeating;		// true if repeating song
+	bool	m_AutoRewind;		// true if song automatically rewinds on stop
 	CPartStateArray	m_PartState;	// array of part states
 	PATCH_BACKUP	m_PatchBackup;	// backup of patch members overridden by song
 	CMySection	m_Section;		// section state
@@ -264,7 +270,7 @@ protected:
 	virtual	void	EmptyNoteMap();
 
 // Helpers
-	void	UpdateDevices();
+	void	FastUpdateDevices();
 	void	MapNote(CNote InNote, int InVel, int PartIdx, CNote OutNote);
 	void	MapChord(CNote InNote, int InVel, int PartIdx, const CScale& OutChord);
 	void	MapArpChord(CNote InNote, int InVel, int PartIdx, const CScale& OutChord);
@@ -391,9 +397,24 @@ inline bool CEngine::IsLeadIn() const
 	return(m_Elapsed < m_StartTick);
 }
 
+inline bool CEngine::GetRepeat() const
+{
+	return(m_IsRepeating);
+}
+
 inline void CEngine::SetRepeat(bool Enable)
 {
 	m_IsRepeating = Enable;
+}
+
+inline bool CEngine::GetAutoRewind() const
+{
+	return(m_AutoRewind);
+}
+
+inline void CEngine::SetAutoRewind(bool Enable)
+{
+	m_AutoRewind = Enable;
 }
 
 inline const CPatch& CEngine::GetPatch() const

@@ -66,11 +66,14 @@ public:
 	void	SetBasePatch(const CBasePatch& Patch);
 	void	SetPart(int PartIdx, const CPart& Part);
 	void	SetBasePatchAndParts(const CPatch& CPatch);
+	CColorStatusBar&	GetStatusBar();
+	CToolBar&	GetToolBar();
 	CPatchBar&	GetPatchBar();
 	CPartsBar&	GetPartsBar();
 	CDeviceBar&	GetDeviceBar();
 	CMidiEventBar&	GetMidiInputBar();
 	CMidiEventBar&	GetMidiOutputBar();
+	COutputNotesBar&	GetOutputNotesBar();
 	CUndoManager&	GetUndoMgr();
 	CPatchDoc&	GetPatchDoc();
 	const COptionsInfo&	GetOptions() const;
@@ -79,6 +82,7 @@ public:
 	void	SetPatchModify(bool Enable);
 	static	int		GetUndoTitleID(int UndoCode);
 	CString	GetRecordFilePath() const;
+	void	SetRecordFilePath(const CString& Path);
 	bool	IsMidiLearn() const;
 
 // Operations
@@ -89,7 +93,6 @@ public:
 	bool	OpenPatch(LPCTSTR Path);
 	void	OnUpdateSong();
 	void	OnSongPositionChange();
-	void	Play(bool Enable, bool Record = FALSE);
 	bool	CheckForUpdates(bool Explicit);
 
 // Overrides
@@ -144,6 +147,7 @@ protected:
 	afx_msg void OnPrevPane();
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnTimer(W64UINT nIDEvent);
+	afx_msg void OnTransportAutoRewind();
 	afx_msg void OnTransportNextChord();
 	afx_msg void OnTransportNextSection();
 	afx_msg void OnTransportPause();
@@ -165,6 +169,7 @@ protected:
 	afx_msg void OnUpdateMidiInput(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateMidiLearn(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateMidiOutput(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransportAutoRewind(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportNextChord(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportNextSection(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportPause(CCmdUI* pCmdUI);
@@ -173,16 +178,17 @@ protected:
 	afx_msg void OnUpdateTransportRecord(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportRepeat(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportRewind(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateViewOutputNotes(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewParts(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewPatch(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewPiano(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewThreads(CCmdUI* pCmdUI);
+	afx_msg void OnViewOutputNotes();
 	afx_msg void OnViewParts();
 	afx_msg void OnViewPatch();
 	afx_msg void OnViewPiano();
 	afx_msg void OnViewThreads();
-	afx_msg void OnViewOutputNotes();
-	afx_msg void OnUpdateViewOutputNotes(CCmdUI* pCmdUI);
+	afx_msg void OnViewRecordPlayer();
 	//}}AFX_MSG
 	afx_msg void OnUpdateIndicatorMeter(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateIndicatorKey(CCmdUI *pCmdUI);
@@ -360,6 +366,16 @@ inline HACCEL CMainFrame::GetAccelTable() const
 	return(m_hAccelTable);
 }
 
+inline CColorStatusBar& CMainFrame::GetStatusBar()
+{
+	return(m_StatusBar);
+}
+
+inline CToolBar& CMainFrame::GetToolBar()
+{
+	return(m_ToolBar);
+}
+
 inline CPatchBar& CMainFrame::GetPatchBar()
 {
 	return(m_PatchBar);
@@ -383,6 +399,11 @@ inline CMidiEventBar& CMainFrame::GetMidiInputBar()
 inline CMidiEventBar& CMainFrame::GetMidiOutputBar()
 {
 	return(m_MidiOutputBar);
+}
+
+inline COutputNotesBar& CMainFrame::GetOutputNotesBar()
+{
+	return(m_OutputNotesBar);
 }
 
 inline CUndoManager& CMainFrame::GetUndoMgr()
@@ -424,6 +445,11 @@ inline int CMainFrame::GetUndoTitleID(int UndoCode)
 inline CString CMainFrame::GetRecordFilePath() const
 {
 	return(m_RecordFilePath);
+}
+
+inline void CMainFrame::SetRecordFilePath(const CString& Path)
+{
+	m_RecordFilePath = Path;
 }
 
 inline bool CMainFrame::IsMidiLearn() const

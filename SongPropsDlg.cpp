@@ -46,6 +46,7 @@ void CSongPropsDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CSongPropsDlg)
+	DDX_Control(pDX, IDC_SONG_PROPS_COMMENTS, m_Comments);
 	DDX_Control(pDX, IDC_SONG_PROPS_TIME_SIG_DENOM, m_TimeSigDenom);
 	DDX_Control(pDX, IDC_SONG_PROPS_TRANSPOSE, m_Transpose);
 	DDX_Control(pDX, IDC_SONG_PROPS_TIME_SIG_NUMER, m_TimeSigNumer);
@@ -86,6 +87,7 @@ BOOL CSongPropsDlg::OnInitDialog()
 	m_TimeSigDenom.SetCurSel(iSelUnit);
 	m_Tempo.SetVal(m_Props.m_Tempo);
 	m_Transpose.SetVal(m_Props.m_Transpose);
+	m_Comments.SetWindowText(m_Props.m_Comments);
 
 	EnableToolTips();
 
@@ -100,6 +102,7 @@ void CSongPropsDlg::OnOK()
 	m_Props.m_Meter.m_Denominator = 1 << m_TimeSigDenom.GetCurSel();
 	m_Props.m_Tempo = m_Tempo.GetVal();
 	m_Props.m_Transpose = m_Transpose.GetIntVal();
+	m_Comments.GetWindowText(m_Props.m_Comments);
 	CDialog::OnOK();
 }
 

@@ -9,6 +9,7 @@
 		rev		date	comments
         00      12sep13	initial version
         01      02may14	add undo manager
+		02		27may14	add auto-record handling
 
 		ChordEase document
  
@@ -70,6 +71,7 @@ public:
 	virtual BOOL OnNewDocument();
 	virtual void Serialize(CArchive& ar);
 	virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);
+	virtual void DeleteContents();
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -90,9 +92,12 @@ protected:
 
 // Data members
 	CString	m_SongText;		// song text
+
+// Helpers
+	void	AutoRecord(bool Enable);
 };
 
-inline CString	CChordEaseDoc::GetSongText() const
+inline CString CChordEaseDoc::GetSongText() const
 {
 	return(m_SongText);
 }

@@ -70,6 +70,9 @@ END
 IDR_MAINFRAME           ICON    DISCARDABLE     "res\\ChordEase.ico"
 IDR_CHORDEASEDOC        ICON    DISCARDABLE     "res\\ChordEaseDoc.ico"
 IDR_CHORDEASEPATCH      ICON    DISCARDABLE     "res\\ChordEasePatch.ico"
+IDI_REC_PLAY_PLAY       ICON    DISCARDABLE     "res\\RecPlayPlay.ico"
+IDI_REC_PLAY_PAUSE      ICON    DISCARDABLE     "res\\RecPlayPause.ico"
+IDI_REC_PLAY_STOP       ICON    DISCARDABLE     "res\\RecPlayStop.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -180,6 +183,7 @@ BEGIN
         MENUITEM "&Next Section\tCtrl+Enter",   ID_TRANSPORT_NEXT_SECTION
         MENUITEM "Next &Chord\tF7",             ID_TRANSPORT_NEXT_CHORD
         MENUITEM "Previous &Chord\tShift+F7",   ID_TRANSPORT_PREV_CHORD
+        MENUITEM "&Auto Rewind",                ID_TRANSPORT_AUTO_REWIND
     END
     POPUP "&MIDI"
     BEGIN
@@ -206,6 +210,7 @@ BEGIN
         MENUITEM "&Piano",                      ID_VIEW_PIANO
         MENUITEM "&Output Notes",               ID_VIEW_OUTPUT_NOTES
         MENUITEM "T&hreads",                    ID_VIEW_THREADS
+        MENUITEM "Re&cord Player",              ID_VIEW_RECORD_PLAYER
     END
     POPUP "&Help"
     BEGIN
@@ -245,8 +250,10 @@ IDM_MIDI_EVENT_CTX MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Clear History",               ID_MIDI_EVENT_CLEAR_HISTORY
-        MENUITEM "Pause",                       ID_MIDI_EVENT_PAUSE
+        MENUITEM "&Clear History",              ID_MIDI_EVENT_CLEAR_HISTORY
+        MENUITEM "&Pause",                      ID_MIDI_EVENT_PAUSE
+        MENUITEM "Controller &Names",           ID_MIDI_EVENT_SHOW_CTRLR_NAMES
+
     END
 END
 
@@ -325,6 +332,7 @@ BEGIN
             MENUITEM SEPARATOR
         END
         MENUITEM "&Key Labels",                 ID_OUT_NOTES_SHOW_KEY_LABELS
+        MENUITEM "&Rotate Labels",              ID_OUT_NOTES_ROTATE_LABELS
         MENUITEM "&Metronome",                  ID_OUT_NOTES_SHOW_METRONOME
     END
 END
@@ -865,7 +873,7 @@ BEGIN
                     WS_TABSTOP,0,0,299,100
 END
 
-IDD_SONG_PROPS DIALOG DISCARDABLE  0, 0, 164, 113
+IDD_SONG_PROPS DIALOG DISCARDABLE  0, 0, 267, 186
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Song Properties"
 FONT 8, "MS Sans Serif"
@@ -880,12 +888,38 @@ BEGIN
     LTEXT           "&Unit:",IDC_STATIC,110,18,16,8
     COMBOBOX        IDC_SONG_PROPS_TIME_SIG_DENOM,110,28,40,100,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "&Tempo:",IDC_STATIC,7,57,25,8
-    EDITTEXT        IDC_SONG_PROPS_TEMPO,7,67,50,14,ES_AUTOHSCROLL
-    LTEXT           "Tr&anspose:",IDC_STATIC,63,57,36,8
-    EDITTEXT        IDC_SONG_PROPS_TRANSPOSE,63,67,40,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,46,92,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,107,92,50,14
+    LTEXT           "&Tempo:",IDC_STATIC,164,7,25,8
+    EDITTEXT        IDC_SONG_PROPS_TEMPO,164,17,50,14,ES_AUTOHSCROLL
+    LTEXT           "Tr&anspose:",IDC_STATIC,220,7,36,8
+    EDITTEXT        IDC_SONG_PROPS_TRANSPOSE,220,17,40,14,ES_AUTOHSCROLL
+    LTEXT           "&Comments:",IDC_STATIC,7,57,35,8
+    EDITTEXT        IDC_SONG_PROPS_COMMENTS,7,67,253,90,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,153,165,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,210,165,50,14
+END
+
+IDD_RECORD_PLAYER DIALOG DISCARDABLE  0, 0, 246, 201
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Record Player"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_REC_PLAY_TITLE,"Static",SS_LEFTNOWORDWRAP | 
+                    SS_SUNKEN | WS_GROUP,7,7,232,12
+    CONTROL         "",IDC_REC_PLAY_PLAY,"Button",BS_AUTOCHECKBOX | BS_ICON | 
+                    BS_PUSHLIKE | WS_TABSTOP,7,25,20,14
+    PUSHBUTTON      "",IDC_REC_PLAY_STOP,34,25,20,14,BS_ICON
+    LTEXT           "",IDC_REC_PLAY_POSITION,91,26,70,12,SS_SUNKEN
+    LTEXT           "",IDC_REC_PLAY_DURATION,169,26,70,12,SS_SUNKEN
+    CONTROL         "Slider1",IDC_REC_PLAY_POS_SLIDER,"msctls_trackbar32",
+                    TBS_NOTICKS | WS_TABSTOP,7,45,232,15
+    CONTROL         "List1",IDC_REC_PLAY_TRACK_LIST,"SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_EDITLABELS | 
+                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,66,232,107
+    PUSHBUTTON      "&Open...",IDC_REC_PLAY_OPEN,9,180,50,14
+    PUSHBUTTON      "&Save...",IDC_REC_PLAY_SAVE,69,180,50,14
+    PUSHBUTTON      "&Export...",IDC_REC_PLAY_EXPORT,129,180,50,14
+    PUSHBUTTON      "&Close",IDCANCEL,189,180,50,14
 END
 
 
@@ -1068,9 +1102,17 @@ BEGIN
     IDD_SONG_PROPS, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 157
+        RIGHTMARGIN, 260
         TOPMARGIN, 7
-        BOTTOMMARGIN, 106
+        BOTTOMMARGIN, 179
+    END
+
+    IDD_RECORD_PLAYER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 239
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 194
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1182,16 +1224,18 @@ BEGIN
     ID_MIDI_DEVICES         "Show or hide the MIDI device bar\nMIDI Devices"
     ID_MIDI_EVENT_CLEAR_HISTORY "Remove all events"
     ID_MIDI_EVENT_PAUSE     "Pause event display"
+    ID_MIDI_EVENT_SHOW_CTRLR_NAMES "Show controller names"
     ID_MIDI_INPUT           "Show or hide the MIDI input bar\nMIDI Input"
     ID_MIDI_LEARN           "Learn MIDI target assignments\nMIDI Learn"
     ID_MIDI_NOTE_MAPPINGS   "List MIDI note mappings\nNote Mappings"
     ID_MIDI_OUTPUT          "Show or hide the MIDI output bar\nMIDI Output"
-    ID_MIDI_PANIC           "Reset all MIDI notes\nPanic"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    ID_MIDI_PANIC           "Reset all MIDI notes\nPanic"
     ID_MIDI_RESET_ALL       "Reset all MIDI targets\nReset All Targets"
+    ID_OUT_NOTES_ROTATE_LABELS "Rotate key labels sideways"
     ID_OUT_NOTES_SHOW_KEY_LABELS "Show note names on keys"
     ID_OUT_NOTES_SHOW_METRONOME "Show metronome notes"
     ID_PATCH_MRU_FILE1      "Open this patch"
@@ -1205,16 +1249,18 @@ BEGIN
     ID_PIANO_KEY_LABEL_TYPE "Hide piano key labels"
     ID_PIANO_KEY_LABEL_TYPE2 "Show shortcuts on piano keys"
     ID_PIANO_KEY_LABEL_TYPE3 "Show input notes on piano keys"
-    ID_PIANO_KEY_LABEL_TYPE4 "Show output notes on piano keys"
-    ID_PIANO_KEY_LABEL_TYPE5 "Show intervals above root on piano keys"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    ID_PIANO_KEY_LABEL_TYPE4 "Show output notes on piano keys"
+    ID_PIANO_KEY_LABEL_TYPE5 "Show intervals above root on piano keys"
     ID_PIANO_KEY_LABEL_TYPE6 "Show scale tones on piano keys"
-    ID_PIANO_ROTATE_LABELS  "Rotate piano key labels sideways"
+    ID_PIANO_ROTATE_LABELS  "Rotate key labels sideways"
     ID_PIANO_SHOW_OCTAVES   "Append octave to note names"
     ID_PIANO_VERTICAL       "Orient piano keyboard vertically"
+    ID_TRANSPORT_AUTO_REWIND 
+                            "Automatically rewind song on stop\nToggle Auto-Rewind"
     ID_TRANSPORT_NEXT_CHORD "Skip forward to next chord\nNext Chord"
     ID_TRANSPORT_NEXT_SECTION "Continue to next section\nNext Section"
     ID_TRANSPORT_PAUSE      "Pause or resume song\nPause"
@@ -1222,15 +1268,16 @@ BEGIN
     ID_TRANSPORT_PREV_CHORD "Skip backward to previous chord\nPrevious Chord"
     ID_TRANSPORT_RECORD     "Record performance\nRecord"
     ID_TRANSPORT_REPEAT     "Repeat song\nRepeat"
-    ID_TRANSPORT_REWIND     "Rewind song\nRewind"
+    ID_TRANSPORT_REWIND     "Rewind to start of song\nRewind"
     ID_VIEW_OUTPUT_NOTES    "Show or hide the output notes bar\nToggle Output Notes"
-    ID_VIEW_PARTS           "Show or hide the parts bar\nToggle Parts Bar"
-    ID_VIEW_PATCH           "Show or hide the patch bar\nToggle Patch Bar"
-    ID_VIEW_PIANO           "Show or hide the virtual piano\nToggle Piano"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    ID_VIEW_PARTS           "Show or hide the parts bar\nToggle Parts Bar"
+    ID_VIEW_PATCH           "Show or hide the patch bar\nToggle Patch Bar"
+    ID_VIEW_PIANO           "Show or hide the virtual piano\nToggle Piano"
+    ID_VIEW_RECORD_PLAYER   "Play back a recording\nRecord Player"
     ID_VIEW_THREADS         "Show or hide the threads dialog\nToggle Threads Dialog"
 END
 
@@ -1340,6 +1387,10 @@ BEGIN
     IDS_MIDI_NMAP_COL_ZONE_HIGH "Zone High"
     IDS_MIDI_NMAP_COL_ZONE_LOW "Zone Low"
     IDS_MIDI_OUTPUT_BAR     "MIDI Output"
+    IDS_MIDI_RECORDING_FILTER 
+                            "MIDI Recordings (*.cemr)|*.cemr|All Files (*.*)|*.*||"
+    IDS_MIDI_REC_BAD_FORMAT "'%1' has an unexpected format."
+    IDS_MIDI_REC_OUT_OF_ORDER "Recorded events are out of order."
     IDS_MIDI_STAT_ACTIVE_SENSING "Active Sensing"
     IDS_MIDI_STAT_CHANNEL_WILDCARD "Channel *"
     IDS_MIDI_STAT_CHAN_AFT  "Chan Aft"
@@ -1350,13 +1401,13 @@ BEGIN
     IDS_MIDI_STAT_KEY_AFT   "Key Aft"
     IDS_MIDI_STAT_MTC_QTR_FRAME "MTC Qtr Frame"
     IDS_MIDI_STAT_NOTE_OFF  "Note Off"
-    IDS_MIDI_STAT_NOTE_ON   "Note On"
-    IDS_MIDI_STAT_PATCH     "Patch"
-    IDS_MIDI_STAT_SONG_POSITION "Song Position"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDS_MIDI_STAT_NOTE_ON   "Note On"
+    IDS_MIDI_STAT_PATCH     "Patch"
+    IDS_MIDI_STAT_SONG_POSITION "Song Position"
     IDS_MIDI_STAT_SONG_SELECT "Song Select"
     IDS_MIDI_STAT_START     "Start"
     IDS_MIDI_STAT_STOP      "Stop"
@@ -1370,13 +1421,13 @@ BEGIN
     IDS_MIDI_TARG_ROW_EVENT "Input event type"
     IDS_MIDI_TARG_ROW_NAME  "Target parameter name"
     IDS_MIDI_TARG_ROW_PORT  "MIDI input device index"
-    IDS_MIDI_TARG_ROW_RANGE_END "End of normalized controller range"
-    IDS_MIDI_TARG_ROW_RANGE_START "Start of normalized controller range"
-    IDS_MSGBOX_NO           "&No"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDS_MIDI_TARG_ROW_RANGE_END "End of normalized controller range"
+    IDS_MIDI_TARG_ROW_RANGE_START "Start of normalized controller range"
+    IDS_MSGBOX_NO           "&No"
     IDS_MSGBOX_YES          "&Yes"
     IDS_MTEVT_CHAN_AFTERTOUCH "Chan Aftertouch"
     IDS_MTEVT_CONTROL       "Control"
@@ -1390,23 +1441,20 @@ BEGIN
     IDS_OPT_RESET_ALL       "Reset All"
     IDS_OPT_RESTORE_DEFAULTS "Restore all options to default settings?"
     IDS_OUTPUT_NOTES_BAR    "Output Notes"
-    IDS_OUT_NOTES_FILTER_ALL "All"
-    IDS_OUT_NOTES_SM_ALL_CHANS "Show output notes for all channels"
-    IDS_OUT_NOTES_SM_ALL_PORTS "Show output notes for all ports"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDS_OUT_NOTES_FILTER_ALL "All"
+    IDS_OUT_NOTES_SM_ALL_CHANS "Show output notes for all channels"
+    IDS_OUT_NOTES_SM_ALL_PORTS "Show output notes for all ports"
     IDS_OUT_NOTES_SM_FILTER_CHAN "Show output notes for this channel only"
     IDS_OUT_NOTES_SM_FILTER_PORT "Show output notes for this port only"
     IDS_OUT_NOTES_SM_PIANO_SIZE "Select piano size in keys"
     IDS_PARTS_BAR           "Parts"
     IDS_PARTS_COL_FUNCTION  "Function"
     IDS_PARTS_COL_PART_NAME "Part"
-    IDS_PARTS_TIP_ENABLE    "Enable this part"
-    IDS_PARTS_TIP_FUNCTION  "Part mapping function"
     IDS_PARTS_TIP_LIST      "List of parts"
-    IDS_PARTS_TIP_NAME      "Part name"
     IDS_PART_FORMAT         "Part%d"
     IDS_PART_MT_AUTO_PLAY   "Auto Play"
     IDS_PART_MT_AUTO_VELOCITY "Auto Velocity"
@@ -1425,21 +1473,26 @@ BEGIN
     IDS_PART_MT_COMP_ARP_REPEAT "Comp Arp Repeat"
     IDS_PART_MT_COMP_VARIATION "Comp Variation"
     IDS_PART_MT_COMP_VOICING "Comp Voicing"
-    IDS_PART_MT_HARM_ANTICIPATION "Harmonic Anticipation"
-    IDS_PART_MT_INPUT_TRANSPOSE "Input Transpose"
-    IDS_PART_MT_INPUT_VEL_OFFSET "Input Vel. Offset"
-    IDS_PART_MT_LEAD_HARM_INTERVAL "Lead Harm Interval"
-    IDS_PART_MT_LEAD_HARM_OMIT_MELODY "Lead Harm Omit Melody"
-    IDS_PART_MT_LEAD_HARM_STATIC_MAX "Lead Harm Static Max"
-    IDS_PART_MT_LEAD_HARM_STATIC_MIN "Lead Harm Static Min"
-    IDS_PART_MT_OUTPUT_PATCH "Output Patch"
+    IDS_PART_MT_ENABLE      "Part Enable"
+    IDS_PART_MT_FUNCTION    "Part Function"
+    IDS_PART_MT_IN_CC_NOTE  "Input CC Note"
+    IDS_PART_MT_IN_CC_NOTE_VEL "Input CC Note Velocity"
+    IDS_PART_MT_IN_NON_DIATONIC "Input Non-Diatonic"
+    IDS_PART_MT_IN_TRANSPOSE "Input Transpose"
+    IDS_PART_MT_IN_VEL_OFFSET "Input Vel. Offset"
+    IDS_PART_MT_IN_ZONE_HIGH "Input Zone High"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDS_PART_MT_OUTPUT_VOLUME "Output Volume"
-    IDS_PART_MT_PART_ENABLE "Part Enable"
-    IDS_PART_MT_PART_FUNCTION "Part Function"
+    IDS_PART_MT_IN_ZONE_LOW "Input Zone Low"
+    IDS_PART_MT_LEAD_HARM_INTERVAL "Lead Harm Interval"
+    IDS_PART_MT_LEAD_HARM_OMIT_MELODY "Lead Harm Omit Melody"
+    IDS_PART_MT_LEAD_HARM_STATIC_MAX "Lead Harm Static Max"
+    IDS_PART_MT_LEAD_HARM_STATIC_MIN "Lead Harm Static Min"
+    IDS_PART_MT_OUT_ANTICIPATION "Harmonic Anticipation"
+    IDS_PART_MT_OUT_PATCH   "Output Patch"
+    IDS_PART_MT_OUT_VOLUME  "Output Volume"
     IDS_PATCH_BAD_FORMAT    "'%1' has an invalid format."
     IDS_PATCH_BAR           "Patch"
     IDS_PATCH_MT_LEAD_IN    "Lead-in"
@@ -1448,20 +1501,81 @@ BEGIN
     IDS_PATCH_MT_NEXT_CHORD "Next Chord"
     IDS_PATCH_MT_NEXT_SECTION "Next Section"
     IDS_PATCH_MT_PAUSE      "Pause"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDC_PART_BASS_APPROACH_LENGTH 
+                            "Fixed bass approach length, as fraction of whole note"
+    IDC_PART_BASS_APPROACH_TRIGGER "Trigger bass approach to target chord"
+    IDC_PART_BASS_LOWEST    "Lowest bass note allowed"
+    IDC_PART_BASS_SLASH_CHORDS "Respect slash chord bass notes"
+    IDC_PART_BASS_TARGET_ALIGNMENT 
+                            "Alignment of triggered bass approach target, in measures"
+    IDC_PART_COMP_ARP_ORDER "Arpeggio note order"
+    IDC_PART_COMP_ARP_PERIOD "Time between arpeggio notes, in whole notes"
+    IDC_PART_COMP_ARP_PERIOD_QUANT 
+                            "Time between arpeggio notes, in quantized units"
+    IDC_PART_COMP_ARP_REPEAT "True if arpeggio repeats; false for one-shot"
+    IDC_PART_COMP_CHORD_RESETS_ALT 
+                            "True if chord change resets variant alternation"
+    IDC_PART_COMP_VARIATION "Chord variation scheme"
+    IDC_PART_COMP_VOICING   "Chord voicing type"
+    IDC_PART_ENABLE         "Enable this part"
+    IDC_PART_FUNCTION       "Part mapping function"
+    IDC_PART_IN_CC_NOTE     "Note input via continuous controller"
+    IDC_PART_IN_CC_NOTE_VEL "Velocity of note input via continuous controller"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDC_PART_IN_CHAN        "Input channel number"
+    IDC_PART_IN_DEVICE_NAME "MIDI input device name"
+    IDC_PART_IN_NON_DIATONIC "Handling for non-diatonic input notes"
+    IDC_PART_IN_PORT        "MIDI input device index"
+    IDC_PART_IN_TRANSPOSE   "Input transposition, in semitones"
+    IDC_PART_IN_VEL_OFFSET  "Input note velocity offset"
+    IDC_PART_IN_ZONE_HIGH   "Highest note of input range"
+    IDC_PART_IN_ZONE_LOW    "Lowest note of input range"
+    IDC_PART_LEAD_HARM_INTERVAL "Generic harmony interval, in diatonic steps"
+    IDC_PART_LEAD_HARM_OMIT_MELODY 
+                            "True if harmonizer should omit melody note"
+    IDC_PART_LEAD_HARM_STATIC_MAX 
+                            "Maximum static harmony interval, in semitones"
+    IDC_PART_LEAD_HARM_STATIC_MIN 
+                            "Minimum static harmony interval, in semitones"
+    IDC_PART_MIDI_ROW       "PartMidiRow"
+    IDC_PART_NAME           "Part name"
+    IDC_PART_OUT_ANTICIPATION 
+                            "Harmonic anticipation, as fraction of whole note"
+    IDC_PART_OUT_CHAN       "Output channel number"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
     IDS_PATCH_MT_PLAY       "Play"
     IDS_PATCH_MT_PREV_CHORD "Previous Chord"
     IDS_PATCH_MT_REPEAT     "Repeat"
     IDS_PATCH_MT_REWIND     "Rewind"
     IDS_PATCH_MT_SONG_POSITION "Song Position"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
     IDS_PATCH_MT_TEMPO      "Tempo"
     IDS_PATCH_MT_TEMPO_MULTIPLE "Tempo Multiple"
     IDS_PATCH_MT_TRANSPOSE  "Transpose"
     IDS_RECORD_AS           "Record As"
     IDS_RECORD_LOCKED       "Locked to always record."
+    IDS_REC_PLAY_COL_CHANNEL "Chan"
+    IDS_REC_PLAY_COL_DEVICE "Device"
+    IDS_REC_PLAY_COL_EVENTS "Events"
+    IDS_REC_PLAY_COL_NAME   "Name"
+    IDS_REC_PLAY_COL_PORT   "Port"
+    IDS_REC_PLAY_STOP_PLAYING 
+                            "Can't do record playback while song is playing. Stop playing?"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_REC_PLAY_STOP_RECORDING 
+                            "Can't do record playback while recording. Stop recording?"
     IDS_SECTION_NAME_SPACES "Section name can't contain spaces."
     IDS_SEC_LIST_COL_IMPLICIT "Implicit"
     IDS_SEC_LIST_COL_INDEX  "#"
@@ -1473,14 +1587,14 @@ BEGIN
     IDS_SONG_ERR_BAD_BASS_NOTE "Invalid bass note in '%s'."
     IDS_SONG_ERR_BAD_CHORD  "Invalid chord '%s'."
     IDS_SONG_ERR_BAD_CHORD_TYPE "Unknown chord type in '%s'."
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
     IDS_SONG_ERR_BAD_COMMAND "Unknown command '%s' or missing duration."
     IDS_SONG_ERR_BAD_DURATION "Invalid duration '%d'."
     IDS_SONG_ERR_BAD_KEY    "Invalid key signature '%s'."
     IDS_SONG_ERR_BAD_MODE   "Unknown mode '%s'."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
     IDS_SONG_ERR_BAD_ROOT   "Invalid root in '%s'."
     IDS_SONG_ERR_BAD_SCALE  "Unknown scale '%s'."
     IDS_SONG_ERR_BAD_SYNTAX "Invalid syntax."
@@ -1493,14 +1607,14 @@ BEGIN
     IDS_SONG_ERR_SEC_CANT_NEST "Sections can't be nested."
     IDS_SONG_ERR_SEC_UNTERMINATED "Missing section terminator."
     IDS_THREADS_COL_KERNEL_TIME "Kernel"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
     IDS_THREADS_COL_PRIORITY "Priority"
     IDS_THREADS_COL_THREAD_ID "ID"
     IDS_THREADS_COL_USER_TIME "User"
     IDS_UC_BASE_PATCH       "Base Patch"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
     IDS_UC_CUT              "Cut Parts"
     IDS_UC_DELETE           "Delete Parts"
     IDS_UC_ENABLE_PART      "Enable Part"
@@ -1513,15 +1627,7 @@ BEGIN
     IDS_UC_REORDER          "Drag Parts"
     IDS_UC_SELECT_PART      "Select Part"
     IDS_UC_SELECT_PART_PAGE "Select Part Page"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
     IDS_UC_SELECT_PATCH_PAGE "Select Patch Page"
-    IDS_PART_MT_INPUT_NON_DIATONIC "Input Non-Diatonic"
-    IDS_PART_MT_INPUT_NOTE  "Input Note"
-    IDS_PART_MT_INPUT_ZONE_LOW "Input Zone Low"
-    IDS_PART_MT_INPUT_ZONE_HIGH "Input Zone High"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -1579,42 +1685,6 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDC_PART_BASS_APPROACH_LENGTH 
-                            "Fixed approach length, as fraction of whole note"
-    IDC_PART_BASS_LOWEST    "Lowest bass note allowed"
-    IDC_PART_BASS_SLASH_CHORDS "Respect slash chord bass notes"
-    IDC_PART_BASS_TARGET_ALIGNMENT 
-                            "Alignment of triggered approach target, in measures"
-    IDC_PART_COMP_ARP_ORDER "Arpeggio note order"
-    IDC_PART_COMP_ARP_PERIOD "Time between arpeggio notes, in whole notes"
-    IDC_PART_COMP_ARP_REPEAT "True if arpeggio repeats; false for one-shot"
-    IDC_PART_COMP_CHORD_RESETS_ALT 
-                            "True if chord change resets variant alternation"
-    IDC_PART_COMP_VARIATION "Chord variation scheme"
-    IDC_PART_COMP_VOICING   "Chord voicing type"
-    IDC_PART_IN_CHAN        "Input channel number"
-    IDC_PART_IN_DEVICE_NAME "MIDI input device name"
-    IDC_PART_IN_NON_DIATONIC "Handling for non-diatonic input notes"
-    IDC_PART_IN_PORT        "MIDI input device index"
-    IDC_PART_IN_TRANSPOSE   "Input transposition, in semitones"
-    IDC_PART_IN_VEL_OFFSET  "Input note velocity offset"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
-    IDC_PART_IN_ZONE_HIGH   "Highest note of input range"
-    IDC_PART_IN_ZONE_LOW    "Lowest note of input range"
-    IDC_PART_LEAD_HARM_INTERVAL "Generic interval, in diatonic steps"
-    IDC_PART_LEAD_HARM_OMIT_MELODY 
-                            "True if harmonizer should omit melody note"
-    IDC_PART_LEAD_HARM_STATIC_MAX 
-                            "Minimum static harmony interval, in semitones"
-    IDC_PART_LEAD_HARM_STATIC_MIN 
-                            "Maximum static harmony interval, in semitones"
-    IDC_PART_MIDI_ROW       "PartMidiRow"
-    IDC_PART_OUT_ANTICIPATION 
-                            "Harmonic anticipation, as fraction of whole note"
-    IDC_PART_OUT_CHAN       "Output channel number"
     IDC_PART_OUT_CONTROLS_THRU "Pass controllers through to output"
     IDC_PART_OUT_DEVICE_NAME "MIDI output device name"
     IDC_PART_OUT_FIX_HELD_NOTES "Correct held notes that become non-diatonics"
@@ -1622,10 +1692,6 @@ BEGIN
     IDC_PART_OUT_PATCH      "Patch number, or -1 if none"
     IDC_PART_OUT_PORT       "MIDI output device index"
     IDC_PART_OUT_VOLUME     "Output volume, or -1 if none"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
     IDC_PATCH_AINST_CHANNEL "Output channel number"
     IDC_PATCH_AINST_ENABLE  "Enable instrument"
     IDC_PATCH_AINST_PATCH   "Patch number, or -1 if none"
@@ -1635,6 +1701,10 @@ BEGIN
     IDC_PATCH_GEN_KEY       "Transposed key signature"
     IDC_PATCH_GEN_LEAD_IN   "Lead-in length, in measures"
     IDC_PATCH_GEN_PPQ       "Time resolution, in pulses per quarter note"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
     IDC_PATCH_GEN_TEMPO     "Tempo, in beats per minute"
     IDC_PATCH_GEN_TEMPO_MULTIPLE "Tempo multiplier"
     IDC_PATCH_GEN_TRANSPOSE "Key transposition, in semitones"
@@ -1642,23 +1712,29 @@ BEGIN
     IDC_PATCH_METRO_ACCENT_SAME_NOTE "Use same note for accent"
     IDC_PATCH_METRO_ACCENT_VEL "Accented note velocity"
     IDC_PATCH_METRO_NOTE    "Normal metronome note"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
     IDC_PIANO_CHANNEL       "Output channel number"
     IDC_PIANO_KEY_COUNT     "Number of keys"
     IDC_PIANO_PORT          "MIDI output device index"
     IDC_PIANO_START_NOTE    "Keyboard's first note"
     IDC_PIANO_VELOCITY      "Output velocity"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
     IDC_SECTION_PROPS_LENGTH "Section length"
     IDC_SECTION_PROPS_NAME  "Section name"
     IDC_SECTION_PROPS_REPEAT "Section repeat count, or zero for indefinite"
     IDC_SECTION_PROPS_START "Section start position"
+    IDC_SONG_PROPS_COMMENTS "Enter one or more comment lines here"
     IDC_SONG_PROPS_KEY_SIG  "Song key signature"
     IDC_SONG_PROPS_TEMPO    "Song tempo, in beats per minute"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
     IDC_SONG_PROPS_TIME_SIG_DENOM "Denominator of song's time signature"
     IDC_SONG_PROPS_TIME_SIG_NUMER "Numerator of song's time signature"
+    IDC_SONG_PROPS_TRANSPOSE "Song transposition amount, in semitones"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -1782,11 +1858,6 @@ BEGIN
     IDC_INSCH_MEASURES      "Chord duration in measures"
     IDC_INSCH_ROOT          "Chord root"
     IDC_INSCH_TYPE          "Chord type"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDC_SONG_PROPS_TRANSPOSE "Song transposition amount, in semitones"
 END
 
 #endif    // English (U.S.) resources

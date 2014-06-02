@@ -16,6 +16,7 @@
 //					name			default
 OUTNOTESSTATEDEF(	PianoSize,		PS_128			)
 OUTNOTESSTATEDEF(	ShowKeyLabels,	TRUE			)
+OUTNOTESSTATEDEF(	RotateLabels,	TRUE			)
 OUTNOTESSTATEDEF(	ShowMetronome,	FALSE			)
 
 #undef OUTNOTESSTATEDEF

@@ -67,17 +67,20 @@ public:
 	EVENT&	operator[](int Index);
 	const EVENT&	operator[](int Index) const;
 	void	GetEvent(CEventArray& Event) const;
+	void	SetEvent(const CEventArray& Event);
 	int		GetBufferSize() const;
 	void	SetBufferSize(int Size);
 	void	GetMidiTracks(const CPartInfoArray& PartInfo, CMidiTrackArray& Track) const;
 
 // Operations
+	void	RemoveAllEvents();
 	void	AddEvent(DWORD Port, DWORD Msg);
 	bool	Write(LPCTSTR Path, const CPatch& Patch);
 	bool	Write(LPCTSTR Path, const FILE_HEADER& Header, const CPartInfoArray& PartInfo);
 	bool	Read(LPCTSTR Path, FILE_HEADER& Header, CPartInfoArray& PartInfo);
 	bool	ExportMidiFile(LPCTSTR Path, const CPatch& Patch, short PPQ) const;
-	bool	ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, double Tempo, short PPQ) const;
+	bool	ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, double Tempo, short PPQ, LARGE_INTEGER PerfFreq) const;
+	static	CString GetTimeStr(int Millis);
 
 protected:
 // Data members

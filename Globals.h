@@ -202,6 +202,7 @@ enum {	// user windows messages
 #define SONG_EXT		_T(".ces")
 #define PATCH_EXT		_T(".cep")
 #define MIDI_FILE_EXT	_T(".mid")
+#define MIDI_RECORD_EXT	_T(".cemr")
 
 // file names
 #define PATCH_INI_FILE_NAME			_T("ChordEasePatch.ini")

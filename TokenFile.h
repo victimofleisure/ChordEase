@@ -27,6 +27,7 @@ public:
 	int		GetLinesRead() const;
 	CString	GetCommentDelimiter() const;
 	void	SetCommentDelimiter(CString Delimiter);
+	CString	GetComments() const;
 
 // Operations
 	CString	ReadToken(LPCTSTR Delimiters);
@@ -37,6 +38,7 @@ protected:
 	int		m_LinesRead;		// number of lines read
 	int		m_LinePos;			// position within line
 	CString	m_CommentDelimiter;	// single-line comment delimiter
+	CString	m_Comments;			// one or more newline-terminated comments
 
 // Helpers
 	void	InitTokenData();
@@ -55,6 +57,11 @@ inline CString CTokenFile::GetCommentDelimiter() const
 inline void CTokenFile::SetCommentDelimiter(CString Delimiter)
 {
 	m_CommentDelimiter = Delimiter;
+}
+
+inline CString CTokenFile::GetComments() const
+{
+	return(m_Comments);
 }
 
 #endif

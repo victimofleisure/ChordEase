@@ -9,6 +9,7 @@
 		rev		date	comments
         00      12sep13	initial version
         01      02may14	add undo manager
+		02		27may14	add auto-record handling
 
 		ChordEase document
  
@@ -21,6 +22,7 @@
 #include "ChordEase.h"
 #include "ChordEaseDoc.h"
 #include "NotepadDlg.h"
+#include "MainFrm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -57,13 +59,11 @@ void CChordEaseDoc::CMyUndoManager::OnModify(bool Modified)
 	m_pDocument->SetModifiedFlag(Modified);
 }
 
-BOOL CChordEaseDoc::OnNewDocument()
+inline void CChordEaseDoc::AutoRecord(bool Enable)
 {
-	if (!CDocument::OnNewDocument())
-		return FALSE;
-	m_SongText.Empty();
-	gEngine.ResetSong();
-	return TRUE;
+	CMainFrame	*pMain = theApp.GetMain();	// frame pointer may be null during app close
+	if (pMain != NULL && pMain->GetOptions().m_Record.AlwaysRecord)	// if auto-recording
+		gEngine.Record(Enable);	// start or stop recording
 }
 
 void CChordEaseDoc::UpdateAllViews(CView* pSender, LPARAM lHint, CObject* pHint)
@@ -195,11 +195,28 @@ void CChordEaseDoc::Dump(CDumpContext& dc) const
 /////////////////////////////////////////////////////////////////////////////
 // CChordEaseDoc commands
 
+BOOL CChordEaseDoc::OnNewDocument()
+{
+	if (!CDocument::OnNewDocument())
+		return FALSE;
+	m_SongText.Empty();
+	if (gEngine.ResetSong())	// reset song
+		AutoRecord(TRUE);	// start auto-recording if applicable
+	return TRUE;
+}
+
 BOOL CChordEaseDoc::OnOpenDocument(LPCTSTR lpszPathName) 
 {
 	if (!CDocument::OnOpenDocument(lpszPathName))
 		return FALSE;
-	// intentionally ignore read return code, so user can correct errors
-	gEngine.ReadSong(lpszPathName);
+	if (gEngine.ReadSong(lpszPathName))	// read song
+		AutoRecord(TRUE);	// start auto-recording if applicable
+	// intentionally override read return code, so user can correct errors
 	return TRUE;
+}
+
+void CChordEaseDoc::DeleteContents() 
+{
+	AutoRecord(FALSE);	// stop auto-recording
+	CDocument::DeleteContents();
 }

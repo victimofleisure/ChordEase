@@ -46,6 +46,7 @@ protected:
 // Dialog Data
 	//{{AFX_DATA(CSongPropsDlg)
 	enum { IDD = IDD_SONG_PROPS };
+	CEdit	m_Comments;
 	CComboBox	m_TimeSigDenom;
 	CSpinNumEdit	m_Transpose;
 	CSpinNumEdit	m_TimeSigNumer;

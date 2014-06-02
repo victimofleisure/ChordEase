@@ -9,6 +9,7 @@
 		rev		date	comments
         00      23sep13	initial version
 		01		03may14	in OnParentNotify, event is low word of message
+		02		31may14	add OnItemChange
 
 		grid control
  
@@ -20,7 +21,6 @@
 #include "stdafx.h"
 #include "GridCtrl.h"
 #include "PopupEdit.h"
-#include "PopupCombo.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -116,6 +116,11 @@ CWnd *CGridCtrl::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& rect, C
 	pEdit->SetWindowText(Text);
 	pEdit->SetSel(0, -1);	// select entire text
 	return(pEdit);
+}
+
+void CGridCtrl::OnItemChange(int Row, int Col, LPCTSTR Text)
+{
+	SetItemText(Row, Col, Text);
 }
 
 BEGIN_MESSAGE_MAP(CGridCtrl, CDragVirtualListCtrl)
@@ -223,6 +228,6 @@ void CGridCtrl::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 LRESULT CGridCtrl::OnTextChange(WPARAM wParam, LPARAM lParam)
 {
-	SetItemText(m_EditRow, m_EditCol, LPCTSTR(wParam));
+	OnItemChange(m_EditRow, m_EditCol, LPCTSTR(wParam));
 	return(0);
 }

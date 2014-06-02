@@ -42,6 +42,7 @@ public:
 public:
 	void	AddEvent(WPARAM wParam, LPARAM lParam);
 	void	OnShowBar(bool Show);
+	void	RemoveAllNotes();
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -62,6 +63,8 @@ protected:
 	afx_msg void OnUpdateShowKeyLabels(CCmdUI *pCmdUI);
 	afx_msg void OnShowMetronome();
 	afx_msg void OnUpdateShowMetronome(CCmdUI *pCmdUI);
+	afx_msg void OnRotateLabels();
+	afx_msg void OnUpdateRotateLabels(CCmdUI *pCmdUI);
 	afx_msg void OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu);
 	//}}AFX_MSG
 	afx_msg void OnFilterPort(UINT nID);
@@ -105,6 +108,7 @@ protected:
 	CMidiInst	m_Filter;		// selected MIDI port and channel, or -1 for all
 	int		m_PianoSize;		// index of current piano size
 	bool	m_ShowKeyLabels;	// true if showing key labels
+	bool	m_RotateLabels;		// if true, rotate labels sideways
 	bool	m_ShowMetronome;	// true if showing metronome notes
 
 // Helpers

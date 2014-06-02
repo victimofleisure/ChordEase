@@ -11,6 +11,7 @@
 		01		16aug13	start over
  		02		16apr14	add section names; refactor command parsing
  		03		01may14	add write
+		04		26may14	preserve comments
 
 		song container
 
@@ -24,6 +25,7 @@
 #include "SongState.h"
 
 #define WHITESPACE _T(" \t")
+#define COMMENT_DELIMITER _T("//")	// same as default in TokenFile.cpp
 
 const LPCTSTR CSong::m_Command[COMMANDS] = {
 	#define SONGCOMMANDDEF(name, str) _T(str),
@@ -65,6 +67,15 @@ int CSong::CSectionArray::FindImplicit() const
 	return(-1);
 }
 
+void CSong::CProperties::Copy(const CProperties& Props)
+{
+	m_Meter			= Props.m_Meter;
+	m_Key			= Props.m_Key;
+	m_Transpose		= Props.m_Transpose;
+	m_Tempo			= Props.m_Tempo;
+	m_Comments		= Props.m_Comments;
+}
+
 CSong::CSong()
 {
 	Reset();
@@ -86,6 +97,7 @@ void CSong::Reset()
 	// don't reset dictionary
 	m_Section.RemoveAll();
 	m_SectionName.RemoveAll();
+	m_Comments.Empty();
 }
 
 void CSong::Copy(const CSong& Song)
@@ -100,6 +112,7 @@ void CSong::Copy(const CSong& Song)
 	m_Dictionary = Song.m_Dictionary;
 	m_Section = Song.m_Section;
 	m_SectionName.Copy(Song.m_SectionName);
+	m_Comments = Song.m_Comments;
 }
 
 bool CSong::IsValid(const CChord& Chord) const
@@ -147,12 +160,41 @@ void CSong::SetState(const CSongState& State)
 	MakeBeatMap(CountBeats(m_Chord));
 }
 
+CString CSong::GetComments() const
+{
+	int	DelimLen = _countof(COMMENT_DELIMITER);
+	CString	sLine, sComments;
+	int	iStart = 0;
+	while (!(sLine = Tokenize(m_Comments, _T("\n"), iStart)).IsEmpty()) {
+		sLine = sLine.Mid(DelimLen);	// remove leading comment delimiter
+		sLine.TrimLeft();	// remove leading whitespace
+		sComments += sLine + _T("\r\n");	// append comment text and CRLF
+	}
+	return(sComments);
+}
+
+void CSong::SetComments(const CString& Comments)
+{
+	m_Comments.Empty();
+	CString	sLine;
+	int	iStart = 0;
+	do {
+		sLine = Tokenize(Comments, _T("\n"), iStart);
+		if (!sLine.IsEmpty() || iStart >= 0) {	// if non-empty line or not last line
+			sLine.TrimRight();	// remove trailing whitespace (including CRLF)
+			// append comment line, prefixed by comment delimiter and space
+			m_Comments += CString(COMMENT_DELIMITER) + ' ' + sLine + '\n';
+		}
+	} while (iStart >= 0);	// until end of string is reached
+}
+
 void CSong::GetProperties(CProperties& Props) const
 {
 	Props.m_Meter		= m_Meter;
 	Props.m_Key			= m_Key;
 	Props.m_Transpose	= m_Transpose;
 	Props.m_Tempo		= m_Tempo;
+	Props.m_Comments	= GetComments();
 }
 
 void CSong::SetProperties(const CProperties& Props)
@@ -163,6 +205,7 @@ void CSong::SetProperties(const CProperties& Props)
 	m_Key			= Props.m_Key;
 	m_Transpose		= Props.m_Transpose;
 	m_Tempo			= Props.m_Tempo;
+	SetComments(Props.m_Comments);
 }
 
 CString	CSong::MakeChordName(CNote Root, CNote Bass, int Type, CNote Key) const
@@ -569,6 +612,7 @@ bool CSong::Read(LPCTSTR Path)
 		ClosePrevSection(beats);	// add implicit section if needed
 //		DumpSections();	// debug only
 		MakeBeatMap(beats);	// make beat map from chord array
+		m_Comments = fp.GetComments();	// save comments if any
 	}
 	CATCH (CFileException, e) {
 		TCHAR	msg[256];
@@ -584,6 +628,8 @@ bool CSong::Write(LPCTSTR Path)
 {
 	TRY {
 		CStdioFile	fp(Path, CFile::modeCreate | CFile::modeWrite);
+		if (!m_Comments.IsEmpty())	// if comments exist
+			fp.WriteString(m_Comments + '\n');	// write comments first
 		CString	line, s;
 		s.Format(_T("%d/%d"), m_Meter.m_Numerator, m_Meter.m_Denominator);
 		line = s + ' ' + m_Key.Name();

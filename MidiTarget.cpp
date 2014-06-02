@@ -107,3 +107,10 @@ void CMidiTarget::Serialize(CArchive& ar, CMidiTarget *Target, int nTargets)
 		ar.Write(Target, nTargets * sizeof(CMidiTarget));
 }
 
+int CMidiTarget::GetControllerName(LPTSTR Text, int TextMax, int Ctrl)
+{
+	LPCTSTR	pName = CMidiTarget::GetControllerName(Ctrl);
+	if (pName == NULL)
+		pName = _T("Undefined");
+	return(_sntprintf(Text, TextMax, _T("%d (%s)"), Ctrl, pName));
+}

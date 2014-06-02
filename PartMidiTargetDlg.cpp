@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      19nov13	initial version
+		01		25may14	override target name tool tip
 
 		part MIDI target dialog
  
@@ -32,6 +33,11 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CPartMidiTargetDlg, CMidiTargetDlg);
 
+const int CPartMidiTargetDlg::m_TargetTipID[] = {
+	#define PARTMIDITARGETDEF(name, page) IDC_PART_##name,
+	#include "PartMidiTargetDef.h"
+};
+
 CPartMidiTargetDlg::CPartMidiTargetDlg(CWnd* pParent /*=NULL*/)
 	: CMidiTargetDlg(IDC_PART_MIDI_ROW, pParent)
 {
@@ -49,6 +55,17 @@ void CPartMidiTargetDlg::SetPart(const CPart& Part)
 {
 	for (int iTarg = 0; iTarg < CPart::MIDI_TARGETS; iTarg++)	// for each target
 		GetRow(iTarg)->SetTarget(Part.m_MidiTarget[iTarg]);	// update row from data
+}
+
+void CPartMidiTargetDlg::GetTargetToolTip(int RowIdx, int id, NMHDR* pNMHDR)
+{
+	ASSERT(RowIdx >= 0 && RowIdx < _countof(m_TargetTipID));
+	int	nTipID = m_TargetTipID[RowIdx];
+	if (nTipID) {	// if alternate tip specified
+		TOOLTIPTEXT *pTTT = (TOOLTIPTEXT *)pNMHDR;
+		pTTT->uFlags &= ~TTF_IDISHWND;	// idFrom is ID, not window handle
+		pNMHDR->idFrom = nTipID;	// set idFrom to hint resource ID
+	}
 }
 
 void CPartMidiTargetDlg::DoDataExchange(CDataExchange* pDX)

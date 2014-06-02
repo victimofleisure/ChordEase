@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      19nov13	initial version
+		01		25may14	override target name tool tip
 
 		part MIDI target dialog
  
@@ -41,6 +42,9 @@ public:
 	void	SetPart(const CPart& Part);
 
 // Overrides
+	virtual	void	GetTargetToolTip(int RowIdx, int id, NMHDR* pNMHDR);
+
+// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPartMidiTargetDlg)
 	protected:
@@ -63,6 +67,7 @@ protected:
 // Types
 
 // Constants
+	static const int	m_TargetTipID[];	// tool tip ID for each target
 
 // Data members
 

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		23sep13	initial version
+		01		31may14	add class factory
 
 		popup combo box control
 
@@ -41,6 +42,7 @@ public:
 // Operations
 public:
 	BOOL	Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID = 0);
+	static	CPopupCombo	*Factory(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, int DropHeight);
 	void	EndEdit();
 	void	CancelEdit();
 

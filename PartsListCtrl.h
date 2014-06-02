@@ -51,11 +51,11 @@ public:
 protected:
 	//{{AFX_MSG(CPartsListCtrl)
 	//}}AFX_MSG
-	afx_msg LRESULT OnTextChange(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 // Overrides
 	virtual	CWnd	*CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID);
+	virtual	void	OnItemChange(int Row, int Col, LPCTSTR Text);
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -348,6 +348,14 @@ SOURCE=.\Hyperlink.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\IconButton.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\IconButton.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\IniFile.cpp
 # End Source File
 # Begin Source File
@@ -1000,6 +1008,18 @@ SOURCE=.\Range.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\RecordPlayerColDef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\RecordPlayerDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RecordPlayerDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\RefPtr.h
 # End Source File
 # Begin Source File
@@ -1173,6 +1193,14 @@ SOURCE=.\StdAfx.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\SteadyStatic.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\SteadyStatic.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\TabbedDlg.cpp
 # End Source File
 # Begin Source File
@@ -1333,11 +1361,31 @@ SOURCE=.\res\header_sort.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\ico00001.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\icon1.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\res\icon2.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\rec_play.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\RecPlayPause.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\RecPlayPlay.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\RecPlayStop.ico
 # End Source File
 # Begin Source File
 

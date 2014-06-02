@@ -81,6 +81,10 @@ void CMidiTargetDlg::DoDataExchange(CDataExchange* pDX)
 	//}}AFX_DATA_MAP
 }
 
+void CMidiTargetDlg::GetTargetToolTip(int RowIdx, int id, NMHDR* pNMHDR)
+{
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CMidiTargetDlg message map
 

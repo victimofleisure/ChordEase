@@ -13,6 +13,7 @@
 		03		28apr14	in TimerHook, add lead-in test
         04      07may14	add editing
 		05		15may14	in SaveUndoState, remove song state's section map
+		06		02jun14	fix access violation on left button up if empty song
 
 		ChordEase view
  
@@ -87,7 +88,7 @@ CChordEaseView::CChordEaseView() :
 	m_ChartRect.SetRectEmpty();
 	m_FontScale = 0;
 	m_LinesPerPage = 0;
-	m_EditChordIdx = 0;
+	m_EditChordIdx = -1;
 	m_HasFocus = FALSE;
 	m_PopupEdit = NULL;
 	m_DragState = DTS_NONE;
@@ -384,7 +385,7 @@ void CChordEaseView::TimerHook()
 		return;
 	int	iChord = m_BeatMap[iBeat];
 	if (iChord != m_CurChord) {	// if current chord changed
-		InvalidateChord(m_CurChord);
+		InvalidateCurrentChord();
 		InvalidateChord(iChord);
 		m_CurChord = iChord;	// update current chord; order matters
 		EnsureVisible(m_ChordSymbol[iChord].m_Rect, m_MeasureSize);
@@ -451,7 +452,10 @@ void CChordEaseView::InvalidateSelection()
 
 void CChordEaseView::SelectToChord(int ChordIdx)
 {
-	ChordIdx = CLAMP(ChordIdx, 0, GetChordCount() - 1);
+	int	nChords = GetChordCount();
+	if (!nChords)	// if empty song
+		return;	// avoid access violation
+	ChordIdx = CLAMP(ChordIdx, 0, nChords - 1);
 	CIntRange	sel;
 	if (HasSelection())
 		sel.Start = m_Selection.Start;
@@ -706,6 +710,8 @@ bool CChordEaseView::OnDestroyPopupEdit()
 	m_PopupEdit = NULL;
 	if (m_PopupEditText.IsEmpty())	// if empty string
 		return(FALSE);
+	if (!IsValidChordIndex(m_EditChordIdx))	// improbable but just in case
+		return(FALSE);
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
 	CSong::CChord	chord = gEngine.GetChord(iSongChord);
 	int	ErrID = gEngine.GetSong().ParseChordSymbol(m_PopupEditText, chord);
@@ -741,14 +747,20 @@ int CChordEaseView::GetCurMeasure() const
 
 void CChordEaseView::SetCurBeat(int BeatIdx)
 {
-	BeatIdx = CLAMP(BeatIdx, 0, GetBeatCount() - 1);
+	int	nBeats = GetBeatCount(); 
+	if (!nBeats)	// if empty song
+		return;	// avoid access violation
+	BeatIdx = CLAMP(BeatIdx, 0, nBeats - 1);
 	gEngine.SetBeat(BeatIdx);
 	theApp.GetMain()->OnSongPositionChange();
 }
 
 void CChordEaseView::SetCurChord(int ChordIdx)
 {
-	ChordIdx = CLAMP(ChordIdx, 0, GetChordCount() - 1);
+	int	nChords = GetChordCount();
+	if (!nChords)	// if empty song
+		return;	// avoid access violation
+	ChordIdx = CLAMP(ChordIdx, 0, nChords - 1);
 	SetCurBeat(m_ChordSymbol[ChordIdx].m_Beat);
 	EmptySelection();
 }
@@ -811,8 +823,7 @@ int CChordEaseView::MeasureToBeat(int MeasureIdx)
 
 int CChordEaseView::GetSongChordIndex(int ChordIdx) const
 {
-	if (!GetChordCount())
-		return(0);
+	ASSERT(IsValidChordIndex(ChordIdx));	// caller is responsible for avoiding this
 	int	iBeat = m_ChordSymbol[ChordIdx].m_Beat;
 	return(gEngine.GetSong().GetChordIndex(iBeat));
 }

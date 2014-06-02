@@ -43,6 +43,8 @@ protected: // create from serialization only
 public:
 	CChordEaseDoc* GetDocument();
 	void	SetPatch(const CBasePatch& Patch);
+	bool	IsValidBeatIndex(int BeatIdx) const;
+	bool	IsValidChordIndex(int ChordIdx) const;
 	int		GetBeatCount() const;
 	int		GetChordCount() const;
 	int		GetCurBeat() const;
@@ -333,6 +335,16 @@ inline CChordEaseView::CSymbol& CChordEaseView::CSymbol::operator=(const CSymbol
 	m_Beat = Symbol.m_Beat;
 	m_Rect = Symbol.m_Rect;
 	return(*this);
+}
+
+inline bool CChordEaseView::IsValidBeatIndex(int BeatIdx) const
+{
+	return(BeatIdx >= 0 && BeatIdx < GetBeatCount());
+}
+
+inline bool CChordEaseView::IsValidChordIndex(int ChordIdx) const
+{
+	return(ChordIdx >= 0 && ChordIdx < GetChordCount());
 }
 
 inline int CChordEaseView::GetBeatCount() const

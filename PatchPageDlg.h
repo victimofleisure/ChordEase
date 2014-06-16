@@ -9,6 +9,7 @@
 		rev		date	comments
         00      14sep13	initial version
         01      22apr14	add tooltip support
+        02      10jun14	add MIDI learn
 
         patch page dialog
  
@@ -41,6 +42,9 @@ public:
 	virtual	void	GetPatch(CBasePatch& Patch) const = 0;
 	virtual	void	UpdateEngine(UINT CtrlID);
 
+// Operations
+	void	UpdateMidiLearn();
+
 // ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPatchPageDlg)
 	//}}AFX_VIRTUAL
@@ -54,13 +58,21 @@ protected:
 // Generated message map functions
 	//{{AFX_MSG(CPatchPageDlg)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnPaint();
 	//}}AFX_MSG
 	afx_msg void OnChangedNumEdit(UINT nID, NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnClickedBtn(UINT nID);
 	afx_msg void OnSelChangeCombo(UINT nID);
 	afx_msg void OnChangedDurationCombo(UINT nID, NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg BOOL OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnChildSetFocus(UINT nID);
+	afx_msg void OnChildKillFocus(UINT nID);
 	DECLARE_MESSAGE_MAP()
+
+// Helpers
+	void	GetSelectionRect(CWnd *pChild, CRect& rSelect);
+	void	UpdateMidiLearn(CWnd *pChild);
+	void	UpdateMidiLearn(UINT nID);
 };
 
 /////////////////////////////////////////////////////////////////////////////

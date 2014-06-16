@@ -298,6 +298,8 @@ protected:
 		return(TRUE);
 	}
 	static	int		NormParamToEnum(double Val, int Enums);
+	static	int		NormParamToInt(double Val, int Min, int Max);
+	static	int		NormParamToMidiVal(double Val);
 	static	bool	UpdateTrigger(bool Input, bool& State);
 	void	UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int Val);
 	int		GetChordIndex(int Tick) const;

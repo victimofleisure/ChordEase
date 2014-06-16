@@ -29,10 +29,10 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CPatchMetronomeDlg dialog
 
-IMPLEMENT_DYNAMIC(CPatchMetronomeDlg, CPatchAutoInstDlg);
+IMPLEMENT_DYNAMIC(CPatchMetronomeDlg, CPatchPageDlg);
 
 CPatchMetronomeDlg::CPatchMetronomeDlg(CWnd* pParent /*=NULL*/)
-	: CPatchAutoInstDlg(pParent)
+	: CPatchPageDlg(IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CPatchMetronomeDlg)
 	//}}AFX_DATA_INIT
@@ -41,7 +41,12 @@ CPatchMetronomeDlg::CPatchMetronomeDlg(CWnd* pParent /*=NULL*/)
 void CPatchMetronomeDlg::GetPatch(CBasePatch& Patch) const
 {
 	CBasePatch::METRONOME&	Inst = Patch.m_Metronome;
-	GetInst(Inst);
+	Inst.Enable = m_Enable.GetCheck() != 0;
+	Inst.Inst.Port = m_Port.GetIntVal();
+	Inst.Inst.Chan = m_Channel.GetIntVal() - 1;
+	Inst.Velocity = m_Velocity.GetIntVal();
+	Inst.Patch = m_Patch.GetIntVal();
+	Inst.Volume = m_Volume.GetIntVal();
 	Inst.Note = m_Note.GetIntVal();
 	Inst.AccentNote = m_AccentNote.GetIntVal();
 	Inst.AccentVel = m_AccentVel.GetIntVal();
@@ -51,7 +56,12 @@ void CPatchMetronomeDlg::GetPatch(CBasePatch& Patch) const
 void CPatchMetronomeDlg::SetPatch(const CBasePatch& Patch)
 {
 	const CBasePatch::METRONOME&	Inst = Patch.m_Metronome;
-	SetInst(Inst);
+	m_Enable.SetCheck(Inst.Enable);
+	m_Port.SetVal(Inst.Inst.Port);
+	m_Channel.SetVal(Inst.Inst.Chan + 1);
+	m_Velocity.SetVal(Inst.Velocity);
+	m_Patch.SetVal(Inst.Patch);
+	m_Volume.SetVal(Inst.Volume);
 	m_Note.SetVal(Inst.Note);
 	m_AccentNote.SetVal(Inst.AccentNote);
 	m_AccentVel.SetVal(Inst.AccentVel);
@@ -60,8 +70,14 @@ void CPatchMetronomeDlg::SetPatch(const CBasePatch& Patch)
 
 void CPatchMetronomeDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CPatchAutoInstDlg::DoDataExchange(pDX);
+	CPatchPageDlg::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CPatchMetronomeDlg)
+	DDX_Control(pDX, IDC_PATCH_METRO_PATCH, m_Patch);
+	DDX_Control(pDX, IDC_PATCH_METRO_VELOCITY, m_Velocity);
+	DDX_Control(pDX, IDC_PATCH_METRO_PORT, m_Port);
+	DDX_Control(pDX, IDC_PATCH_METRO_ENABLE, m_Enable);
+	DDX_Control(pDX, IDC_PATCH_METRO_CHANNEL, m_Channel);
+	DDX_Control(pDX, IDC_PATCH_METRO_VOLUME, m_Volume);
 	DDX_Control(pDX, IDC_PATCH_METRO_ACCENT_SAME_NOTE, m_AccentSameNote);
 	DDX_Control(pDX, IDC_PATCH_METRO_NOTE, m_Note);
 	DDX_Control(pDX, IDC_PATCH_METRO_ACCENT_NOTE, m_AccentNote);
@@ -72,7 +88,7 @@ void CPatchMetronomeDlg::DoDataExchange(CDataExchange* pDX)
 /////////////////////////////////////////////////////////////////////////////
 // CPatchMetronomeDlg message map
 
-BEGIN_MESSAGE_MAP(CPatchMetronomeDlg, CPatchAutoInstDlg)
+BEGIN_MESSAGE_MAP(CPatchMetronomeDlg, CPatchPageDlg)
 	//{{AFX_MSG_MAP(CPatchMetronomeDlg)
 	ON_UPDATE_COMMAND_UI(IDC_PATCH_METRO_ACCENT_NOTE, OnUpdateAccentNote)
 	//}}AFX_MSG_MAP
@@ -83,7 +99,7 @@ END_MESSAGE_MAP()
 
 BOOL CPatchMetronomeDlg::OnInitDialog() 
 {
-	CPatchAutoInstDlg::OnInitDialog();
+	CPatchPageDlg::OnInitDialog();
 	
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE

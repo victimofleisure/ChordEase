@@ -123,6 +123,7 @@ public:
 	BASS	m_Bass;			// bass settings
 	AUTO	m_Auto;			// auto settings
 	CMidiTarget	m_MidiTarget[MIDI_TARGETS];	// array of MIDI targets
+	char	m_MidiShadow[MIDI_TARGETS];	// MIDI controller value for each target
 };
 
 class CPart : public WObject, public CBasePart {

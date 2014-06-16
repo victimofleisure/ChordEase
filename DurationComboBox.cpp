@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      17oct13	initial version
+        01      10jun14	let parent handle notifications too
 
         note duration combo box
  
@@ -156,8 +157,8 @@ void CDurationComboBox::UpdateValFromString(CString Str)
 
 BEGIN_MESSAGE_MAP(CDurationComboBox, CComboBox)
 	//{{AFX_MSG_MAP(CDurationComboBox)
-	ON_CONTROL_REFLECT(CBN_KILLFOCUS, OnKillfocus)
-	ON_CONTROL_REFLECT(CBN_SELCHANGE, OnSelchange)
+	ON_CONTROL_REFLECT_EX(CBN_KILLFOCUS, OnKillfocus)
+	ON_CONTROL_REFLECT_EX(CBN_SELCHANGE, OnSelchange)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -185,14 +186,15 @@ void CDurationComboBox::PreSubclassWindow()
 	}
 }
 
-void CDurationComboBox::OnKillfocus() 
+BOOL CDurationComboBox::OnKillfocus() 
 {
 	CString	s;
 	GetWindowText(s);
 	UpdateValFromString(s);
+	return(FALSE);	// let parent handle notification too
 }
 
-void CDurationComboBox::OnSelchange() 
+BOOL CDurationComboBox::OnSelchange() 
 {
 	int	iItem = GetCurSel();
 	if (iItem >= 0) {
@@ -200,6 +202,7 @@ void CDurationComboBox::OnSelchange()
 		GetLBText(iItem, s);
 		UpdateValFromString(s);
 	}
+	return(FALSE);	// let parent handle notification too
 }
 
 BOOL CDurationComboBox::PreTranslateMessage(MSG* pMsg) 

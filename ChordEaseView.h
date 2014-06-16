@@ -10,6 +10,7 @@
         00      12sep13	initial version
         01      17apr14	add support for song sections
         02      07may14	add editing
+		03		10jun14	add SetChord
 
 		ChordEase view
  
@@ -67,6 +68,7 @@ public:
 	bool	CanPaste() const;
 	CRect	GetChordItemRect(int ChordIdx) const;
 	int		GetCurSection() const;
+	bool	SetChord(int ChordIdx, const CSong::CChord& Chord);
 
 // Operations
 public:

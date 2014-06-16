@@ -18,6 +18,7 @@
 		08		04oct13	add drop position tracking
 		09		21nov13	derive from extended selection list
 		10		22nov13	in PreTranslateMessage, do base class if not dragging
+		11		12jun14	add drag enable
 
         virtual list control with drag reordering
  
@@ -43,6 +44,7 @@ IMPLEMENT_DYNAMIC(CDragVirtualListCtrl, CListCtrlExSel);
 
 CDragVirtualListCtrl::CDragVirtualListCtrl()
 {
+	m_DragEnable = TRUE;
 	m_Dragging = FALSE;
 	m_TrackDropPos = FALSE;
 	m_ScrollDelta = 0;
@@ -113,13 +115,15 @@ END_MESSAGE_MAP()
 
 BOOL CDragVirtualListCtrl::OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult) 
 {
-	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
-	m_Dragging = TRUE;
-	SetCapture();
-	UpdateCursor(pNMListView->ptAction);
-	m_DropPos = -1;
-	if (m_TrackDropPos)
-		SetFocus();
+	if (m_DragEnable) {	// if drag enabled
+		NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
+		m_Dragging = TRUE;
+		SetCapture();
+		UpdateCursor(pNMListView->ptAction);
+		m_DropPos = -1;
+		if (m_TrackDropPos)
+			SetFocus();
+	}
 	*pResult = 0;
 	return(FALSE);	// let parent handle notification too
 }

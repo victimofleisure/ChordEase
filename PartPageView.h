@@ -58,6 +58,7 @@ public:
 	CDialog	*GetPage(int PageIdx);
 	const CDialog	*GetPage(int PageIdx) const;
 	CString	GetControlCaption(UINT CtrlID) const;
+	CPartMidiTargetDlg&	GetMidiTargetDlg();
 
 // Operations
 public:
@@ -132,6 +133,11 @@ inline void CPartPageView::FocusControl(UINT CtrlID)
 inline void CPartPageView::UpdateCmdUI(BOOL bDisableIfNoHandler)
 {
 	m_TabDlg.UpdateCmdUI(bDisableIfNoHandler);
+}
+
+inline CPartMidiTargetDlg& CPartPageView::GetMidiTargetDlg()
+{
+	return(m_MidiTargetDlg);
 }
 
 /////////////////////////////////////////////////////////////////////////////

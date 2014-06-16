@@ -71,6 +71,7 @@ public:
 	CString	GetPartName(int PartIdx) const;
 	void	SetPartName(int PartIdx, LPCTSTR Name);
 	int		GetParentPane(HWND hWnd) const;
+	CPartMidiTargetDlg&	GetMidiTargetDlg();
 	static	bool	IsValidPartIdx(int PartIdx);
 	static	bool	IsValidInsertPos(int PartIdx);
 
@@ -220,6 +221,11 @@ inline bool CPartsBar::CanPaste() const
 inline CString CPartsBar::GetPartName(int PartIdx) const
 {
 	return(GetListCtrl().GetItemText(PartIdx, CPartsListView::COL_PART_NAME));
+}
+
+inline CPartMidiTargetDlg& CPartsBar::GetMidiTargetDlg()
+{
+	return(m_PageView->GetMidiTargetDlg());
 }
 
 /////////////////////////////////////////////////////////////////////////////

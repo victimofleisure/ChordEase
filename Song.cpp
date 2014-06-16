@@ -355,6 +355,21 @@ int CSong::FindSection(int BeatIdx) const
 	return(m_Section.FindBeat(BeatIdx));
 }
 
+int CSong::FindSectionByChord(int ChordIdx) const
+{
+	return(m_Section.FindBeat(m_StartBeat[ChordIdx]));
+}
+
+bool CSong::IsMergeable(int ChordIdx) const
+{
+	return((ChordIdx > 0
+		&& m_Chord[ChordIdx - 1].EqualNoDuration(m_Chord[ChordIdx])
+		&& FindSectionByChord(ChordIdx - 1) == FindSectionByChord(ChordIdx))
+		|| (ChordIdx < GetChordCount() - 1
+		&& m_Chord[ChordIdx + 1].EqualNoDuration(m_Chord[ChordIdx])
+		&& FindSectionByChord(ChordIdx + 1) == FindSectionByChord(ChordIdx)));
+}
+
 void CSong::ClosePrevSection(int Beats)
 {
 	int	PrevEnd;	// end of previous section
@@ -487,7 +502,7 @@ bool CSong::Read(LPCTSTR Path)
 			return(FALSE);
 		}
 		if (!m_Meter.IsValidMeter()) {	// if bogus time signature 
-			ReportError(fp, IDS_SONG_BAD_METER, 
+			ReportError(fp, IDS_SONG_ERR_BAD_METER, 
 				m_Meter.m_Numerator, m_Meter.m_Denominator);
 			return(FALSE);
 		}

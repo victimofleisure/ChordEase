@@ -118,9 +118,9 @@ CWnd *CGridCtrl::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& rect, C
 	return(pEdit);
 }
 
-void CGridCtrl::OnItemChange(int Row, int Col, LPCTSTR Text)
+void CGridCtrl::OnItemChange(LPCTSTR Text)
 {
-	SetItemText(Row, Col, Text);
+	SetItemText(m_EditRow, m_EditCol, Text);
 }
 
 BEGIN_MESSAGE_MAP(CGridCtrl, CDragVirtualListCtrl)
@@ -228,6 +228,6 @@ void CGridCtrl::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 LRESULT CGridCtrl::OnTextChange(WPARAM wParam, LPARAM lParam)
 {
-	OnItemChange(m_EditRow, m_EditCol, LPCTSTR(wParam));
+	OnItemChange(LPCTSTR(wParam));
 	return(0);
 }

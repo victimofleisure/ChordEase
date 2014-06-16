@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      17oct13	initial version
+        01      10jun14	let parent handle notifications too
 
         note duration combo box
  
@@ -68,8 +69,8 @@ public:
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CDurationComboBox)
-	afx_msg void OnKillfocus();
-	afx_msg void OnSelchange();
+	afx_msg BOOL OnKillfocus();
+	afx_msg BOOL OnSelchange();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

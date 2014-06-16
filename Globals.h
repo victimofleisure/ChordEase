@@ -191,8 +191,7 @@ enum {	// user windows messages
 	UWM_ENGINEERROR,		// wParam: string resource ID, lParam: CEngine*
 	UWM_ENGINENOTIFY,		// wParam: notification code, lParam: CEngine*
 	UWM_DEVICENODECHANGE,	// wParam: none, lParam: none
-	UWM_MIDIROWEDIT,		// wParam: row index, lParam: control ID
-	UWM_MIDITARGETCHANGE,	// wParam: part index, lParam: target index
+	UWM_MIDITARGETCHANGE,	// wParam: part index, lParam: LSW target index, HSW change flag
 	UWM_MIDIINPUTDATA,		// wParam: MIDI message and device index in MSB, lParam: timestamp
 	UWM_MIDIOUTPUTDATA,		// wParam: MIDI message and device index in MSB, lParam: timestamp
 	UWM_COLORSTATUSBARPANE,	// wParam: HDC, lParam: pane index, return COLORREF

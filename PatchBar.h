@@ -54,6 +54,7 @@ public:
 	CDialog	*GetPage(int PageIdx);
 	const CDialog	*GetPage(int PageIdx) const;
 	CString	GetControlCaption(UINT CtrlID) const;
+	CPatchMidiTargetDlg&	GetMidiTargetDlg();
 
 // Operations
 public:
@@ -115,6 +116,11 @@ inline const CDialog *CPatchBar::GetPage(int PageIdx) const
 inline void CPatchBar::FocusControl(UINT CtrlID)
 {
 	m_TabDlg.FocusControl(CtrlID);
+}
+
+inline CPatchMidiTargetDlg& CPatchBar::GetMidiTargetDlg()
+{
+	return(m_MidiTargetDlg);
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -27,7 +27,7 @@ struct CBasePatch {	// binary copy OK
 public:
 // Constants
 	enum {
-		#define PATCHMIDITARGETDEF(name, page) MIDI_TARGET_##name,
+		#define PATCHMIDITARGETDEF(name, page, tag) MIDI_TARGET_##name,
 		#include "PatchMidiTargetDef.h"
 		MIDI_TARGETS,
 	};
@@ -56,6 +56,7 @@ public:
 	int		m_Transpose;		// global transposition, in steps
 	int		m_CurPart;			// index of current part, or -1 if none
 	CMidiTarget	m_MidiTarget[MIDI_TARGETS];	// array of MIDI targets
+	char	m_MidiShadow[MIDI_TARGETS];	// MIDI controller value for each target
 
 // Attributes
 	double	GetTempo() const;

@@ -39,8 +39,9 @@ public:
 	public:
 		CChord();
 		CChord(int Duration, CNote Root, CNote Bass, int Type);
-		bool operator==(const CChord& Chord) const;
-		bool operator!=(const CChord& Chord) const;
+		bool	operator==(const CChord& Chord) const;
+		bool	operator!=(const CChord& Chord) const;
+		bool	EqualNoDuration(const CChord& Chord) const;
 		int		m_Duration;		// duration in beats
 		CNote	m_Root;			// normalized root note
 		CNote	m_Bass;			// normalized bass note
@@ -144,6 +145,8 @@ public:
 	const CSection&	GetSection(int SectionIdx) const;
 	CString	GetSectionName(int SectionIdx) const;
 	int		FindSection(int BeatIdx) const;
+	int		FindSectionByChord(int ChordIdx) const;
+	bool	IsMergeable(int ChordIdx) const;
 	void	GetProperties(CProperties& Props) const;
 	void	SetProperties(const CProperties& Props);
 	CString	GetComments() const;
@@ -277,6 +280,12 @@ inline bool CSong::CChord::operator==(const CChord& Chord) const
 inline bool CSong::CChord::operator!=(const CChord& Chord) const
 {
 	return(!operator==(Chord));
+}
+
+inline bool CSong::CChord::EqualNoDuration(const CChord& Chord) const
+{
+	// binary compare; also assumes duration is first member, followed by root
+	return(!memcmp(&m_Root, &Chord.m_Root, sizeof(CChord) - sizeof(m_Duration)));
 }
 
 inline CSong::CChordInfo::CChordInfo()

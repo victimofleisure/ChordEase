@@ -129,8 +129,6 @@ protected:
 
 // Helpers
 	void	PlayNote(int Note, bool Enable);
-	static	void	InitNoteCombo(CComboBox& Combo, CIntRange Range, int SelIdx);
-	static	void	InitNumericCombo(CComboBox& Combo, CIntRange Range, int SelIdx);
 	void	ResetPianoState();
 	void	LoadPianoState();
 	void	SavePianoState();

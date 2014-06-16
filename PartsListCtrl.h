@@ -55,7 +55,8 @@ protected:
 
 // Overrides
 	virtual	CWnd	*CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID);
-	virtual	void	OnItemChange(int Row, int Col, LPCTSTR Text);
+	virtual	void	OnItemChange(LPCTSTR Text);
+	virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 };
 
 /////////////////////////////////////////////////////////////////////////////

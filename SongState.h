@@ -33,6 +33,7 @@ public:
 	const CSong::CChord&	GetChord(int ChordIdx) const;
 	void	GetChords(CSong::CChordArray& Chord) const;
 	void	GetChords(CIntRange BeatRange, CSong::CChordArray& Chord) const;
+	void	SetChord(CIntRange BeatRange, const CSong::CChord& Chord);
 
 // Operations
 	int		FindChord(int Beat, int& Offset) const;

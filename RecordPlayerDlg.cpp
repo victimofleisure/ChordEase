@@ -60,6 +60,7 @@ CRecordPlayerDlg::CRecordPlayerDlg(CWnd* pParent /*=NULL*/)
 	m_StartPos = 0;
 	m_Duration = 0;
 	m_TrackList.m_pParent = this;
+	m_TrackList.SetDragEnable(FALSE);
 }
 
 CRecordPlayerDlg::CPlay::CPlay(CRecordPlayerDlg& Dlg, bool Enable) : m_Dlg(Dlg)
@@ -353,17 +354,17 @@ CWnd *CRecordPlayerDlg::CTrackList::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, 
 	return CGridCtrl::CreateEditCtrl(Text, dwStyle, rect, pParentWnd, nID);
 }
 
-void CRecordPlayerDlg::CTrackList::OnItemChange(int Row, int Col, LPCTSTR Text)
+void CRecordPlayerDlg::CTrackList::OnItemChange(LPCTSTR Text)
 {
-	switch (Col) {
+	switch (m_EditCol) {
 	case CRecordPlayerDlg::COL_PORT:
-		m_pParent->SetPort(Row, _ttoi(Text));
+		m_pParent->SetPort(m_EditRow, _ttoi(Text));
 		break;
 	case CRecordPlayerDlg::COL_CHANNEL:
-		m_pParent->SetChannel(Row, _ttoi(Text) - 1);
+		m_pParent->SetChannel(m_EditRow, _ttoi(Text) - 1);
 		break;
 	}
-	CGridCtrl::OnItemChange(Row, Col, Text);
+	CGridCtrl::OnItemChange(Text);
 }
 
 void CRecordPlayerDlg::DoDataExchange(CDataExchange* pDX)

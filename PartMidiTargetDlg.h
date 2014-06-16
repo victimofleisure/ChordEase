@@ -9,6 +9,7 @@
 		rev		date	comments
         00      19nov13	initial version
 		01		25may14	override target name tool tip
+		02		12jun14	refactor to use grid control instead of row view
 
 		part MIDI target dialog
  
@@ -40,9 +41,15 @@ public:
 // Attributes
 	void	GetPart(CPart& Part) const;
 	void	SetPart(const CPart& Part);
+	static	int		GetTargetCtrlID(int TargetIdx);
+
+// Operations
+	static	int		FindTargetByCtrlID(int CtrlID);
 
 // Overrides
-	virtual	void	GetTargetToolTip(int RowIdx, int id, NMHDR* pNMHDR);
+	virtual	void	OnTargetChange(int RowIdx, int ColIdx);
+	virtual	int		GetShadowValue(int RowIdx);
+	virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -61,18 +68,23 @@ protected:
 	//{{AFX_MSG(CPartMidiTargetDlg)
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
-	afx_msg LRESULT	OnMidiRowEdit(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 // Types
 
 // Constants
-	static const int	m_TargetTipID[];	// tool tip ID for each target
+	static const int	m_TargetCtrlID[CPart::MIDI_TARGETS];	// control ID for each target
 
 // Data members
 
 // Helpers
 };
+
+inline int CPartMidiTargetDlg::GetTargetCtrlID(int TargetIdx)
+{
+	ASSERT(TargetIdx >= 0 && TargetIdx < _countof(m_TargetCtrlID));
+	return(m_TargetCtrlID[TargetIdx]);
+}
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

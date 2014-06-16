@@ -84,9 +84,8 @@ void CSongState::MergeDuplicateChords()
 		const CSong::CChord&	chord = m_Chord[iChord];
 		CSong::CChord&	PrevChord = m_Chord[iChord - 1];
 		// if chord and previous chord are identical except for duration
-		if (chord.m_Root == PrevChord.m_Root 
-		&& chord.m_Bass == PrevChord.m_Bass
-		&& chord.m_Type == PrevChord.m_Type) {
+		if (chord.EqualNoDuration(PrevChord)
+		&& m_SectionMap[iChord] == m_SectionMap[iChord - 1]) {	// and belong to same section
 			PrevChord.m_Duration += chord.m_Duration;	// sum durations
 			RemoveAt(iChord);	// delete duplicate chord
 			nChords--;
@@ -132,7 +131,7 @@ CIntRange CSongState::FindChordRange(CIntRange BeatRange, CIntRange& Offset) con
 int CSongState::GetSection(int ChordIdx)
 {
 	int	iSection;
-	if (ChordIdx < GetChordCount())	// if inserting before end of chord array
+	if (ChordIdx < GetChordCount())	// if index within chord array
 		iSection = m_SectionMap[ChordIdx];	// return this chord's section
 	else {	// inserting at end of chord array
 		if (ChordIdx > 0)	// if at least one chord
@@ -234,6 +233,17 @@ int CSongState::MoveChords(CIntRange BeatRange, int Beat)
 	Beat = min(Beat, CSong::CountBeats(m_Chord));
 	InsertChords(Beat, chord);
 	return(Beat);	// return possibly updated beat
+}
+
+void CSongState::SetChord(CIntRange BeatRange, const CSong::CChord& Chord)
+{
+	RemoveChords(BeatRange);
+	MakeSectionMap();	// must rebuild section map before inserting
+	CSong::CChordArray	ch;
+	ch.SetSize(1);
+	ch[0] = Chord;	// copy caller's chord
+	ch[0].m_Duration = BeatRange.LengthInclusive();	// same duration as beat range
+	InsertChords(BeatRange.Start, ch);	// insert chord at start of beat range
 }
 
 void CSongState::AssignToSection(CIntRange BeatRange, int SectionIdx)

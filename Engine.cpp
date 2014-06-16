@@ -1,4 +1,4 @@
-]// Copyleft 2013 Chris Korda
+// Copyleft 2013 Chris Korda
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or any later version.
@@ -544,6 +544,17 @@ inline int CEngine::NormParamToEnum(double Val, int Enums)
 	return(CLAMP(ival, 0, Enums - 1));
 }
 
+inline int CEngine::NormParamToInt(double Val, int Min, int Max)
+{
+	int	ival = round(Val);
+	return(CLAMP(ival, Min, Max));
+}
+
+inline int CEngine::NormParamToMidiVal(double Val)
+{
+	return(NormParamToInt(Val * MIDI_NOTE_MAX, 0, MIDI_NOTE_MAX));
+}
+
 inline bool CEngine::UpdateTrigger(bool Input, bool& State)
 {
 	if (Input == State)
@@ -563,6 +574,7 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 		for (int iTarg = 0; iTarg < CPart::MIDI_TARGETS; iTarg++) {	// for each target
 			const CMidiTarget&	targ = part.m_MidiTarget[iTarg];
 			if (targ.IsMatch(Inst, Event, Ctrl)) {	// if target matches input parameters
+				part.m_MidiShadow[iTarg] = static_cast<char>(Val);
 				double	pos = targ.GetNormPos(Val);
 				bool	TargetChanged = FALSE;
 				switch (iTarg) {
@@ -573,16 +585,16 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 					UMT(part.m_Function, NormParamToEnum(pos, CPart::FUNCTIONS));
 					break;
 				case CPart::MIDI_TARGET_IN_ZONE_LOW:
-					UMT(part.m_In.ZoneLow, round(pos * MIDI_NOTE_MAX));
+					UMT(part.m_In.ZoneLow, NormParamToMidiVal(pos));
 					break;
 				case CPart::MIDI_TARGET_IN_ZONE_HIGH:
-					UMT(part.m_In.ZoneHigh, round(pos * MIDI_NOTE_MAX));
+					UMT(part.m_In.ZoneHigh, NormParamToMidiVal(pos));
 					break;
 				case CPart::MIDI_TARGET_IN_TRANSPOSE:
-					UMT(part.m_In.Transpose, round((pos * 2 - 1) * OCTAVE));
+					UMT(part.m_In.Transpose, NormParamToInt((pos * 2 - 1) * OCTAVE, -MIDI_NOTE_MAX, MIDI_NOTE_MAX));
 					break;
 				case CPart::MIDI_TARGET_IN_VEL_OFFSET:
-					UMT(part.m_In.VelOffset, round((pos * 2 - 1) * MIDI_NOTE_MAX));
+					UMT(part.m_In.VelOffset, NormParamToInt((pos * 2 - 1) * MIDI_NOTE_MAX, -MIDI_NOTE_MAX, MIDI_NOTE_MAX));
 					break;
 				case CPart::MIDI_TARGET_IN_NON_DIATONIC:
 					UMT(part.m_In.NonDiatonic, NormParamToEnum(pos, CPart::INPUT::NON_DIATONIC_RULES));
@@ -590,7 +602,7 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				case CPart::MIDI_TARGET_IN_CC_NOTE:
 					{
 						// convert continuous controller position to input note
-						CNote	note(round(pos * MIDI_NOTE_MAX));
+						CNote	note(NormParamToMidiVal(pos));
 						// if non-diatonic rule is disable, apply rule to input note
 						int	iRule = part.m_In.NonDiatonic;
 						if (iRule == CPart::INPUT::NDR_DISABLE
@@ -615,18 +627,21 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 					}
 					break;
 				case CPart::MIDI_TARGET_IN_CC_NOTE_VEL:
-					m_PartState[iPart].m_InputCCNoteVel = round(pos * MIDI_NOTE_MAX);
+					m_PartState[iPart].m_InputCCNoteVel = NormParamToMidiVal(pos);
 					break;
 				case CPart::MIDI_TARGET_OUT_PATCH:
-					UMT(part.m_Out.Patch, round(pos * MIDI_NOTE_MAX));
+					UMT(part.m_Out.Patch, NormParamToMidiVal(pos));
 					OutputPatch(part.m_Out.Inst, part.m_Out.Patch);
 					break;
 				case CPart::MIDI_TARGET_OUT_VOLUME:
-					UMT(part.m_Out.Volume, round(pos * MIDI_NOTE_MAX));
+					UMT(part.m_Out.Volume, NormParamToMidiVal(pos));
 					OutputControl(part.m_Out.Inst, VOLUME, part.m_Out.Volume);
 					break;
 				case CPart::MIDI_TARGET_OUT_ANTICIPATION:
 					UMT(part.m_Out.Anticipation, pos);
+					break;
+				case CPart::MIDI_TARGET_OUT_FIX_HELD_NOTES:
+					UMT(part.m_Out.FixHeldNotes, pos > 0);
 					break;
 				case CPart::MIDI_TARGET_LEAD_HARM_INTERVAL:
 					UMT(part.m_Lead.Harm.Interval, round(pos * CDiatonic::DEGREES));
@@ -671,7 +686,7 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 						m_PartState[iPart].OnTimeChange(part, m_Patch.m_PPQ);
 					break;
 				case CPart::MIDI_TARGET_BASS_APPROACH_TRIGGER:
-					if (pos > 0) {
+					if (pos > 0 && m_Song.GetChordCount()) {	// if positive transition and song not empty 
 						if (!m_PartState[iPart].m_BassApproachTrigger) {	// if not already triggered
 							m_PartState[iPart].m_BassApproachTrigger = TRUE;	// set triggered state
 							SetBassApproachTarget(iPart);	// compute approach target time and chord
@@ -687,16 +702,15 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 					UMT(part.m_Auto.Play, pos > 0);
 					break;
 				case CPart::MIDI_TARGET_AUTO_WINDOW:
-					UMT(part.m_Auto.Window, round(pos * MIDI_NOTE_MAX));
+					UMT(part.m_Auto.Window, NormParamToMidiVal(pos));
 					break;
 				case CPart::MIDI_TARGET_AUTO_VELOCITY:
-					UMT(part.m_Auto.Velocity, round(pos * MIDI_NOTE_MAX));
+					UMT(part.m_Auto.Velocity, NormParamToMidiVal(pos));
 					break;
 				default:
 					NODEFAULTCASE;	// missing target handler
 				}
-				if (TargetChanged)
-					OnMidiTargetChange(iPart, iTarg);
+				OnMidiTargetChange(iPart, MAKELONG(iTarg, TargetChanged));
 			}
 		}
 	}
@@ -704,6 +718,7 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 	for (int iTarg = 0; iTarg < CPatch::MIDI_TARGETS; iTarg++) {	// for each target
 		const CMidiTarget&	targ = m_Patch.m_MidiTarget[iTarg];
 		if (targ.IsMatch(Inst, Event, Ctrl)) {	// if target matches input parameters
+			m_Patch.m_MidiShadow[iTarg] = static_cast<char>(Val);
 			double	pos = targ.GetNormPos(Val);
 			bool	TargetChanged = FALSE;
 			switch (iTarg) {
@@ -729,7 +744,7 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				UMT(m_Patch.m_Metronome.Enable, pos > 0);
 				break;
 			case CPatch::MIDI_TARGET_METRO_VOLUME:
-				UMT(m_Patch.m_Metronome.Volume, round(pos * MIDI_NOTE_MAX));
+				UMT(m_Patch.m_Metronome.Volume, NormParamToMidiVal(pos));
 				OutputControl(m_Patch.m_Metronome.Inst, VOLUME, m_Patch.m_Metronome.Volume);
 				break;
 			case CPatch::MIDI_TARGET_PLAY:
@@ -763,8 +778,8 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 			default:
 				NODEFAULTCASE;	// missing target handler
 			}
-			if (TargetChanged)
-				OnMidiTargetChange(-1, iTarg);	// negative part index indicates patch
+			// negative part index indicates patch
+			OnMidiTargetChange(-1, MAKELONG(iTarg, TargetChanged));
 		}
 	}
 }

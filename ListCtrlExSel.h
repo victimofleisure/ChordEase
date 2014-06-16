@@ -9,6 +9,7 @@
 		rev		date	comments
         00      21nov13	initial version
 		01		13feb14	add SetSelected
+		02		15jun14	add tool tip support
 
 		extended selection list control
  
@@ -32,7 +33,9 @@ class CListCtrlExSel : public CListCtrl
 {
 	DECLARE_DYNCREATE(CListCtrlExSel)
 public:
+// Construction
 	CListCtrlExSel();
+	virtual ~CListCtrlExSel();
 
 // Types
 	struct COL_INFO {	// column info
@@ -61,20 +64,24 @@ public:
 	bool	SaveColumnWidths(LPCTSTR Section, LPCTSTR Key);
 	bool	LoadColumnWidths(LPCTSTR Section, LPCTSTR Key);
 	void	FixContextMenuPoint(CPoint& Point);
+	void	EnableToolTips(BOOL bEnable = TRUE);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CListCtrlExSel)
+	public:
+	virtual INT_PTR OnToolHitTest(CPoint point, TOOLINFO* pTI) const;
 	//}}AFX_VIRTUAL
-
-// Implementation
-	virtual ~CListCtrlExSel();
 
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CListCtrlExSel)
 	//}}AFX_MSG
+	afx_msg BOOL OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 	DECLARE_MESSAGE_MAP()
+
+// Overrideables
+	virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 };
 
 /////////////////////////////////////////////////////////////////////////////

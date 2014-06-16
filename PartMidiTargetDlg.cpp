@@ -9,6 +9,7 @@
 		rev		date	comments
         00      19nov13	initial version
 		01		25may14	override target name tool tip
+		02		12jun14	refactor to use grid control instead of row view
 
 		part MIDI target dialog
  
@@ -33,13 +34,13 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CPartMidiTargetDlg, CMidiTargetDlg);
 
-const int CPartMidiTargetDlg::m_TargetTipID[] = {
+const int CPartMidiTargetDlg::m_TargetCtrlID[] = {
 	#define PARTMIDITARGETDEF(name, page) IDC_PART_##name,
 	#include "PartMidiTargetDef.h"
 };
 
 CPartMidiTargetDlg::CPartMidiTargetDlg(CWnd* pParent /*=NULL*/)
-	: CMidiTargetDlg(IDC_PART_MIDI_ROW, pParent)
+	: CMidiTargetDlg(pParent)
 {
 	//{{AFX_DATA_INIT(CPartMidiTargetDlg)
 	//}}AFX_DATA_INIT
@@ -48,24 +49,53 @@ CPartMidiTargetDlg::CPartMidiTargetDlg(CWnd* pParent /*=NULL*/)
 void CPartMidiTargetDlg::GetPart(CPart& Part) const
 {
 	for (int iTarg = 0; iTarg < CPart::MIDI_TARGETS; iTarg++)	// for each target
-		GetRow(iTarg)->GetTarget(Part.m_MidiTarget[iTarg]);	// retrieve data from row
+		Part.m_MidiTarget[iTarg] = m_Target[iTarg];	// retrieve data from row
 }
 
 void CPartMidiTargetDlg::SetPart(const CPart& Part)
 {
 	for (int iTarg = 0; iTarg < CPart::MIDI_TARGETS; iTarg++)	// for each target
-		GetRow(iTarg)->SetTarget(Part.m_MidiTarget[iTarg]);	// update row from data
+		m_Target[iTarg] = Part.m_MidiTarget[iTarg];	// update row from data
+	m_List.Invalidate();
 }
 
-void CPartMidiTargetDlg::GetTargetToolTip(int RowIdx, int id, NMHDR* pNMHDR)
+void CPartMidiTargetDlg::OnTargetChange(int RowIdx, int ColIdx)
 {
-	ASSERT(RowIdx >= 0 && RowIdx < _countof(m_TargetTipID));
-	int	nTipID = m_TargetTipID[RowIdx];
-	if (nTipID) {	// if alternate tip specified
-		TOOLTIPTEXT *pTTT = (TOOLTIPTEXT *)pNMHDR;
-		pTTT->uFlags &= ~TTF_IDISHWND;	// idFrom is ID, not window handle
-		pNMHDR->idFrom = nTipID;	// set idFrom to hint resource ID
+	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
+	if (CPartsBar::IsValidPartIdx(iPart)) {	// if current part is valid
+		theApp.GetMain()->NotifyEdit(
+			m_ColInfo[ColIdx].TitleID, UCODE_PART, CUndoable::UE_COALESCE);
+		CPart	part(gEngine.GetPart(iPart));
+		GetPart(part);
+		gEngine.SetPart(iPart, part);
 	}
+}
+
+int CPartMidiTargetDlg::GetShadowValue(int RowIdx)
+{
+	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
+	if (CPartsBar::IsValidPartIdx(iPart))	// if current part is valid
+		return(gEngine.GetPart(iPart).m_MidiShadow[RowIdx]);
+	return(0);
+}
+
+int CPartMidiTargetDlg::GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text)
+{
+	if (pHTI->iSubItem == COL_NAME && pHTI->iItem >= 0) {	// if name column and valid row
+		int	nID = GetTargetCtrlID(pHTI->iItem);	// get row's control ID
+		if (nID)	// if valid ID
+			return(nID);
+	}
+	return(CMidiTargetDlg::GetToolTipText(pHTI, Text));
+}
+
+int CPartMidiTargetDlg::FindTargetByCtrlID(int CtrlID)
+{
+	for (int iTarg = 0; iTarg < CPart::MIDI_TARGETS; iTarg++) {	// for each target
+		if (m_TargetCtrlID[iTarg] == CtrlID)	// if control ID found
+			return(iTarg);
+	}
+	return(-1);
 }
 
 void CPartMidiTargetDlg::DoDataExchange(CDataExchange* pDX)
@@ -81,7 +111,6 @@ void CPartMidiTargetDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CPartMidiTargetDlg, CMidiTargetDlg)
 	//{{AFX_MSG_MAP(CPartMidiTargetDlg)
 	//}}AFX_MSG_MAP
-	ON_MESSAGE(UWM_MIDIROWEDIT, OnMidiRowEdit)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -91,24 +120,8 @@ BOOL CPartMidiTargetDlg::OnInitDialog()
 {
 	CMidiTargetDlg::OnInitDialog();
 
-	m_View->CreateRows(CPart::MIDI_TARGETS);
-	m_View->SetNotifyWnd(this);
-	for (int iTarg = 0; iTarg < CPart::MIDI_TARGETS; iTarg++)	// for each target
-		GetRow(iTarg)->SetTargetName(LDS(CPart::m_MidiTargetNameID[iTarg]));	// set name
+	SetTargets(CPart::m_MidiTargetNameID, CPart::MIDI_TARGETS);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
-}
-
-LRESULT	CPartMidiTargetDlg::OnMidiRowEdit(WPARAM wParam, LPARAM lParam)
-{
-	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
-	if (CPartsBar::IsValidPartIdx(iPart)) {	// if current part is valid
-		theApp.GetMain()->NotifyEdit(INT64TO32(lParam), 
-			UCODE_PART, CUndoable::UE_COALESCE);
-		CPart	part(gEngine.GetPart(iPart));
-		GetPart(part);
-		gEngine.SetPart(iPart, part);
-	}
-	return(0);
 }

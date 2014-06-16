@@ -9,6 +9,7 @@
 		rev		date	comments
         00      19nov13	initial version
         01      23apr14	define columns via macro
+		02		12jun14	refactor to use grid control instead of row view
 
 		MIDI target dialog
  
@@ -27,24 +28,38 @@
 // CMidiTargetDlg dialog
 
 #include "ChildDlg.h"
-#include "MidiTargetRowDlg.h"
-
-class CMidiRowView;
+#include "GridCtrl.h"
 
 class CMidiTargetDlg : public CChildDlg
 {
 	DECLARE_DYNAMIC(CMidiTargetDlg);
 // Construction
 public:
-	CMidiTargetDlg(int ViewID, CWnd* pParent = NULL);
+	CMidiTargetDlg(CWnd* pParent = NULL);
+
+// Constants
+	enum {
+		#define MIDITARGETCOLDEF(name, align, width) COL_##name,
+		#include "MidiTargetColDef.h"
+		COLUMNS
+	};
 
 // Attributes
+	void	SetTargets(const int *TargetNameID, int Targets);
 	static	UINT	GetTemplateID();
 	int		GetCurSel() const;
 	void	SetCurSel(int RowIdx);
+	CMidiTarget&	GetTarget(int RowIdx);
+
+// Operations
+	void	OnLearnChange();
+	void	UpdateShadowVal(int RowIdx);
+	void	EnableToolTips(BOOL bEnable = TRUE);
 
 // Overrideables
-	virtual	void	GetTargetToolTip(int RowIdx, int id, NMHDR* pNMHDR);
+	virtual	void	OnTargetChange(int RowIdx, int ColIdx);
+	virtual	int		GetShadowValue(int RowIdx);
+	virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -65,35 +80,40 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStruct);
+	afx_msg void OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnMidiLearn();
+	afx_msg void OnUpdateMidiLearn(CCmdUI *pCmdUI);
+	afx_msg void OnMidiTargetReset();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 // Types
+	class CTargetGridCtrl : public CGridCtrl {
+	public:
+		virtual BOOL	PreCreateWindow(CREATESTRUCT& cs);
+		virtual	CWnd	*CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID);
+		virtual	void	OnItemChange(LPCTSTR Text);
+		virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
+		CMidiTargetDlg	*m_pParent;
+	};
 
 // Constants
 	enum {
-		#define MIDITARGETCOLDEF(name) COL_##name,
-		#include "MidiTargetColDef.h"
-		COLUMNS
+		MIDI_LEARN_COLOR = RGB(0, 255, 0),
 	};
-	static const CRowView::COLINFO	m_ColInfo[COLUMNS];
+	static const CGridCtrl::COL_INFO	m_ColInfo[COLUMNS];
+	static const int	m_ColToolTip[COLUMNS];
 
 // Data members
-	int		m_ViewID;			// control ID of row view
-	CMidiRowView	*m_View;	// pointer to MIDI row view
-	int		m_CurSel;			// currently selected row, or -1 if none
+	CTargetGridCtrl	m_List;			// target grid control
+	CMidiTargetArray	m_Target;	// array of targets
+	const int	*m_TargetNameID;	// pointer to array of target name string IDs
+	int		m_ListItemHeight;		// height of list item, in pixels
 
 // Helpers
-	CMidiTargetRowDlg	*GetRow(int Idx);
-	const CMidiTargetRowDlg	*GetRow(int Idx) const;
-};
-
-class CMidiRowView : public CRowView {
-protected:
-	DECLARE_DYNCREATE(CMidiRowView);
-	virtual	CRowDlg	*CreateRow(int Idx);
-	virtual	void	UpdateRow(int Idx);
 };
 
 inline UINT CMidiTargetDlg::GetTemplateID()
@@ -101,19 +121,19 @@ inline UINT CMidiTargetDlg::GetTemplateID()
 	return(IDD);
 }
 
-inline CMidiTargetRowDlg *CMidiTargetDlg::GetRow(int Idx)
-{
-	return((CMidiTargetRowDlg *)m_View->GetRow(Idx));
-}
-
-inline const CMidiTargetRowDlg *CMidiTargetDlg::GetRow(int Idx) const
-{
-	return((CMidiTargetRowDlg *)m_View->GetRow(Idx));
-}
-
 inline int CMidiTargetDlg::GetCurSel() const
 {
-	return(m_CurSel);
+	return(m_List.GetSelection());
+}
+
+inline CMidiTarget& CMidiTargetDlg::GetTarget(int RowIdx)
+{
+	return(m_Target[RowIdx]);
+}
+
+inline void CMidiTargetDlg::EnableToolTips(BOOL bEnable)
+{
+	m_List.EnableToolTips(bEnable);
 }
 
 //{{AFX_INSERT_LOCATION}}

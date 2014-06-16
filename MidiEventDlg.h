@@ -59,6 +59,7 @@ public:
 	void	ResizeFilters(int ItemIdx = -1, int ItemWidth = 0);
 	void	UpdateDevices();
 	void	Pause(bool Enable);
+	void	EnableToolTips(BOOL bEnable = TRUE);
 	static	WPARAM	MakeParam(DWORD Device, W64UINT MidiMsg);
 	static	int		GetDevice(WPARAM wParam);
 
@@ -167,6 +168,11 @@ inline bool CMidiEventDlg::GetShowCtrlrNames() const
 inline void CMidiEventDlg::SetShowCtrlrNames(bool Enable)
 {
 	m_ShowCtrlrNames = Enable;
+}
+
+inline void CMidiEventDlg::EnableToolTips(BOOL bEnable)
+{
+	m_List.EnableToolTips(bEnable);
 }
 
 inline WPARAM CMidiEventDlg::MakeParam(DWORD Device, W64UINT MidiMsg)

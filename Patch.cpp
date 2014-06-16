@@ -31,12 +31,12 @@
 #define RK_MIDI_OUT_PORT_ID	_T("MidiOutPortID")
 
 const LPCTSTR CBasePatch::m_MidiTargetName[MIDI_TARGETS] = {	
-	#define PATCHMIDITARGETDEF(name, page) _T(#name),
+	#define PATCHMIDITARGETDEF(name, page, tag) _T(#name),
 	#include "PatchMidiTargetDef.h"	// generate table of MIDI target names
 };
 
 const int CBasePatch::m_MidiTargetNameID[MIDI_TARGETS] = {	
-	#define PATCHMIDITARGETDEF(name, page) IDS_PATCH_MT_##name,
+	#define PATCHMIDITARGETDEF(name, page, tag) IDS_PATCH_MT_##name,
 	#include "PatchMidiTargetDef.h"	// generate table of MIDI target name IDs
 };
 
@@ -44,6 +44,7 @@ CPatch::CPatch()
 {
 	#define PATCHDEF(name, init) m_##name = init;
 	#include "PatchDef.h"	// generate code to initialize members
+	ZeroMemory(m_MidiShadow, sizeof(m_MidiShadow));
 }
 
 double CBasePatch::GetTempo() const
@@ -59,6 +60,7 @@ void CPatch::Copy(const CPatch& Patch)
 	m_Part = Patch.m_Part;	// copy part array
 	m_InPortID = Patch.m_InPortID;	// copy port ID arrays
 	m_OutPortID = Patch.m_OutPortID;
+	CopyMemory(m_MidiShadow, Patch.m_MidiShadow, sizeof(m_MidiShadow));
 }
 
 bool CPatch::operator==(const CPatch& Patch) const

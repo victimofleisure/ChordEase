@@ -48,8 +48,8 @@ public:
 
 // Constants
 	enum {	// columns
-		COL_PART_NAME,
-		COL_FUNCTION,
+		#define LISTCOLDEF(name, align, width) COL_##name,
+		#include "PartsListColDef.h"
 		COLUMNS
 	};
 	enum {	// functions
@@ -94,11 +94,9 @@ protected:
 	afx_msg void OnListItemchanged(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnListEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnListReorder(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStruct);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnDestroy();
 	//}}AFX_MSG
-	afx_msg BOOL OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 	DECLARE_MESSAGE_MAP()
 
 // Constants

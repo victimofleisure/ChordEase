@@ -59,19 +59,46 @@ CWnd *CPartsListCtrl::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& re
 	return CGridCtrl::CreateEditCtrl(Text, dwStyle, rect, pParentWnd, nID);
 }
 
-void CPartsListCtrl::OnItemChange(int Row, int Col, LPCTSTR Text)
+void CPartsListCtrl::OnItemChange(LPCTSTR Text)
 {
 	ASSERT(m_EditCol == CPartsListView::COL_FUNCTION);
 	CPopupCombo	*pCombo = STATIC_DOWNCAST(CPopupCombo, m_EditCtrl);
 	int	iFunc = pCombo->FindString(0, Text);
-	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
-	ASSERT(iPart >= 0);
-	theApp.GetMain()->NotifyEdit(IDS_PARTS_COL_FUNCTION, 
-		UCODE_PART, CUndoable::UE_COALESCE);
-	CPart	part(gEngine.GetPart(iPart));
-	part.m_Function = iFunc;
-	gEngine.SetPart(iPart, part);
-	CGridCtrl::OnItemChange(Row, Col, Text);
+	if (iFunc >= 0) {	// if text found in combo
+		int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
+		ASSERT(iPart >= 0);
+		CPart	part(gEngine.GetPart(iPart));
+		if (iFunc != part.m_Function) {	// if value changed
+			ASSERT(iFunc < CPart::FUNCTIONS);
+			theApp.GetMain()->NotifyEdit(IDS_PARTS_COL_FUNCTION, 
+				UCODE_PART, CUndoable::UE_COALESCE);
+			part.m_Function = iFunc;
+			gEngine.SetPart(iPart, part);
+			CGridCtrl::OnItemChange(Text);
+		}
+	}
+}
+
+int CPartsListCtrl::GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text)
+{
+	UINT	nID;
+	if (pHTI->iItem >= 0) {	// if cursor on list item
+		switch (pHTI->iSubItem) {
+		case CPartsListView::COL_PART_NAME:
+			if (pHTI->flags & LVHT_ONITEMSTATEICON)	// if cursor on checkbox
+				nID = IDC_PART_ENABLE;
+			else
+				nID = IDC_PART_NAME;
+			break;
+		case CPartsListView::COL_FUNCTION:
+			nID = IDC_PART_FUNCTION;
+			break;
+		default:
+			nID = 0;
+		}
+	} else	// cursor not on list item
+		nID = IDS_PARTS_TIP_LIST;
+	return(nID);
 }
 
 /////////////////////////////////////////////////////////////////////////////

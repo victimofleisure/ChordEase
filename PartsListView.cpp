@@ -9,6 +9,7 @@
 		rev		date	comments
         00      20sep13	initial version
         01      23apr14	add tooltip support
+		02		12jun14	in OnCreate, set font
 
 		parts list view
  
@@ -34,8 +35,8 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNCREATE(CPartsListView, CView)
 
 const CPartsListCtrl::COL_INFO	CPartsListView::m_ColInfo[COLUMNS] = {
-	{IDS_PARTS_COL_PART_NAME,	LVCFMT_LEFT, 70},
-	{IDS_PARTS_COL_FUNCTION,	LVCFMT_LEFT, 60},
+	#define LISTCOLDEF(name, align, width) {IDS_PARTS_COL_##name, align, width},
+	#include "PartsListColDef.h"
 };
 
 const LPCTSTR CPartsListView::m_FunctionName[FUNCTIONS] = {
@@ -153,7 +154,6 @@ BEGIN_MESSAGE_MAP(CPartsListView, CView)
     ON_NOTIFY(NM_RCLICK, IDC_PARTS_LIST, OnListClick)
 	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
-	ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnToolTipNeedText)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -163,20 +163,16 @@ int CPartsListView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CView::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	// specify owner draw style, but remove it after list control is created;
-	// this lets us adjust item height by forcing OnMeasureItem to be called
-	DWORD	style = WS_CHILD | WS_VISIBLE 
-		| LVS_REPORT | LVS_SHOWSELALWAYS | LVS_EDITLABELS 
-		| LVS_NOSORTHEADER | LVS_OWNERDRAWFIXED;
+	DWORD	style = WS_CHILD | WS_VISIBLE | LVS_REPORT 
+		| LVS_SHOWSELALWAYS | LVS_EDITLABELS | LVS_NOSORTHEADER;
 	if (!m_List.Create(style, CRect(0, 0, 0, 0), this, IDC_PARTS_LIST))
 		return -1;
-	m_List.ModifyStyle(LVS_OWNERDRAWFIXED, 0);	// remove owner draw
+	m_List.SendMessage(WM_SETFONT, WPARAM(GetStockObject(DEFAULT_GUI_FONT)));
 	DWORD	ExStyle = LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES;
 	m_List.SetExtendedStyle(ExStyle);
 	m_List.TrackDropPos(TRUE);
 	m_List.CreateColumns(m_ColInfo, COLUMNS);
-	m_List.LoadColumnWidths(REG_SETTINGS, RK_PARTS_LIST_CW);	
-	EnableToolTips();
+	m_List.LoadColumnWidths(REG_SETTINGS, RK_PARTS_LIST_CW);
 	return 0;
 }
 
@@ -184,12 +180,6 @@ void CPartsListView::OnDestroy()
 {
 	m_List.SaveColumnWidths(REG_SETTINGS, RK_PARTS_LIST_CW);	
 	CView::OnDestroy();
-}
-
-void CPartsListView::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStruct)
-{
-	if (nIDCtl == IDC_PARTS_LIST)
-		lpMeasureItemStruct->itemHeight += 3;	// increase row height for popup editing
 }
 
 void CPartsListView::OnSize(UINT nType, int cx, int cy) 
@@ -266,37 +256,4 @@ void CPartsListView::OnContextMenu(CWnd* pWnd, CPoint point)
 	menu.LoadMenu(IDM_PART_LIST_CTX);
 	CMenu	*mp = menu.GetSubMenu(0);
 	mp->TrackPopupMenu(0, point.x, point.y, theApp.GetMain());
-}
-
-BOOL CPartsListView::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
-{
-	if (!theApp.GetMain()->GetOptions().m_Other.ShowTooltips)	// if not showing tooltips
-		return(FALSE);
-	CPoint	pt;
-	GetCursorPos(&pt);
-	m_List.ScreenToClient(&pt);	// convert cursor to list's client coords
-	LVHITTESTINFO	hti;
-	hti.pt = pt;
-	m_List.SubItemHitTest(&hti);
-	UINT	nID;
-	if (hti.iItem >= 0) {	// if cursor on list item
-		switch (hti.iSubItem) {
-		case COL_PART_NAME:
-			if (hti.flags & LVHT_ONITEMSTATEICON)	// if cursor on checkbox
-				nID = IDC_PART_ENABLE;
-			else
-				nID = IDC_PART_NAME;
-			break;
-		case COL_FUNCTION:
-			nID = IDC_PART_FUNCTION;
-			break;
-		default:
-			nID = 0;
-		}
-	} else	// cursor not on list item
-		nID = IDS_PARTS_TIP_LIST;
-	TOOLTIPTEXT *pTTT = (TOOLTIPTEXT *)pNMHDR;
-	pTTT->lpszText = MAKEINTRESOURCE(nID);
-	pTTT->hinst = AfxGetResourceHandle();
-	return(TRUE);
 }

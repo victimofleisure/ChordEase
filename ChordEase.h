@@ -86,6 +86,8 @@ public:
 	void	MakeAbsolutePath(CString& Path);
 	static	void	ValidateFolder(CDataExchange* pDX, int CtrlID, const CString& Path);
 	BOOL	OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
+	static	void	InitNoteCombo(CComboBox& Combo, CIntRange Range, int SelIdx);
+	static	void	InitNumericCombo(CComboBox& Combo, CIntRange Range, int SelIdx);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

@@ -45,31 +45,6 @@ CPianoDlg::CPianoDlg(CWnd* pParent /*=NULL*/)
 	m_WasShown = FALSE;
 }
 
-void CPianoDlg::InitNoteCombo(CComboBox& Combo, CIntRange Range, int SelIdx)
-{
-	CString	s;
-	int	iSel = -1;
-	for (CNote iNote = Range.Start; iNote <= Range.End; iNote++) {
-		Combo.AddString(iNote.MidiName());
-		if (iNote == SelIdx)
-			iSel = iNote - Range.Start;
-	}
-	Combo.SetCurSel(iSel);
-}
-
-void CPianoDlg::InitNumericCombo(CComboBox& Combo, CIntRange Range, int SelIdx)
-{
-	CString	s;
-	int	iSel = -1;
-	for (int iItem = Range.Start; iItem <= Range.End; iItem++) {
-		s.Format(_T("%d"), iItem);
-		Combo.AddString(s);
-		if (iItem == SelIdx)
-			iSel = iItem - Range.Start;
-	}
-	Combo.SetCurSel(iSel);
-}
-
 void CPianoDlg::PlayNote(int Note, bool Enable)
 {
 	if (Note < 0 || Note > MIDI_NOTE_MAX)	// if note outside MIDI range
@@ -102,10 +77,10 @@ void CPianoDlg::SavePianoState()
 
 void CPianoDlg::InitControls()
 {
-	InitNumericCombo(m_PortCombo, CIntRange(0, MAX_PORTS - 1), m_State.Port);
-	InitNumericCombo(m_ChannelCombo, CIntRange(1, MIDI_CHANNELS), m_State.Channel + 1);
-	InitNoteCombo(m_StartNoteCombo, CIntRange(0, MIDI_NOTE_MAX), m_State.StartNote);
-	InitNumericCombo(m_KeyCountCombo, CIntRange(MIN_KEYS, MAX_KEYS), m_State.KeyCount);
+	CChordEaseApp::InitNumericCombo(m_PortCombo, CIntRange(0, MAX_PORTS - 1), m_State.Port);
+	CChordEaseApp::InitNumericCombo(m_ChannelCombo, CIntRange(1, MIDI_CHANNELS), m_State.Channel + 1);
+	CChordEaseApp::InitNoteCombo(m_StartNoteCombo, CIntRange(0, MIDI_NOTE_MAX), m_State.StartNote);
+	CChordEaseApp::InitNumericCombo(m_KeyCountCombo, CIntRange(MIN_KEYS, MAX_KEYS), m_State.KeyCount);
 	m_VelocitySlider.SetRange(0, MIDI_NOTE_MAX);
 	m_VelocitySlider.SetPos(m_State.Velocity);
 }

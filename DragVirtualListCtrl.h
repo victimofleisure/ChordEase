@@ -14,6 +14,7 @@
 		04		06jan10	W64: make OnTimer 64-bit compatible
 		05		04oct13	add drop position tracking
 		06		21nov13	derive from extended selection list
+		07		12jun14	add drag enable
 
         virtual list control with drag reordering
  
@@ -44,6 +45,8 @@ public:
 
 // Attributes
 public:
+	void	SetDragEnable(bool Enable);
+	bool	GetDragEnable() const;
 	int		GetDropPos() const;
 	bool	IsDragging() const;
 	void	TrackDropPos(bool Enable);
@@ -80,6 +83,7 @@ protected:
 	};
 
 // Member data
+	bool	m_DragEnable;		// true if drag is enabled
 	bool	m_Dragging;			// true if items are being dragged
 	bool	m_TrackDropPos;		// true if tracking drop position
 	int		m_ScrollDelta;		// scroll by this amount per timer tick
@@ -92,6 +96,16 @@ protected:
 // Helpers
 	void	AutoScroll(const CPoint& Cursor);
 };
+
+inline void CDragVirtualListCtrl::SetDragEnable(bool Enable)
+{
+	m_DragEnable = Enable;
+}
+
+inline bool CDragVirtualListCtrl::GetDragEnable() const
+{
+	return(m_DragEnable);
+}
 
 inline int CDragVirtualListCtrl::GetDropPos() const
 {

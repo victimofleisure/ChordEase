@@ -1785,14 +1785,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MidiTargetRowDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MidiTargetRowDlg.h"
-				>
-			</File>
-			<File
 				RelativePath="MidiWrap.cpp"
 				>
 				<FileConfiguration
@@ -2333,6 +2325,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PartsListColDef.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PartsListCtrl.cpp"
 				>
 			</File>
@@ -2354,14 +2350,6 @@
 			</File>
 			<File
 				RelativePath=".\Patch.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PatchAutoInstDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PatchAutoInstDlg.h"
 				>
 			</File>
 			<File
@@ -2562,30 +2550,6 @@
 			</File>
 			<File
 				RelativePath="Round.h"
-				>
-			</File>
-			<File
-				RelativePath=".\RowDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RowDlg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\RowForm.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RowForm.h"
-				>
-			</File>
-			<File
-				RelativePath=".\RowView.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RowView.h"
 				>
 			</File>
 			<File
@@ -3402,6 +3366,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\ChordEasePatch.ico"
+				>
+			</File>
+			<File
 				RelativePath=".\res\dragmulti.cur"
 				>
 			</File>
@@ -3411,6 +3379,18 @@
 			</File>
 			<File
 				RelativePath=".\res\header_sort.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecPlayPause.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecPlayPlay.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecPlayStop.ico"
 				>
 			</File>
 			<File

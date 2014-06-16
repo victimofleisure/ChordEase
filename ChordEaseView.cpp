@@ -14,6 +14,7 @@
         04      07may14	add editing
 		05		15may14	in SaveUndoState, remove song state's section map
 		06		02jun14	fix access violation on left button up if empty song
+		07		10jun14	add SetChord
 
 		ChordEase view
  
@@ -723,8 +724,7 @@ bool CChordEaseView::OnDestroyPopupEdit()
 	}
 	if (chord == gEngine.GetChord(iSongChord))	// if chord unchanged
 		return(FALSE);
-	NotifyUndoableEdit(iSongChord, CHART_UCODE_CHORD_EDIT);
-	if (!gEngine.SetChord(iSongChord, chord))
+	if (!SetChord(m_EditChordIdx, chord))
 		return(FALSE);
 	UpdateViews(CChordEaseDoc::HINT_CHART);
 	return(TRUE);
@@ -919,6 +919,27 @@ bool CChordEaseView::MakeChordPopups(CMenu& Menu, int ChordIdx)
 	return(TRUE);
 }
 
+bool CChordEaseView::SetChord(int ChordIdx, const CSong::CChord& Chord)
+{
+	int	iSongChord = GetSongChordIndex(ChordIdx);
+	if (m_ChordSymbol[ChordIdx].m_Name == MEASURE_REPEAT	// if repeated measure
+	|| GetSelection().LengthInclusive() > 1	// or multi-chord selection
+	|| gEngine.GetSong().IsMergeable(iSongChord)) {	// or merging with adjacent chord
+		CSongState	state;
+		gEngine.GetSongState(state);
+		NotifyUndoableEdit(iSongChord, CHART_UCODE_MULTI_CHORD_EDIT);
+		state.SetChord(GetBeatSelection(), Chord);
+		if (!gEngine.SetSongState(state))
+			return(FALSE);
+	} else {	// single chord edit
+		NotifyUndoableEdit(iSongChord, CHART_UCODE_CHORD_EDIT);
+		if (!gEngine.SetChord(iSongChord, Chord))
+			return(FALSE);
+	}
+	UpdateViews(CChordEaseDoc::HINT_CHART);
+	return(TRUE);
+}
+
 void CChordEaseView::SaveUndoState(CUndoState& State)
 {
 //	_tprintf(_T("SaveUndoState %d %d\n"), State.GetCtrlID(), State.GetCode());
@@ -951,6 +972,7 @@ void CChordEaseView::SaveUndoState(CUndoState& State)
 	case CHART_UCODE_SECTION_CREATE:
 	case CHART_UCODE_SECTION_DELETE:
 	case CHART_UCODE_SECTION_PROPS:
+	case CHART_UCODE_MULTI_CHORD_EDIT:
 		{
 			CRefPtr<CClipboardEditUndoInfo>	uip;
 			uip.CreateObj();
@@ -1006,6 +1028,7 @@ void CChordEaseView::RestoreUndoState(const CUndoState& State)
 	case CHART_UCODE_SECTION_CREATE:
 	case CHART_UCODE_SECTION_DELETE:
 	case CHART_UCODE_SECTION_PROPS:
+	case CHART_UCODE_MULTI_CHORD_EDIT:
 		{
 			const CClipboardEditUndoInfo	*uip = 
 				static_cast<CClipboardEditUndoInfo *>(State.GetObj());
@@ -1523,11 +1546,9 @@ void CChordEaseView::OnChordRoot(UINT nID)
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
 	CSong::CChord	ch = gEngine.GetChord(iSongChord);
 	if (note != ch.m_Root) {	// if selection changed
-		NotifyUndoableEdit(iSongChord, CHART_UCODE_CHORD_EDIT);
 		ch.m_Root = note;
 		ch.m_Bass = note;	// reset bass note to root
-		gEngine.SetChord(iSongChord, ch);
-		UpdateViews(CChordEaseDoc::HINT_CHART);
+		SetChord(m_EditChordIdx, ch);
 	}
 }
 
@@ -1538,10 +1559,8 @@ void CChordEaseView::OnChordType(UINT nID)
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
 	CSong::CChord	ch = gEngine.GetChord(iSongChord);
 	if (iType != ch.m_Type) {	// if selection changed
-		NotifyUndoableEdit(iSongChord, CHART_UCODE_CHORD_EDIT);
 		ch.m_Type = iType;
-		gEngine.SetChord(iSongChord, ch);
-		UpdateViews(CChordEaseDoc::HINT_CHART);
+		SetChord(m_EditChordIdx, ch);
 	}
 }
 
@@ -1552,10 +1571,8 @@ void CChordEaseView::OnChordBass(UINT nID)
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
 	CSong::CChord	ch = gEngine.GetChord(iSongChord);
 	if (note != ch.m_Bass) {	// if selection changed
-		NotifyUndoableEdit(iSongChord, CHART_UCODE_CHORD_EDIT);
 		ch.m_Bass = note;
-		gEngine.SetChord(iSongChord, ch);
-		UpdateViews(CChordEaseDoc::HINT_CHART);
+		SetChord(m_EditChordIdx, ch);
 	}
 }
 

@@ -548,14 +548,6 @@ SOURCE=.\MidiTargetDlg.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\MidiTargetRowDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\MidiTargetRowDlg.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\MidiWrap.cpp
 # End Source File
 # Begin Source File
@@ -808,6 +800,10 @@ SOURCE=.\PartsBar.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\PartsListColDef.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\PartsListCtrl.cpp
 # End Source File
 # Begin Source File
@@ -829,14 +825,6 @@ SOURCE=.\Patch.cpp
 # Begin Source File
 
 SOURCE=.\Patch.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\PatchAutoInstDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\PatchAutoInstDlg.h
 # End Source File
 # Begin Source File
 
@@ -1037,30 +1025,6 @@ SOURCE=.\Resource.h
 # Begin Source File
 
 SOURCE=.\Round.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\RowDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\RowDlg.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\RowForm.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\RowForm.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\RowView.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\RowView.h
 # End Source File
 # Begin Source File
 
@@ -1325,10 +1289,6 @@ SOURCE=.\Wrapx64.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=.\res\chordeas.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\ChordEase.ico
 # End Source File
 # Begin Source File
@@ -1353,27 +1313,7 @@ SOURCE=.\res\dragsingle.cur
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\gear.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\header_sort.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\ico00001.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icon1.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icon2.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\rec_play.ico
 # End Source File
 # Begin Source File
 

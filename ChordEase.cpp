@@ -467,6 +467,31 @@ CString CChordEaseApp::GetFileTitle(const CString& Path)
 	return(sTitle);
 }
 
+void CChordEaseApp::InitNoteCombo(CComboBox& Combo, CIntRange Range, int SelIdx)
+{
+	CString	s;
+	int	iSel = -1;
+	for (CNote iNote = Range.Start; iNote <= Range.End; iNote++) {
+		Combo.AddString(iNote.MidiName());
+		if (iNote == SelIdx)
+			iSel = iNote - Range.Start;
+	}
+	Combo.SetCurSel(iSel);
+}
+
+void CChordEaseApp::InitNumericCombo(CComboBox& Combo, CIntRange Range, int SelIdx)
+{
+	CString	s;
+	int	iSel = -1;
+	for (int iItem = Range.Start; iItem <= Range.End; iItem++) {
+		s.Format(_T("%d"), iItem);
+		Combo.AddString(s);
+		if (iItem == SelIdx)
+			iSel = iItem - Range.Start;
+	}
+	Combo.SetCurSel(iSel);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CChordEaseApp message map
 

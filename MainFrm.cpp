@@ -11,6 +11,7 @@
 		01		22apr14	add piano dialog
 		02		28apr14	in OnEngineNotify, add device state change handler
 		03		30apr14	add OnDropFiles
+		04		04jun14	in CreateEngine, fix opening patch via command line
 
 		ChordEase main frame
  
@@ -300,17 +301,22 @@ bool CMainFrame::CreateEngine()
 		return(FALSE);
 	CString	ChordDictPath(theApp.MakeDataFolderPath(CHORD_DICTIONARY_FILE_NAME, TRUE));
 	gEngine.ReadChordDictionary(ChordDictPath);	// read chord dictionary
+	bool	CmdLinePatchOpen;
 	if (!theApp.m_PatchPath.IsEmpty())	// if patch specified on command line
-		OpenPatch(theApp.m_PatchPath);
-	else	// patch not specified
+		CmdLinePatchOpen = OpenPatch(theApp.m_PatchPath);	// open command line patch
+	else {	// patch not specified
+		CmdLinePatchOpen = FALSE;
 		m_PatchDoc.New();	// initialize patch document
-	CPatch	patch;
-	CString	PatchPath(theApp.MakeDataFolderPath(PATCH_INI_FILE_NAME, TRUE));
-	if (PathFileExists(PatchPath)) {	// if patch file exists
-		if (!patch.Read(PatchPath))	// read patch file
-			patch.Reset();	// read failed; avoid partial data
 	}
-	SetPatch(patch, TRUE);	// update ports for current devices
+	if (!CmdLinePatchOpen) {	// if patch wasn't opened via command line
+		CPatch	patch;
+		CString	PatchPath(theApp.MakeDataFolderPath(PATCH_INI_FILE_NAME, TRUE));
+		if (PathFileExists(PatchPath)) {	// if patch file exists
+			if (!patch.Read(PatchPath))	// read patch file
+				patch.Reset();	// read failed; avoid partial data
+		}
+		SetPatch(patch, TRUE);	// update ports for current devices
+	}
 	return(TRUE);
 }
 
@@ -456,6 +462,24 @@ void CMainFrame::UpdateHookMidiOutput()
 		|| m_OutputNotesBar.IsWindowVisible() != 0);
 }
 
+int CMainFrame::GetCtrlMidiTarget(CWnd *pWnd, int& PartIdx) const
+{
+	CWnd	*pParent = pWnd->GetParent();
+	ASSERT(pParent != NULL);
+	if (pParent->IsKindOf(RUNTIME_CLASS(CComboBox)))	// if parent is combo box
+		pWnd = pParent;
+	UINT	nID = pWnd->GetDlgCtrlID();
+	int	iTarget;
+	if (m_PatchBar.IsChild(pWnd)) {
+		iTarget = CPatchMidiTargetDlg::FindTargetByCtrlID(nID);
+		PartIdx = -1;
+	} else {
+		iTarget = CPartMidiTargetDlg::FindTargetByCtrlID(nID);
+		PartIdx = m_PartsBar.GetCurPart();
+	}
+	return(iTarget);
+}
+
 void CMainFrame::ApplyOptions(const COptionsInfo& PrevOpts, bool ForceUpdate)
 {
 	// if chart measures per line or font changed
@@ -466,6 +490,15 @@ void CMainFrame::ApplyOptions(const COptionsInfo& PrevOpts, bool ForceUpdate)
 	// if always record option changed
 	if (m_Options.m_Record.AlwaysRecord != PrevOpts.m_Record.AlwaysRecord)
 		gEngine.Record(m_Options.m_Record.AlwaysRecord != 0);	// update record state
+	if (m_Options.m_Other.ShowTooltips != PrevOpts.m_Other.ShowTooltips || ForceUpdate)
+		EnableAppToolTips(m_Options.m_Other.ShowTooltips != 0);
+}
+
+void CMainFrame::EnableAppToolTips(bool Enable)
+{
+	m_PatchBar.GetMidiTargetDlg().EnableToolTips(Enable);
+	m_PartsBar.GetMidiTargetDlg().EnableToolTips(Enable);
+	m_PartsBar.GetListCtrl().EnableToolTips(Enable);
 }
 
 bool CMainFrame::CheckForUpdates(bool Explicit)
@@ -733,6 +766,8 @@ CString	CMainFrame::GetUndoTitle(const CUndoState& State)
 	switch (State.GetCode()) {
 	case UCODE_BASE_PATCH:
 		s = m_PatchBar.GetControlCaption(State.GetCtrlID());
+		if (s.IsEmpty())
+			s.LoadString(State.GetCtrlID());	// assume ID is list column string
 		break;
 	case UCODE_PART:
 		s = m_PartsBar.GetPageView()->GetControlCaption(State.GetCtrlID());
@@ -1137,39 +1172,50 @@ LRESULT	CMainFrame::OnMidiTargetChange(WPARAM wParam, LPARAM lParam)
 		#include "PartMidiTargetDef.h"	// map part MIDI targets to part pages
 	};
 	static const int PatchMidiTargetPage[CPatch::MIDI_TARGETS] = {
-		#define PATCHMIDITARGETDEF(name, page) CPatchBar::PAGE_##page,
+		#define PATCHMIDITARGETDEF(name, page, tag) CPatchBar::PAGE_##page,
 		#include "PatchMidiTargetDef.h"	// map patch MIDI targets to patch pages
 	};
-//	_tprintf(_T("CMainFrame::OnMidiTargetChange %d %d\n"), wParam, lParam);
 	int	iPart = static_cast<int>(wParam);
-	int	iTarget = static_cast<int>(lParam);
+	int	iTarget = LOWORD(lParam);
+	int	bChanged = HIWORD(lParam);
+//	_tprintf(_T("CMainFrame::OnMidiTargetChange %d %d (%d)\n"), iPart, iTarget, bChanged);
 	if (iPart >= 0) {	// if part target
-		int	iPage = PartMidiTargetPage[iTarget];
-		CPart	part(gEngine.GetPart(iPart));
-		if (iPage >= 0) {	// if valid part page
-			if (m_MidiChaseEvents) {	// if chasing MIDI events
-				NotifyEdit(0, UCODE_MIDI_CHASE,	// save part/page indices
-					CUndoable::UE_COALESCE | CUndoable::UE_INSIGNIFICANT);
-				if (iPart != m_PartsBar.GetCurPart())
-					m_PartsBar.SetCurPart(iPart);	// chase to target's part
-				m_PartsBar.SetCurPage(iPage);	// chase to target's page
-			}
-			if (iPart == m_PartsBar.GetCurPart())	// if target part is showing
-				m_PartsBar.GetPageView()->UpdatePage(iPage, part);	// update page
-		} else	// assume parts list
-			m_PartsBar.GetListView()->SetSubitems(iPart, part);	// update parts list
+		if (iPart == m_PartsBar.GetCurPart()	// if current part
+		&& m_PartsBar.GetMidiTargetDlg().IsWindowVisible())
+			m_PartsBar.GetMidiTargetDlg().UpdateShadowVal(iTarget);
 	} else {	// patch target
-		int	iPage = PatchMidiTargetPage[iTarget];
-		CBasePatch	patch;
-		gEngine.GetBasePatch(patch);
-		if (m_MidiChaseEvents) {	// if chasing MIDI events
-			NotifyEdit(0, UCODE_MIDI_CHASE, // save part/page indices
-				CUndoable::UE_COALESCE | CUndoable::UE_INSIGNIFICANT);
-			m_PatchBar.SetCurPage(iPage);	// chase to target's page
+		if (m_PatchBar.GetMidiTargetDlg().IsWindowVisible())
+			m_PatchBar.GetMidiTargetDlg().UpdateShadowVal(iTarget);
+	}
+	if (bChanged) {	// if target parameter changed
+		if (iPart >= 0) {	// if part target
+			int	iPage = PartMidiTargetPage[iTarget];
+			CPart	part(gEngine.GetPart(iPart));
+			if (iPage >= 0) {	// if valid part page
+				if (m_MidiChaseEvents && !m_MidiLearn) {	// if chasing MIDI events
+					NotifyEdit(0, UCODE_MIDI_CHASE,	// save part/page indices
+						CUndoable::UE_COALESCE | CUndoable::UE_INSIGNIFICANT);
+					if (iPart != m_PartsBar.GetCurPart())
+						m_PartsBar.SetCurPart(iPart);	// chase to target's part
+					m_PartsBar.SetCurPage(iPage);	// chase to target's page
+				}
+				if (iPart == m_PartsBar.GetCurPart())	// if target part is showing
+					m_PartsBar.GetPageView()->UpdatePage(iPage, part);	// update page
+			} else	// assume parts list
+				m_PartsBar.GetListView()->SetSubitems(iPart, part);	// update parts list
+		} else {	// patch target
+			int	iPage = PatchMidiTargetPage[iTarget];
+			CBasePatch	patch;
+			gEngine.GetBasePatch(patch);
+			if (m_MidiChaseEvents && !m_MidiLearn) {	// if chasing MIDI events
+				NotifyEdit(0, UCODE_MIDI_CHASE, // save part/page indices
+					CUndoable::UE_COALESCE | CUndoable::UE_INSIGNIFICANT);
+				m_PatchBar.SetCurPage(iPage);	// chase to target's page
+			}
+			m_PatchBar.UpdatePage(iPage, patch);	// update page
+			if (iTarget == CPatch::MIDI_TARGET_TRANSPOSE)	// if target is transpose
+				m_View->UpdateChart();	// update chart view
 		}
-		m_PatchBar.UpdatePage(iPage, patch);	// update page
-		if (iTarget == CPatch::MIDI_TARGET_TRANSPOSE)	// if target is transpose
-			m_View->UpdateChart();	// update chart view
 	}
 	return(0);
 }
@@ -1186,20 +1232,23 @@ LRESULT CMainFrame::OnMidiInputData(WPARAM wParam, LPARAM lParam)
 		if (pFocusWnd != NULL) {
 			int	iTarget = -1;
 			int	iPart = -1;
-			CDialog	*pMidiPage = m_PatchBar.GetPage(CPatchBar::PAGE_MidiTarget);
-			if (pMidiPage->IsChild(pFocusWnd)) {	// if patch MIDI control has focus
-				CMidiTargetRowDlg	*pRowDlg = DYNAMIC_DOWNCAST(CMidiTargetRowDlg, pFocusWnd->GetParent());
-				if (pRowDlg != NULL)	// if control's parent is MIDI row dialog
-					iTarget = pRowDlg->GetRowIndex();
+			CMidiTargetDlg&	PatchMTDlg = m_PatchBar.GetMidiTargetDlg();
+			// if child of patch MIDI target dialog has focus
+			if (PatchMTDlg.IsChild(pFocusWnd)) {
+				iTarget = PatchMTDlg.GetCurSel();
 			} else {
-				pMidiPage = m_PartsBar.GetPageView()->GetPage(CPartPageView::PAGE_MidiTarget);
-				if (pMidiPage->IsChild(pFocusWnd)) {	// if part MIDI control has focus
+				CMidiTargetDlg&	PartMTDlg = m_PartsBar.GetMidiTargetDlg();
+				// if child of part MIDI target dialog has focus
+				if (PartMTDlg.IsChild(pFocusWnd)) {
 					iPart = m_PartsBar.GetCurPart();
-					if (iPart >= 0) {	// if part selected; should be true
-						CMidiTargetRowDlg	*pRowDlg = DYNAMIC_DOWNCAST(CMidiTargetRowDlg, pFocusWnd->GetParent());
-						if (pRowDlg != NULL)	// if control's parent is MIDI row dialog
-							iTarget = pRowDlg->GetRowIndex();
-					}
+					if (iPart >= 0)	// if part selected; should be true
+						iTarget = PartMTDlg.GetCurSel();
+				} else {	// try ordinary patch/part pages
+					iTarget = GetCtrlMidiTarget(pFocusWnd, iPart);
+					if (iPart < 0)	// if patch target
+						PatchMTDlg.SetCurSel(iTarget);
+					else	// part target
+						PartMTDlg.SetCurSel(iTarget);
 				}
 			}
 			if (iTarget >= 0) {	// if valid MIDI target
@@ -1234,6 +1283,18 @@ LRESULT CMainFrame::OnMidiInputData(WPARAM wParam, LPARAM lParam)
 							SetPart(iPart, patch.m_Part[iPart]);
 						else	// patch target
 							SetBasePatch(patch);
+					}
+				}
+			} else {	// MIDI target not found
+				UINT	nID = pFocusWnd->GetDlgCtrlID();
+				if (nID == IDC_PART_IN_PORT || nID == IDC_PART_IN_CHAN) {
+					iPart = m_PartsBar.GetCurPart();
+					CPart	part(gEngine.GetPart(iPart));
+					CMidiInst	inst(CMidiEventDlg::GetDevice(wParam), MIDI_CHAN(wParam));
+					if (inst != part.m_In.Inst) {
+						NotifyEdit(nID, UCODE_PART);
+						part.m_In.Inst = inst;
+						SetPart(iPart, part);
 					}
 				}
 			}
@@ -1620,8 +1681,23 @@ void CMainFrame::OnMidiLearn()
 {
 	m_MidiLearn ^= 1;
 	UpdateHookMidiInput();
-	m_PatchBar.GetPage(CPatchBar::PAGE_MidiTarget)->SendMessage(WM_COMMAND, ID_MIDI_LEARN);
-	m_PartsBar.GetPageView()->GetPage(CPartPageView::PAGE_MidiTarget)->SendMessage(WM_COMMAND, ID_MIDI_LEARN);
+	m_PatchBar.GetMidiTargetDlg().OnLearnChange();
+	m_PartsBar.GetMidiTargetDlg().OnLearnChange();
+	CWnd	*pFocusWnd = GetFocus();
+	if (pFocusWnd != NULL) {
+		CPatchPageDlg	*pPage = NULL;
+		if (m_PatchBar.IsChild(pFocusWnd)) {	// if patch bar control has focus
+			int	iPage = m_PatchBar.GetCurPage();
+			if (iPage >= 0)
+				pPage = DYNAMIC_DOWNCAST(CPatchPageDlg, m_PatchBar.GetPage(iPage));
+		} else if (m_PartsBar.GetPageView()->IsChild(pFocusWnd)) {	// if parts bar control has focus
+			int	iPage = m_PartsBar.GetPageView()->GetCurPage();
+			if (iPage >= 0)
+				pPage = DYNAMIC_DOWNCAST(CPatchPageDlg, m_PartsBar.GetPageView()->GetPage(iPage));
+		}
+		if (pPage != NULL)
+			pPage->UpdateMidiLearn();
+	}
 }
 
 void CMainFrame::OnUpdateMidiLearn(CCmdUI* pCmdUI) 

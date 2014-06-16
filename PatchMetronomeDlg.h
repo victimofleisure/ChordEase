@@ -25,9 +25,9 @@
 /////////////////////////////////////////////////////////////////////////////
 // CPatchMetronomeDlg dialog
 
-#include "PatchAutoInstDlg.h"
+#include "PatchPageDlg.h"
 
-class CPatchMetronomeDlg : public CPatchAutoInstDlg
+class CPatchMetronomeDlg : public CPatchPageDlg
 {
 	DECLARE_DYNAMIC(CPatchMetronomeDlg);
 // Construction
@@ -55,6 +55,12 @@ protected:
 	CSpinNoteEdit	m_Note;
 	CSpinNoteEdit	m_AccentNote;
 	CMidiValEdit	m_AccentVel;
+	CPatchEdit	m_Patch;
+	CMidiValEdit	m_Velocity;
+	CPortEdit	m_Port;
+	CButton	m_Enable;
+	CChannelEdit	m_Channel;
+	CPatchEdit	m_Volume;
 	//}}AFX_DATA
 
 // Generated message map functions

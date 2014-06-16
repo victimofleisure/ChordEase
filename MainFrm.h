@@ -84,6 +84,8 @@ public:
 	CString	GetRecordFilePath() const;
 	void	SetRecordFilePath(const CString& Path);
 	bool	IsMidiLearn() const;
+	bool	IsMidiChase() const;
+	int		GetCtrlMidiTarget(CWnd *pWnd, int& PartIdx) const;
 
 // Operations
 public:
@@ -340,6 +342,7 @@ protected:
 	void	UpdateHookMidiInput();
 	void	UpdateHookMidiOutput();
 	void	DockControlBarNextTo(CControlBar* pBar, CControlBar* pTargetBar);
+	void	EnableAppToolTips(bool Enable);
 	static	UINT	CheckForUpdatesThreadFunc(LPVOID Param);
 
 // Undo state values
@@ -455,6 +458,11 @@ inline void CMainFrame::SetRecordFilePath(const CString& Path)
 inline bool CMainFrame::IsMidiLearn() const
 {
 	return(m_MidiLearn);
+}
+
+inline bool CMainFrame::IsMidiChase() const
+{
+	return(m_MidiChaseEvents);
 }
 
 /////////////////////////////////////////////////////////////////////////////

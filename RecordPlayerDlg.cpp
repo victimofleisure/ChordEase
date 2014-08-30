@@ -406,6 +406,7 @@ BEGIN_MESSAGE_MAP(CRecordPlayerDlg, CPersistDlg)
 	ON_BN_CLICKED(IDC_REC_PLAY_EXPORT, OnExport)
 	//}}AFX_MSG_MAP
 	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
+	ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnToolTipNeedText)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -469,6 +470,7 @@ BOOL CRecordPlayerDlg::OnInitDialog()
 		if (PathFileExists(sRecPath))	// if recording exists
 			Open(sRecPath);	// open most recent recording
 	}
+	EnableToolTips();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -587,4 +589,9 @@ void CRecordPlayerDlg::OnEndlabeleditTrackList(NMHDR* pNMHDR, LRESULT* pResult)
 	if (item.pszText != NULL)	// if user didn't cancel edit
 		m_TrackList.SetItemText(item.iItem, 0, item.pszText);
 	*pResult = 0;
+}
+
+BOOL CRecordPlayerDlg::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
+{
+	return theApp.OnToolTipNeedText(id, pNMHDR, pResult);
 }

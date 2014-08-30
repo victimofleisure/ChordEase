@@ -10,6 +10,7 @@
         00      20sep13	initial version
         01      23apr14	add tooltip support
 		02		12jun14	in OnCreate, set font
+		03		15jul14	add OnCommandHelp
 
 		parts list view
  
@@ -153,6 +154,7 @@ BEGIN_MESSAGE_MAP(CPartsListView, CView)
 	ON_WM_CONTEXTMENU()
     ON_NOTIFY(NM_RCLICK, IDC_PARTS_LIST, OnListClick)
 	ON_WM_DESTROY()
+	ON_MESSAGE(WM_COMMANDHELP, OnCommandHelp)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -256,4 +258,10 @@ void CPartsListView::OnContextMenu(CWnd* pWnd, CPoint point)
 	menu.LoadMenu(IDM_PART_LIST_CTX);
 	CMenu	*mp = menu.GetSubMenu(0);
 	mp->TrackPopupMenu(0, point.x, point.y, theApp.GetMain());
+}
+
+LRESULT CPartsListView::OnCommandHelp(WPARAM wParam, LPARAM lParam)
+{
+	theApp.WinHelp(IDC_PARTS_LIST);	// show parts list help topic
+	return TRUE;	// stop routing
 }

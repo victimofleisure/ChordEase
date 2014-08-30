@@ -10,6 +10,7 @@
         00      12sep13	initial version
         01      02may14	add undo manager
 		02		27may14	add auto-record handling
+		03		01jul14	add handling for lead sheets
 
 		ChordEase document
  
@@ -92,6 +93,9 @@ protected:
 
 // Data members
 	CString	m_SongText;		// song text
+
+// Protected overrides
+	BOOL	DoSave(LPCTSTR lpszPathName, BOOL bReplace);
 
 // Helpers
 	void	AutoRecord(bool Enable);

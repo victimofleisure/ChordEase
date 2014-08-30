@@ -10,6 +10,7 @@
         00      14sep13	initial version
         01      22apr14	add tooltip support
         02      10jun14	add MIDI learn
+		03		05aug14	add OnCommandHelp
 
         patch page dialog
  
@@ -59,6 +60,7 @@ protected:
 	//{{AFX_MSG(CPatchPageDlg)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
+	afx_msg	LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	afx_msg void OnChangedNumEdit(UINT nID, NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnClickedBtn(UINT nID);

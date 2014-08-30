@@ -11,6 +11,7 @@
         01      16apr14	add help
 		02		22apr14	add OnToolTipNeedText
 		03		30apr14	add patch path
+		04		05aug14	add DlgCtrlHelp
 
 		ChordEase application
  
@@ -88,6 +89,8 @@ public:
 	BOOL	OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 	static	void	InitNoteCombo(CComboBox& Combo, CIntRange Range, int SelIdx);
 	static	void	InitNumericCombo(CComboBox& Combo, CIntRange Range, int SelIdx);
+	bool	DlgCtrlHelp(HWND DlgWnd);
+	static	int		FindHelpID(int ResID);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

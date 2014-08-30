@@ -10,6 +10,7 @@
         00      12sep13	initial version
 		01		22apr14	add piano dialog
 		02		30apr14	add OnDropFiles
+		03		23jul14	add OnTransportGoTo
 
 		ChordEase main frame
  
@@ -150,6 +151,7 @@ protected:
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnTimer(W64UINT nIDEvent);
 	afx_msg void OnTransportAutoRewind();
+	afx_msg void OnTransportGoTo();
 	afx_msg void OnTransportNextChord();
 	afx_msg void OnTransportNextSection();
 	afx_msg void OnTransportPause();
@@ -161,6 +163,7 @@ protected:
 	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditCut(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditDelete(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditInsert(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditPaste(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditRedo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditRename(CCmdUI* pCmdUI);
@@ -172,6 +175,7 @@ protected:
 	afx_msg void OnUpdateMidiLearn(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateMidiOutput(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportAutoRewind(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransportGoTo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportNextChord(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportNextSection(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportPause(CCmdUI* pCmdUI);
@@ -189,8 +193,8 @@ protected:
 	afx_msg void OnViewParts();
 	afx_msg void OnViewPatch();
 	afx_msg void OnViewPiano();
-	afx_msg void OnViewThreads();
 	afx_msg void OnViewRecordPlayer();
+	afx_msg void OnViewThreads();
 	//}}AFX_MSG
 	afx_msg void OnUpdateIndicatorMeter(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateIndicatorKey(CCmdUI *pCmdUI);

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00		08mar10	initial version
+		01		01jul14	add lead sheet file extension
 
 		global definitions and inlines
 
@@ -202,6 +203,7 @@ enum {	// user windows messages
 #define PATCH_EXT		_T(".cep")
 #define MIDI_FILE_EXT	_T(".mid")
 #define MIDI_RECORD_EXT	_T(".cemr")
+#define LEAD_SHEET_EXT	_T(".ls")
 
 // file names
 #define PATCH_INI_FILE_NAME			_T("ChordEasePatch.ini")

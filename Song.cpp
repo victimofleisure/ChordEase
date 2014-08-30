@@ -12,6 +12,9 @@
  		02		16apr14	add section names; refactor command parsing
  		03		01may14	add write
 		04		26may14	preserve comments
+		05		20jun14	in ReadChordDictionary, add support for aliases
+		06		01jul14	add ReadLeadSheet
+		07		28aug14	in IsMergeable, add chord arg
 
 		song container
 
@@ -297,27 +300,38 @@ bool CSong::ReadChordDictionary(LPCTSTR Path)
 				break;	// assume end of file
 			if (ChordTypeName == _T("NULL"))	// usually reserved for major triad
 				ChordTypeName.Empty();
-			CString	ScaleName(fp.ReadToken(WHITESPACE));
-			CString	ModeName(fp.ReadToken(WHITESPACE));
 			if (FindChordType(ChordTypeName) >= 0) {
 				ReportError(fp, IDS_SONG_ERR_DUP_CHORD_TYPE, ChordTypeName);
 				return(FALSE);
 			}
-			info.m_Name = ChordTypeName;
-			info.m_Scale = CDiatonic::FindScale(ScaleName);
-			if (info.m_Scale < 0) {	// if scale not found
-				ReportError(fp, IDS_SONG_ERR_BAD_SCALE, ScaleName);
-				return(FALSE);
-			}
-			info.m_Mode = CDiatonic::FindMode(ModeName);
-			if (info.m_Mode < 0) {	// if mode not found
-				ReportError(fp, IDS_SONG_ERR_BAD_MODE, ModeName);
-				return(FALSE);
-			}
-			for (int iVar = 0; iVar < CChordInfo::COMP_VARIANTS; iVar++) {
-				if (!ReadChord(fp, info.m_Comp[iVar]))
+			CString	ScaleName(fp.ReadToken(WHITESPACE));
+			CString	ModeName(fp.ReadToken(WHITESPACE));
+			if (ScaleName == '=') {	// if alias, mode name is source chord type
+				if (ModeName == _T("NULL"))	// usually reserved for major triad
+					ModeName.Empty();
+				int	iType = FindChordType(ModeName);
+				if (iType < 0) {	// if source chord type not defined
+					ReportError(fp, IDS_SONG_ERR_BAD_CHORD_TYPE, ModeName);
 					return(FALSE);
+				}
+				info = m_Dictionary[iType];	// copy chord definition from source
+			} else {	// chord type definition, not alias
+				info.m_Scale = CDiatonic::FindScale(ScaleName);
+				if (info.m_Scale < 0) {	// if scale not found
+					ReportError(fp, IDS_SONG_ERR_BAD_SCALE, ScaleName);
+					return(FALSE);
+				}
+				info.m_Mode = CDiatonic::FindMode(ModeName);
+				if (info.m_Mode < 0) {	// if mode not found
+					ReportError(fp, IDS_SONG_ERR_BAD_MODE, ModeName);
+					return(FALSE);
+				}
+				for (int iVar = 0; iVar < CChordInfo::COMP_VARIANTS; iVar++) {
+					if (!ReadChord(fp, info.m_Comp[iVar]))	// read chord tones
+						return(FALSE);
+				}
 			}
+			info.m_Name = ChordTypeName;
 			m_Dictionary.Add(info);
 		}
 	}
@@ -360,13 +374,15 @@ int CSong::FindSectionByChord(int ChordIdx) const
 	return(m_Section.FindBeat(m_StartBeat[ChordIdx]));
 }
 
-bool CSong::IsMergeable(int ChordIdx) const
+bool CSong::IsMergeable(int ChordIdx, const CChord& Chord) const
 {
+	// if caller's chord is same as preceding or following chord 
+	// (ignoring duration) and belongs to same section, return true
 	return((ChordIdx > 0
-		&& m_Chord[ChordIdx - 1].EqualNoDuration(m_Chord[ChordIdx])
+		&& m_Chord[ChordIdx - 1].EqualNoDuration(Chord)
 		&& FindSectionByChord(ChordIdx - 1) == FindSectionByChord(ChordIdx))
 		|| (ChordIdx < GetChordCount() - 1
-		&& m_Chord[ChordIdx + 1].EqualNoDuration(m_Chord[ChordIdx])
+		&& m_Chord[ChordIdx + 1].EqualNoDuration(Chord)
 		&& FindSectionByChord(ChordIdx + 1) == FindSectionByChord(ChordIdx)));
 }
 
@@ -493,6 +509,7 @@ int CSong::ParseChordSymbol(CString Symbol, CChord& Chord) const
 bool CSong::Read(LPCTSTR Path)
 {
 	TRY {
+		Reset();
 		CTokenFile	fp(Path, CFile::modeRead | CFile::shareDenyWrite);
 		CString	sTok;
 		sTok = fp.ReadToken(WHITESPACE);	// read time signature
@@ -513,11 +530,6 @@ bool CSong::Read(LPCTSTR Path)
 			return(FALSE);
 		}
 		m_Key = key;
-		m_Transpose = 0;
-		m_Tempo = 0;
-		m_Chord.RemoveAll();
-		m_Section.RemoveAll();
-		m_SectionName.RemoveAll();
 		int	dur = 0;
 		int	beats = 0;
 		int	SectionStart = -1;
@@ -703,5 +715,168 @@ bool CSong::Write(LPCTSTR Path)
 		return(FALSE);
 	}
 	END_CATCH
+	return(TRUE);
+}
+
+bool CSong::ReadLeadSheet(LPCTSTR Path)
+{
+	// import chords from Impro-Visor lead sheet file
+	enum {	// define metadata keywords we care about
+		MD_METER,
+		MD_KEY,
+		MD_TEMPO,
+		MD_TITLE,
+		MD_COMPOSER,
+		METADATA_KEYWORDS
+	};
+	// keywords must be in same order as enum above
+	static const LPCTSTR MetadataKeyword[METADATA_KEYWORDS] = {
+		_T("meter"),
+		_T("key"),
+		_T("tempo"),
+		_T("title"),
+		_T("composer"),
+	};
+	CMeter	meter(4, 4);	// default meter
+	int	key = 0;
+	CString	sTitle, sComposer;
+	CChord	chord(0, C, C, 0);	// default initial chord
+	CChordArray	Measure;
+	bool	MeterDoubled = FALSE;
+	TRY {
+		Reset();
+		CTokenFile	fp(Path, CFile::modeRead | CFile::shareDenyWrite);
+		CString	sType, sToken;
+		CNote	root, bass;
+		int	nMetaLevels = 0;
+		while (!(sToken = fp.ReadToken(_T(" "))).IsEmpty()) {
+			int	nTokenLen = sToken.GetLength();
+			int	iPos = 0;
+			while (iPos < nTokenLen && sToken[iPos] == '(') {	// while opening parentheses
+				nMetaLevels++;	// increment metadata nesting
+				iPos++;
+			}
+			if (!nMetaLevels) {	// if not within metadata
+				if (sToken == '|') {	// if end of measure
+					if (!Measure.GetSize())	// if empty measure
+						Measure.Add(chord);	// repeat previous chord
+					int	nChordsPerMeasure = Measure.GetSize();
+					// if measure length not evenly divisible by measure's chord count
+					if (meter.m_Numerator % nChordsPerMeasure) {
+						if (!MeterDoubled) {	// if meter not already doubled
+							meter.m_Numerator *= 2;	// try doubling meter
+							meter.m_Denominator *= 2;
+							int	nChords = m_Chord.GetSize();
+							for (int iChord = 0; iChord < nChords; iChord++)	// for each chord
+								m_Chord[iChord].m_Duration *= 2;	// double duration
+							MeterDoubled = TRUE;	// set meter doubled state
+						}
+						if (meter.m_Numerator % nChordsPerMeasure) {	// if still no good
+							ReportError(fp, IDS_SONG_ERR_BAD_DURATION, nChordsPerMeasure);
+							return(FALSE);
+						}
+					}
+					int	dur = meter.m_Numerator / nChordsPerMeasure;	// duration in beats
+					ASSERT(dur > 0);
+					for (int iChord = 0; iChord < nChordsPerMeasure; iChord++)	// for each chord
+						Measure[iChord].m_Duration = dur;	// set chord's duration
+					m_Chord.Append(Measure);	// append measure to chord array
+					Measure.RemoveAll();	// reset measure
+				} else if (sToken == '/') {	// if repeat symbol
+					Measure.Add(chord);	// repeat previous chord
+				} else if (isupper(sToken[0])) {	// if first character is upper case
+					if (sToken == _T("NC")) {	// if no chord symbol
+						Measure.Add(chord);	// repeat previous chord
+					} else {	// chord symbol
+						int	nErrID = ParseChordSymbol(sToken, chord);
+						if (nErrID) {
+							ReportError(fp, nErrID, sToken);
+							return(FALSE);
+						}
+						Measure.Add(chord);
+					}
+				}
+			} else if (nMetaLevels == 1) {	// if within first-level metadata
+				CString	sKeyword = sToken.Mid(1);
+				int	iKey;
+				for (iKey = 0; iKey < METADATA_KEYWORDS; iKey++) {
+					if (sKeyword == MetadataKeyword[iKey])
+						break;
+				}
+				if (iKey < METADATA_KEYWORDS) {	// if keyword is interesting
+					CString	sArg = fp.ReadToken(_T("\n"));	// read to end of line
+					sArg.TrimRight();	// trim trailing spaces if any
+					if (sArg.Right(1) != ')') {	// if missing closing parenthesis
+						ReportError(fp, IDS_SONG_ERR_BAD_SYNTAX);
+						return(FALSE);
+					}
+					sArg.Delete(sArg.GetLength() - 1);	// remove closing parenthesis
+					nMetaLevels--;	// decrement metadata nesting
+					switch (iKey) {
+					case MD_METER:
+						if (_stscanf(sArg, _T("%d %d"), &meter.m_Numerator, &meter.m_Denominator) != 2) {
+							ReportError(fp, IDS_SONG_ERR_BAD_SYNTAX);
+							return(FALSE);
+						}
+						if (!meter.IsValidMeter()) {	// if bogus time signature 
+							ReportError(fp, IDS_SONG_ERR_BAD_METER, 
+								m_Meter.m_Numerator, m_Meter.m_Denominator);
+							return(FALSE);
+						}
+						m_Meter = meter;
+						break;
+					case MD_KEY:
+						if (_stscanf(sArg, _T("%d"), &key) != 1) {
+							ReportError(fp, IDS_SONG_ERR_BAD_KEY, sArg);
+							return(FALSE);
+						}
+						// key is signed offset within cycle of fifths, relative to C
+						m_Key = CNote(7 * key).Normal();
+						break;
+					case MD_TEMPO:
+						if (_stscanf(sArg, _T("%lf"), &m_Tempo) != 1 || m_Tempo <= 0) {
+							ReportError(fp, IDS_SONG_ERR_BAD_TEMPO, sArg);
+							return(FALSE);
+						}
+						break;
+					case MD_TITLE:
+						sTitle = sArg;
+						break;
+					case MD_COMPOSER:
+						sComposer = sArg;
+						break;
+					}
+				}
+			}
+			iPos = nTokenLen - 1;
+			while (iPos >= 0 && sToken[iPos] == ')') {	// while closing parentheses
+				nMetaLevels--;	// decrement metadata nesting
+				if (nMetaLevels < 0) {	// if invalid nesting
+					ReportError(fp, IDS_SONG_ERR_BAD_SYNTAX);
+					return(FALSE);
+				}
+				iPos--;
+			}
+		}
+	}
+	CATCH (CFileException, e) {
+		TCHAR	msg[256];
+		e->GetErrorMessage(msg, _countof(msg));
+		OnError(msg);
+		return(FALSE);
+	}
+	END_CATCH
+	int	nBeats = CountBeats(m_Chord);
+	ASSERT(nBeats > 0);
+	ClosePrevSection(nBeats);	// add implicit section if needed
+	MakeBeatMap(nBeats);	// make beat map from chord array
+	CSongState	ss;
+	GetState(ss);
+	ss.MergeDuplicateChords();
+	SetState(ss);
+	if (!sTitle.IsEmpty())	// if title was specified, add comment line
+		m_Comments += _T("// title: ") + sTitle + '\n';
+	if (!sComposer.IsEmpty())	// if composer was specified, add comment line
+		m_Comments += _T("// composer: ") + sComposer + '\n';
 	return(TRUE);
 }

@@ -157,7 +157,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
+				PreprocessorDefinitions="NDEBUG;_WIN64"
 				Culture="1033"
 			/>
 			<Tool
@@ -335,7 +335,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
+				PreprocessorDefinitions="_DEBUG;_WIN64"
 				Culture="1033"
 			/>
 			<Tool
@@ -513,7 +513,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
+				PreprocessorDefinitions="NDEBUG;_WIN64;PORTABLE_APP"
 				Culture="1033"
 			/>
 			<Tool
@@ -1150,6 +1150,14 @@
 			</File>
 			<File
 				RelativePath=".\DLLWrap.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DocManagerEx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DocManagerEx.h"
 				>
 			</File>
 			<File
@@ -2494,6 +2502,14 @@
 			</File>
 			<File
 				RelativePath=".\PopupEdit.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PositionDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PositionDlg.h"
 				>
 			</File>
 			<File

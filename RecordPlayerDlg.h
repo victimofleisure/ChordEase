@@ -108,6 +108,7 @@ protected:
 	afx_msg void OnExport();
 	//}}AFX_MSG
 	afx_msg LRESULT	OnKickIdle(WPARAM wParam, LPARAM lParam);
+	afx_msg BOOL OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 	DECLARE_MESSAGE_MAP()
 
 // Types

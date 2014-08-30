@@ -9,6 +9,7 @@
 		rev		date	comments
         00      20sep13	initial version
         01      23apr14	add tooltip support
+		02		15jul14	add OnCommandHelp
 
 		parts list view
  
@@ -96,6 +97,7 @@ protected:
 	afx_msg void OnListReorder(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnDestroy();
+	afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

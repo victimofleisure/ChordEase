@@ -9,7 +9,9 @@
 		rev		date	comments
 		00		23aug13	initial version
 		01		16apr14	fix anticipation during section repeat
- 
+		02		28jun14	defer updating patches until after devices reopen
+		03		01jul14	in ReadSong, add handling for lead sheets
+
 		engine
  
 */
@@ -20,6 +22,7 @@
 #include "Diatonic.h"
 #include "MidiWrap.h"
 #include <math.h>
+#include "shlwapi.h"	// for PathFindExtension
 
 const CEngine::CPartState	CEngine::CPartState::m_Default;
 
@@ -132,6 +135,7 @@ CEngine::CEngine()
 	m_IsPaused = FALSE;
 	m_IsRepeating = TRUE;
 	m_AutoRewind = TRUE;
+	m_PatchUpdatePending = FALSE;
 	m_PatchBackup.Tempo = 0;
 	m_PatchBackup.Transpose = INT_MAX;
 	ZeroMemory(&m_PatchTrigger, sizeof(m_PatchTrigger));
@@ -247,6 +251,10 @@ bool CEngine::Run(bool Enable)
 		RunInit();
 		if (!OpenDevices())
 			return(FALSE);
+		if (m_PatchUpdatePending) {	// if deferred patch update is pending
+			UpdatePatches();	// update patches after opening devices
+			m_PatchUpdatePending = FALSE;	// reset pending flag
+		}
 		if (!RunTimer(TRUE))	// run timer thread last
 			return(FALSE);
 	} else {	// stopping
@@ -521,8 +529,8 @@ bool CEngine::SetPatch(const CPatch& Patch, bool UpdatePorts)
 			if (!m_Patch.UpdatePorts(m_MidiDevID))	// update ports for current devices
 				Notify(NC_MISSING_DEVICE);
 		}
+		m_PatchUpdatePending = TRUE;	// defer updating patches until devices reopen
 	}	// engine may restart
-	UpdatePatches();	// update patches after restarting engine
 	return(TRUE);
 }
 
@@ -686,7 +694,7 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 						m_PartState[iPart].OnTimeChange(part, m_Patch.m_PPQ);
 					break;
 				case CPart::MIDI_TARGET_BASS_APPROACH_TRIGGER:
-					if (pos > 0 && m_Song.GetChordCount()) {	// if positive transition and song not empty 
+					if (pos > 0) {	// if positive transition
 						if (!m_PartState[iPart].m_BassApproachTrigger) {	// if not already triggered
 							m_PartState[iPart].m_BassApproachTrigger = TRUE;	// set triggered state
 							SetBassApproachTarget(iPart);	// compute approach target time and chord
@@ -728,7 +736,7 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 					UpdateTempo();
 				break;
 			case CPatch::MIDI_TARGET_TEMPO_MULTIPLE:
-				UMT(m_Patch.m_TempoMultiple, pos);
+				UMT(m_Patch.m_TempoMultiple, pos * 2 - 1);
 				if (TargetChanged)
 					UpdateTempo();
 				break;
@@ -804,7 +812,7 @@ void CEngine::OnTimeChange()
 		m_PartState[iPart].OnTimeChange(m_Patch.m_Part[iPart], m_Patch.m_PPQ);
 }
 
-CString CEngine::GetTickString(int Tick) const
+CString CEngine::TickToString(int Tick) const
 {
 	CString	s;
 	if (!m_Song.IsEmpty()) {
@@ -825,7 +833,7 @@ CString CEngine::GetTickString(int Tick) const
 	return(s);
 }
 
-CString CEngine::GetTickSpanString(int TickSpan) const
+CString CEngine::TickSpanToString(int TickSpan) const
 {
 	CString	s;
 	if (!m_Song.IsEmpty() && TickSpan >= 0) {
@@ -837,6 +845,28 @@ CString CEngine::GetTickSpanString(int TickSpan) const
 		s.Format(_T("%d:%d:%03d"), MeasureNum, BeatNum, TickRem);
 	}
 	return(s);
+}
+
+bool CEngine::StringToTick(LPCTSTR Str, int& Tick, bool IsSpan) const
+{
+	if (m_Song.IsEmpty())
+		return(FALSE);
+	int	MeasureNum, BeatNum, TickRem;
+	int	nConvs = _stscanf(Str, _T("%d:%d:%d"), &MeasureNum, &BeatNum, &TickRem);
+	if (nConvs < 1)	// if nothing was scanned
+		return(FALSE);
+	if (!IsSpan) {	// if not span
+		MeasureNum--;	// convert measure and beat from one-origin to zero-origin
+		BeatNum--;
+	}
+	CSong::CMeter	meter = m_Song.GetMeter();
+	int	Beat = MeasureNum * meter.m_Numerator;
+	if (nConvs > 1)	// if beat was scanned
+		Beat += BeatNum;
+	Tick = Beat * m_TicksPerBeat;
+	if (nConvs > 2)	// if tick was scanned
+		Tick += TickRem;
+	return(TRUE);
 }
 
 void CEngine::OnNewSong()
@@ -872,18 +902,23 @@ bool CEngine::ReadSong(LPCTSTR Path)
 	bool	WasRunning = IsRunning();
 	{
 		STOP_ENGINE(*this);	// for thread safety
-		if (!m_Song.Read(Path)) {	// if song can't be read or contains errors
+		CString	ext(PathFindExtension(Path));
+		bool	retc;
+		if (!ext.CompareNoCase(LEAD_SHEET_EXT))	// if lead sheet extension
+			retc = m_Song.ReadLeadSheet(Path);
+		else	// native format
+			retc = m_Song.Read(Path);
+		if (!retc) {	// if song can't be read or contains errors
 			m_Song.Reset();	// remove partially read song if any
 			m_IsPlaying = FALSE;	// stop playing to avoid crash due to empty song
 			return(FALSE);
 		}
 		OnNewSong();
+		m_PatchUpdatePending = TRUE;	// defer updating patches until devices reopen
 	}	// engine may restart
 	OnTimeChange();
 	if (!Run(WasRunning))	// possibly restart engine
 		return(FALSE);
-	if (IsRunning())
-		UpdatePatches();	// requires engine to be running
 	return(TRUE);
 }
 
@@ -1179,8 +1214,10 @@ CNote CEngine::GetBassNote(CNote Note, int PartIdx) const
 void CEngine::SetBassApproachTarget(int PartIdx)
 {
 	int	NowTick = m_Tick;	// current position is volatile, so only read it once
-	if (NowTick < 0)
-		return;
+	if (NowTick < 0)	// if before start of song
+		return;	// avoid math problems
+	if (!m_Song.GetChordCount())	// if song is empty
+		return;	// avoid access violation
 	int	NowRem = NowTick % m_TicksPerBeat;
 	int	NowBeat = NowTick / m_TicksPerBeat % m_Song.GetBeatCount();
 	int	iChord = m_Song.GetChordIndex(NowBeat);

@@ -36,6 +36,7 @@ public:
 
 // Operations
 	static	void	GetSectionRangeStrings(const CSong::CSection& Section, CString& Start, CString& Length);
+	static	bool	SetSectionRangeStrings(CSong::CSection& Section, CString Start, CString Length);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

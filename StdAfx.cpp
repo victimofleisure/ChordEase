@@ -1,3 +1,17 @@
+// Copyleft 2013 Chris Korda
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or any later version.
+/*
+        chris korda
+ 
+		revision history:
+		rev		date	comments
+        00      12sep13	initial version
+		01		12aug14	fix memory leak in LoadFromBuffer
+
+*/
+
 // stdafx.cpp : source file that includes just the standard includes
 //	ChordEase.pch will be the pre-compiled header
 //	stdafx.obj will contain the pre-compiled type information
@@ -37,7 +51,7 @@ void StoreToBuffer(CObject& obj, CByteArrayEx& ba)
 	CMemFile	fp;
 	{
 		CArchive	ar(&fp, CArchive::store);
-		obj.Serialize(ar);
+		obj.Serialize(ar);	// store object to buffer
 	}	// destroy CArchive before detaching CMemFile
 	ULONGLONG	nSize = fp.GetLength();
 	ASSERT(nSize <= W64INT_MAX);	// check size range
@@ -48,12 +62,15 @@ void LoadFromBuffer(CObject& obj, CByteArrayEx& ba)
 {
 	LPBYTE	pData;
 	W64INT	nSize;
-	ba.Detach(pData, nSize);
+	ba.Detach(pData, nSize);	// get buffer pointer from byte array
 	CMemFile	fp;
 	ASSERT(nSize >= 0 && nSize < UINT_MAX);
-	fp.Attach(pData, static_cast<UINT>(nSize));
+	fp.Attach(pData, static_cast<UINT>(nSize));	// attach CMemFile to buffer
 	CArchive	ar(&fp, CArchive::load);
-	obj.Serialize(ar);
+	obj.Serialize(ar);	// load object from buffer
+	// don't rely on CMemFile dtor to delete buffer, else memory leak occurs;
+	// CMemFile::Free assumes buffer was allocated via malloc instead of new
+	delete fp.Detach();	// detach CMemFile from buffer and delete buffer
 }
 
 #if _MFC_VER <= 0x0600

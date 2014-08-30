@@ -48,8 +48,8 @@ protected:
 // Generated message map functions
 	//{{AFX_MSG(CMySizingControlBar)
 	afx_msg void OnWindowPosChanged(WINDOWPOS* lpwndpos);
-	//}}AFX_MSG
 	afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
+	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 // Member data

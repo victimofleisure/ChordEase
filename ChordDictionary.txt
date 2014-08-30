@@ -9,7 +9,7 @@ maj7        MAJOR               LYDIAN      [1,3,5,7]   [2,3,5,6]
 -maj7(b6)   HARMONIC_MINOR      IONIAN      [2,3,5,7]   [1,3,5,7]
 maj7#5      MELODIC_MINOR       PHRYGIAN    [1,3,5,7]   [2,3,5,6]
 maj7(4)     MAJOR               IONIAN      [1,3,5,7]   [2,3,5,6]
--7b5(9)     HARMONIC_MINOR      DORIAN      [2,3,5,7]   [1,3,5,7]
+-7b5(6)     HARMONIC_MINOR      DORIAN      [2,3,5,7]   [1,3,5,7]
 7b9(4)      HARMONIC_MINOR      MIXOLYDIAN  [2,3,5,7]   [1,3,5,7]
 7sus4(b9)   HARMONIC_MINOR      MIXOLYDIAN  [2,4,5,7]   [1,4,5,7]
 7b9(6)      ASYM_DIMINISHED     LOCRIAN     [2,3,5,7]   [2,3,6,7]
@@ -23,4 +23,115 @@ sus         MAJOR               MIXOLYDIAN  [1,4,5]     [2,4,5]
 (4)         MAJOR               IONIAN      [1,3,5]     [2,3,5]
 (b6)        MELODIC_MINOR       MIXOLYDIAN  [1,3,5]     [2,3,5]
 -(b6)       MAJOR               AEOLIAN     [1,3,5]     [1,3,4]
+-(b5)       MAJOR               LOCRIAN     [1,3,5]     [1,3,4]
+-6          MAJOR               DORIAN      [2,3,5,6]   [2,3,4,6]
+-7(b6)      MAJOR               AEOLIAN     [2,3,5,7]   [2,3,4,7]
+-7(b9)      MAJOR               PHRYGIAN    [1,3,5,7]   [1,3,4,7]
+6           MAJOR               LYDIAN      [2,3,5,6]   [1,3,5,7]
+maj7(#9)    HARMONIC_MINOR      AEOLIAN     [1,3,5,7]   [1,3,5,6]
+maj7(b6)    HARMONIC_MINOR      IONIAN      [1,3,5,7]   [2,3,5,7]
+-7b5(9)     MELODIC_MINOR       AEOLIAN     [1,3,5,7]   [1,4,5,7]
 
++add9   = +7
+11      = 7
+13      = 7
+13#11   = 7#4
+13#9    = 7b9(6)
+13b5    = 7b9(6)
+13b9    = 7b9(6)
+13b9#11 = 7b9(6)
+13sus   = 7
+13sus4  = 7
+2       = NULL
+4       = NULL
+5       = NULL
+6#11    = NULL
+67      = NULL
+69      = NULL
+6b5     = NULL
+7#11    = 7#4
+7#5     = 7b9
+7#5#9   = 7b9
+7#5b9   = 7b9
+7#5b9#11 = 7b9
+7#9     = 7b9
+7#9#11  = 7b9
+7#9b13  = 7b9
+7+      = +7
+7add13  = 7
+7add6   = 7
+7alt    = 7b9
+7b13    = 7b9
+7b5     = 7b9
+7b5#9   = 7b9
+7b5b9   = 7b9
+7b6     = 7b9
+7b9#11  = 7b9
+7b9b13  = 7b9
+7b9sus4 = 7sus4(b9)
+7sus    = 7sus4
+7sus4b9 = 7sus4(b9)
+7sus4b9b13 = 7sus4(b9)
+7susb9  = 7sus4(b9)
+9       = 7
+9#11    = 7#4
+9#5     = +7
+9+      = +7
+9b13    = +7
+9b5     = +7
+9sus    = 7
+9sus4   = 7
+M       = NULL
+M#5add9 = maj7#5
+M13     = maj7
+M13#11  = maj7
+M6      = 6
+M69     = 6
+M69#11  = maj7
+M7      = maj7
+M7#11   = maj7
+M7#5    = maj7#5
+M7#9#11 = maj7(#9)
+M7+     = maj7#5
+M7add13 = maj7
+M7b5    = maj7#5
+M9      = maj7
+M9#11   = maj7
+M9#5    = maj7#5
+Mb5     = NULL
+add9    = NULL
+add9no3 = NULL
+aug     = +
+dim     = o
+dim7    = o7
+m       = -
+m#5     = -(b6)
+m+      = -(b6)
+m11     = -7
+m11b5   = -7b5
+m13     = -7
+m6      = -6
+m69     = 6
+m7      = -7
+m7#5    = -7b5
+m7add11 = -7
+m7add4  = maj7(4)
+m7b5    = -7b5
+m7b9    = -7(b9)
+m9      = -7
+m9b5    = -7b5(9)
+mM7     = -maj7
+mM7b6   = -maj7(b6)
+mM9     = -maj7
+mMaj7   = -maj7
+madd9   = -7
+maj13   = maj7
+maj9    = maj7
+maj9#11 = maj7
+mb5     = -(b5)
+mb6     = -(b6)
+oM7     = o7
+sus2    = sus
+sus24   = sus
+sus4    = sus
+susb9   = 7sus4(b9)

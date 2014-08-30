@@ -11,6 +11,8 @@
         01      16apr14	add help
 		02		22apr14	add OnToolTipNeedText
 		03		30apr14	add patch path
+		04		01jul14	add custom document manager
+		05		05aug14	add DlgCtrlHelp
 
 		ChordEase application
  
@@ -32,6 +34,7 @@
 #include "SplashDlg.h"
 #include "htmlhelp.h"	// needed for HTML Help API
 #include "HelpIDs.h"
+#include "DocManagerEx.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -186,6 +189,8 @@ BOOL CChordEaseApp::InitInstance()
 		RUNTIME_CLASS(CChordEaseDoc),
 		RUNTIME_CLASS(CMainFrame),       // main SDI frame window
 		RUNTIME_CLASS(CChordEaseView));
+	ASSERT(m_pDocManager == NULL);
+	m_pDocManager = new CDocManagerEx;
 	AddDocTemplate(pDocTemplate);
 
 	// Parse command line for standard shell commands, DDE, file open
@@ -219,6 +224,40 @@ int CChordEaseApp::ExitInstance()
 	return CWinAppCK::ExitInstance();
 }
 
+int CChordEaseApp::FindHelpID(int ResID)
+{
+	int	elems = _countof(m_HelpResMap);
+	for (int iElem = 0; iElem < elems; iElem++) {	// for each map element
+		if (ResID == m_HelpResMap[iElem].ResID)	// if resource ID found
+			return(m_HelpResMap[iElem].HelpID);	// return context help ID
+	}
+	return(0);
+}
+
+bool CChordEaseApp::DlgCtrlHelp(HWND DlgWnd)
+{
+	HWND	hFocusWnd = ::GetFocus();	// get focused window
+	if (hFocusWnd) {
+		HWND	hParentWnd = ::GetParent(hFocusWnd);
+		TCHAR	szClassName[6];	// if focused window's parent is combo box
+		if (GetClassName(hParentWnd, szClassName, 6)
+		&& _tcsicmp(szClassName, _T("Combo")) == 0) {
+			// assume combo box edit control or list control has focus
+			hFocusWnd = hParentWnd;	 // pretend combo box has focus instead
+			hParentWnd = ::GetParent(hFocusWnd);
+		}
+		if (hParentWnd == DlgWnd) {	// if focused window's parent is given dialog
+			int	CtrlID = ::GetDlgCtrlID(hFocusWnd);	// get focused control's ID
+			// if focused control is valid and exists in help map
+			if (CtrlID && CChordEaseApp::FindHelpID(CtrlID)) {
+				WinHelp(CtrlID);	// show help topic for focused control
+				return(TRUE);	// skip default handling
+			}
+		}
+	}
+	return(FALSE);	// do default handling
+}
+
 void CChordEaseApp::WinHelp(DWORD dwData, UINT nCmd) 
 {
 //printf("dwData=%d:%d nCmd=%d\n", HIWORD(dwData), LOWORD(dwData), nCmd);
@@ -226,14 +265,7 @@ void CChordEaseApp::WinHelp(DWORD dwData, UINT nCmd)
 	HelpPath.Append(CString(m_pszAppName) + _T(".chm"));
 	HWND	hMainWnd = GetMain()->m_hWnd;
 	UINT	ResID = LOWORD(dwData);
-	int	HelpID = 0;
-	int	elems = _countof(m_HelpResMap);
-	for (int iElem = 0; iElem < elems; iElem++) {	// for each map element
-		if (ResID == m_HelpResMap[iElem].ResID) {	// if resource ID found
-			HelpID = m_HelpResMap[iElem].HelpID;	// store context help ID
-			break;
-		}
-	}
+	int	HelpID = FindHelpID(ResID);
 	HWND	retc = 0;	// assume failure
 	if (HelpID)	// if context help ID was found
 		retc = ::HtmlHelp(hMainWnd, HelpPath, HH_HELP_CONTEXT, HelpID);

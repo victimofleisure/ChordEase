@@ -10,6 +10,7 @@
         00      14oct13	initial version
         01      22apr14	add show tooltips
 		02		29apr14	add data folder path
+		03		08jul14	in OnFolderBrowse, set initial directory
 
         other options dialog
  
@@ -22,6 +23,7 @@
 #include "ChordEase.h"
 #include "OptsOtherDlg.h"
 #include "FolderDialog.h"
+#include "PathStr.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -112,6 +114,13 @@ void COptsOtherDlg::OnDataFolderBrowse()
 {
 	CString	title(LPCTSTR(IDS_OPT_OTHER_DATA_FOLDER));
 	CString	path;
-	if (CFolderDialog::BrowseFolder(title, path, NULL, BIF_NEWDIALOGSTYLE, NULL, m_hWnd))
+	GetDlgItem(IDC_OPT_OTHER_DATA_FOLDER_PATH)->GetWindowText(path);	// get current path
+	theApp.MakeAbsolutePath(path);	// make current path absolute
+	LPCTSTR	InitialDir;
+	if (PathFileExists(path))	// if current path exists
+		InitialDir = path;	// set initial directory
+	else
+		InitialDir = NULL;
+	if (CFolderDialog::BrowseFolder(title, path, NULL, BIF_NEWDIALOGSTYLE, InitialDir, m_hWnd))
 		GetDlgItem(IDC_OPT_OTHER_DATA_FOLDER_PATH)->SetWindowText(path);	// update edit control
 }

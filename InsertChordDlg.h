@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      13may14	initial version
+		01		28aug14	add SetChord and ability to edit existing chord
 
         insert chord dialog
  
@@ -32,7 +33,7 @@ class CInsertChordDlg : public CDialog
 {
 // Construction
 public:
-	CInsertChordDlg(CWnd* pParent = NULL);
+	CInsertChordDlg(CWnd* pParent = NULL, bool IsEdit = FALSE);
 	virtual	~CInsertChordDlg();
 
 // Constants
@@ -48,7 +49,8 @@ public:
 	};
 
 // Attributes
-	void	GetChord(CSong::CChord& Chord);
+	void	GetChord(CSong::CChord& Chord) const;
+	void	SetChord(const CSong::CChord& Chord);
 	int		GetDurationUnit() const;
 	int		GetInsertType() const;
 
@@ -91,15 +93,17 @@ protected:
 	int		m_DurationUnit;			// duration unit; see enum
 	int		m_DurationPreset;		// duration preset index; see ChordEaseView.h
 	int		m_InsertType;			// insertion type; see enum
+	bool	m_IsEdit;				// true if editing existing chord
 
 // Helpers
 	static	int		GetRadio(CWnd *pWnd, int FirstID, int LastID);
 	static	void	SetRadio(CWnd *pWnd, int FirstID, int LastID, int Val);
 	int		GetMeasures() const;
 	void	SetMeasures(int PresetIdx);
+	static	int		GetPresetIndex(int Duration);
 };
 
-inline void CInsertChordDlg::GetChord(CSong::CChord& Chord)
+inline void CInsertChordDlg::GetChord(CSong::CChord& Chord) const
 {
 	Chord = m_Chord;
 }

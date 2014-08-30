@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      14sep13	initial version
+		01		02jul14	add OnCommandHelp
 
         tabbed dialog
  
@@ -161,6 +162,7 @@ BEGIN_MESSAGE_MAP(CTabbedDlg, CChildDlg)
 	//{{AFX_MSG_MAP(CTabbedDlg)
 	ON_WM_SIZE()
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TABDLG_TAB, OnSelchange)
+	ON_MESSAGE(WM_COMMANDHELP, OnCommandHelp)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -198,4 +200,11 @@ void CTabbedDlg::OnSelchange(NMHDR* pNMHDR, LRESULT* pResult)
 		pWnd->SendMessage(UWM_TABBEDDLGSELECT, iPage, LPARAM(m_hWnd));
 	ShowPage(iPage);
 	*pResult = 0;
+}
+
+LRESULT CTabbedDlg::OnCommandHelp(WPARAM wParam, LPARAM lParam)
+{
+	if (m_CurPage >= 0)	// if valid selection, delegate to current page dialog
+		return GetPage(m_CurPage)->SendMessage(WM_COMMANDHELP, wParam, lParam);
+	return CChildDlg::OnCommandHelp(wParam, lParam);	// default to base class
 }

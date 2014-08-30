@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      18may14	initial version
+		01		09jul14	show device names in port popup menu
 
         output notes bar
  
@@ -238,11 +239,13 @@ void COutputNotesBar::OnContextMenu(CWnd* pWnd, CPoint point)
 	CMenu	*pPopup;
 	// make port filter submenu
 	pPopup = mp->GetSubMenu(SM_PORT);
-	int	PORTS = 16;
 	item.SetSize(FILTER_PORTS + 1);	// one extra item for wildcard
 	item[0] = LDS(IDS_OUT_NOTES_FILTER_ALL);	// wildcard comes first
-	for (iItem = 0; iItem < PORTS; iItem++) {	// for each port
+	int	nOutDevs = gEngine.GetOutputDeviceCount();
+	for (iItem = 0; iItem < FILTER_PORTS; iItem++) {	// for each port
 		s.Format(_T("%d"), iItem);
+		if (iItem < nOutDevs)
+			s += ' ' + gEngine.GetOutputDeviceName(iItem);
 		item[iItem + 1] = s;	// offset to account for wildcard
 	}
 	CChordEaseView::MakePopup(*pPopup, SMID_PORT_START, item, m_Filter.Port + 1);

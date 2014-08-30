@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      14may14	initial version
+		01		23jul14	make start and length editable
 
         section properties dialog
  
@@ -44,8 +45,26 @@ void CSectionPropsDlg::GetSectionRangeStrings(const CSong::CSection& Section, CS
 	int	TicksPerBeat = gEngine.GetTicksPerBeat();
 	int	StartTicks = Section.m_Start * TicksPerBeat;
 	int	LengthTicks = Section.m_Length * TicksPerBeat;
-	Start = gEngine.GetTickString(StartTicks);
-	Length = gEngine.GetTickSpanString(LengthTicks);
+	Start = gEngine.TickToString(StartTicks);
+	Length = gEngine.TickSpanToString(LengthTicks);
+}
+
+bool CSectionPropsDlg::SetSectionRangeStrings(CSong::CSection& Section, CString Start, CString Length)
+{
+	int	TicksPerBeat = gEngine.GetTicksPerBeat();
+	int	SongTicks = gEngine.GetTickCount();
+	int	tStart;
+	if (!gEngine.StringToTick(Start, tStart))	// convert start to tick
+		return(FALSE);	// conversion failed
+	tStart = CLAMP(tStart, 0, SongTicks - 1);	// clip to song
+	Section.m_Start = tStart / TicksPerBeat;
+	int	tLength;
+	// set IsSpan flag because length's measures and beats are zero-origin
+	if (!gEngine.StringToTick(Length, tLength, TRUE))	// convert length to tick
+		return(FALSE);	// conversion failed
+	tLength = CLAMP(tLength, 0, SongTicks - tStart);	// clip to song
+	Section.m_Length = tLength / TicksPerBeat;
+	return(TRUE);
 }
 
 void CSectionPropsDlg::DoDataExchange(CDataExchange* pDX)
@@ -91,13 +110,19 @@ BOOL CSectionPropsDlg::OnInitDialog()
 
 	EnableToolTips();
 
-	return TRUE;  // return TRUE unless you set the focus to a control
+	GotoDlgCtrl(GetDlgItem(IDC_SECTION_PROPS_REPEAT));
+
+	return FALSE; // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 void CSectionPropsDlg::OnOK() 
 {
 	CDialog::OnOK();
+	CString	sStart, sLength;
+	m_Start.GetWindowText(sStart);
+	m_Length.GetWindowText(sLength);
+	SetSectionRangeStrings(m_Section, sStart, sLength);
 	m_Section.m_Repeat = m_Repeat.GetIntVal();
 	m_Name.GetWindowText(m_SectionName);
 }

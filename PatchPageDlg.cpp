@@ -10,6 +10,7 @@
         00      14sep13	initial version
         01      22apr14	add tooltip support
         02      10jun14	add MIDI learn
+		03		05aug14	add OnCommandHelp
 
         patch page dialog
  
@@ -96,6 +97,7 @@ void CPatchPageDlg::UpdateMidiLearn()
 BEGIN_MESSAGE_MAP(CPatchPageDlg, CScrollDlg)
 	//{{AFX_MSG_MAP(CPatchPageDlg)
 	ON_WM_PAINT()
+	ON_MESSAGE(WM_COMMANDHELP, OnCommandHelp)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY_RANGE(NEN_CHANGED, 0, USHRT_MAX, OnChangedNumEdit)
 	ON_CONTROL_RANGE(BN_CLICKED, 0, USHRT_MAX, OnClickedBtn)
@@ -186,4 +188,11 @@ void CPatchPageDlg::OnChildKillFocus(UINT nID)
 {
 	if (theApp.GetMain()->IsMidiLearn())	// if learning MIDI assignments
 		UpdateMidiLearn(nID);
+}
+
+LRESULT CPatchPageDlg::OnCommandHelp(WPARAM wParam, LPARAM lParam)
+{
+	if (theApp.DlgCtrlHelp(m_hWnd))	// show topic for focused control if any
+		return TRUE;	// skip default handling
+	return CChildDlg::OnCommandHelp(wParam, lParam);	// default to base class
 }

@@ -109,8 +109,9 @@ public:
 	int		GetTickCount() const;
 	int		GetElapsedTime() const;
 	CString	GetTickString() const;
-	CString	GetTickString(int Tick) const;
-	CString GetTickSpanString(int TickSpan) const;
+	CString	TickToString(int Tick) const;
+	CString TickSpanToString(int TickSpan) const;
+	bool	StringToTick(LPCTSTR Str, int& Tick, bool IsSpan = FALSE) const;
 	const CSong::CSection&	GetCurSection() const;
 	int		GetSectionIndex() const;
 	bool	SectionLastPass() const;
@@ -125,6 +126,7 @@ public:
 	bool	SetSongState(const CSongState& State);
 	void	GetSongProperties(CSong::CProperties& Props) const;
 	bool	SetSongProperties(const CSong::CProperties& Props);
+	void	SetBassApproachTarget(int PartIdx);
 
 // Operations
 	bool	ReadChordDictionary(LPCTSTR Path);
@@ -251,6 +253,7 @@ protected:
 	bool	m_IsPaused;			// true if engine is paused
 	bool	m_IsRepeating;		// true if repeating song
 	bool	m_AutoRewind;		// true if song automatically rewinds on stop
+	bool	m_PatchUpdatePending;	// true if deferred patch update is pending
 	CPartStateArray	m_PartState;	// array of part states
 	PATCH_BACKUP	m_PatchBackup;	// backup of patch members overridden by song
 	CMySection	m_Section;		// section state
@@ -281,7 +284,6 @@ protected:
 	void	UpdatePartPatch(const CPart& Part, const CPart *PrevPart = NULL);
 	void	UpdatePatches();
 	void	GetHarmony(const CSong::CChord& Chord, CHarmony& Harm) const;
-	void	SetBassApproachTarget(int PartIdx);
 	void	GetCompChord(const CHarmony& Harmony, CNote WindowNote, int Voicing, bool Alt, CScale& Chord);
 	void	FixHeldNotes();
 	void	OnNoteOn(CMidiInst Inst, CNote Note, int Vel);
@@ -507,7 +509,7 @@ inline int CEngine::GetElapsedTime() const
 
 inline CString CEngine::GetTickString() const
 {
-	return(GetTickString(m_Tick));
+	return(TickToString(m_Tick));
 }
 
 inline const CSong::CSection& CEngine::GetCurSection() const

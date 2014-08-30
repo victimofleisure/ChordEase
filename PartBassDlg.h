@@ -9,6 +9,7 @@
 		rev		date	comments
         00      20sep13	initial version
 		01		15may14	remove chromatic checkbox
+		02		07aug14	add approach trigger button
 
 		part bass dialog
  
@@ -66,6 +67,8 @@ protected:
 // Generated message map functions
 	//{{AFX_MSG(CPartBassDlg)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnApproachTrigger();
+	afx_msg void OnUpdateApproachTrigger(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

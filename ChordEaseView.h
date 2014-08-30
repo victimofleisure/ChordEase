@@ -11,6 +11,8 @@
         01      17apr14	add support for song sections
         02      07may14	add editing
 		03		10jun14	add SetChord
+		04		15jul14	add OnCommandHelp
+		05		28aug14	add OnEditChordProps
 
 		ChordEase view
  
@@ -138,9 +140,11 @@ protected:
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CChordEaseView)
+	afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
+	afx_msg void OnEditChordProps();
 	afx_msg void OnEditCopy();
 	afx_msg void OnEditCut();
 	afx_msg void OnEditDelete();
@@ -158,6 +162,7 @@ protected:
 	afx_msg void OnFileProperties();
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnKillFocus(CWnd* pNewWnd);
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu);
@@ -167,6 +172,7 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnTimer(W64UINT nIDEvent);
+	afx_msg void OnUpdateEditChordProps(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditCut(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditDelete(CCmdUI* pCmdUI);
@@ -186,6 +192,7 @@ protected:
 	afx_msg void OnChordRoot(UINT nID);
 	afx_msg void OnChordType(UINT nID);
 	afx_msg void OnChordBass(UINT nID);
+	afx_msg void OnEnterMenuLoop(BOOL bIsTrackPopupMenu);
 	afx_msg void OnExitMenuLoop(BOOL bIsTrackPopupMenu);
 	afx_msg LRESULT OnTextChange(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
@@ -297,6 +304,7 @@ protected:
 	CRect	m_DragFocusRect;		// drag focus rectangle
 	CSize	m_DragScrollDelta;		// drag scrolling deltas
 	bool	m_DragScrollTimer;		// true if drag scrolling timer exists
+	bool	m_InContextMenu;		// true if tracking context menu
 
 // Overrides
 	virtual	void	SaveUndoState(CUndoState& State);

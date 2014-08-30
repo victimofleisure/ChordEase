@@ -15,6 +15,9 @@
 		05		15may14	in SaveUndoState, remove song state's section map
 		06		02jun14	fix access violation on left button up if empty song
 		07		10jun14	add SetChord
+		08		15jul14	add OnCommandHelp
+		09		28aug14	in OnCommandHelp, do default help while in context menu
+		10		28aug14	add OnEditChordProps
 
 		ChordEase view
  
@@ -97,6 +100,7 @@ CChordEaseView::CChordEaseView() :
 	m_DragFocusRect.SetRectEmpty();
 	m_DragScrollDelta = CSize(0, 0);
 	m_DragScrollTimer = FALSE;
+	m_InContextMenu = FALSE;
 }
 
 CChordEaseView::~CChordEaseView()
@@ -726,7 +730,6 @@ bool CChordEaseView::OnDestroyPopupEdit()
 		return(FALSE);
 	if (!SetChord(m_EditChordIdx, chord))
 		return(FALSE);
-	UpdateViews(CChordEaseDoc::HINT_CHART);
 	return(TRUE);
 }
 
@@ -924,7 +927,7 @@ bool CChordEaseView::SetChord(int ChordIdx, const CSong::CChord& Chord)
 	int	iSongChord = GetSongChordIndex(ChordIdx);
 	if (m_ChordSymbol[ChordIdx].m_Name == MEASURE_REPEAT	// if repeated measure
 	|| GetSelection().LengthInclusive() > 1	// or multi-chord selection
-	|| gEngine.GetSong().IsMergeable(iSongChord)) {	// or merging with adjacent chord
+	|| gEngine.GetSong().IsMergeable(iSongChord, Chord)) {	// or merging with adjacent chord
 		CSongState	state;
 		gEngine.GetSongState(state);
 		NotifyUndoableEdit(iSongChord, CHART_UCODE_MULTI_CHORD_EDIT);
@@ -1205,9 +1208,11 @@ CChordEaseDoc* CChordEaseView::GetDocument() // non-debug version is inline
 
 BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	//{{AFX_MSG_MAP(CChordEaseView)
+	ON_MESSAGE(WM_COMMANDHELP, OnCommandHelp)
 	ON_WM_CONTEXTMENU()
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
+	ON_COMMAND(ID_EDIT_CHORD_PROPS, OnEditChordProps)
 	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
 	ON_COMMAND(ID_EDIT_CUT, OnEditCut)
 	ON_COMMAND(ID_EDIT_DELETE, OnEditDelete)
@@ -1225,6 +1230,7 @@ BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
 	ON_WM_KEYDOWN()
 	ON_WM_KILLFOCUS()
+	ON_WM_LBUTTONDBLCLK()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_MENUSELECT()
@@ -1234,6 +1240,7 @@ BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	ON_WM_SETFOCUS()
 	ON_WM_SIZE()
 	ON_WM_TIMER()
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CHORD_PROPS, OnUpdateEditChordProps)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateEditCut)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditDelete)
@@ -1247,10 +1254,10 @@ BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, OnUpdateEditSelectAll)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT_SETUP, OnUpdateFilePrint)
-	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT_PREVIEW, OnUpdateFilePrint)
-	ON_UPDATE_COMMAND_UI(ID_NEXT_PANE, OnUpdateNextPane)
+	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
 	ON_UPDATE_COMMAND_UI(ID_PREV_PANE, OnUpdateNextPane)
+	ON_UPDATE_COMMAND_UI(ID_NEXT_PANE, OnUpdateNextPane)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CScrollView::OnFilePrint)
@@ -1260,6 +1267,7 @@ BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	ON_COMMAND_RANGE(CSMID_ROOT_START, CSMID_ROOT_END, OnChordRoot)
 	ON_COMMAND_RANGE(CSMID_TYPE_START, CSMID_TYPE_END, OnChordType)
 	ON_COMMAND_RANGE(CSMID_BASS_START, CSMID_BASS_END, OnChordBass)
+	ON_WM_ENTERMENULOOP()
 	ON_WM_EXITMENULOOP()
 	ON_MESSAGE(CPopupEdit::UWM_TEXT_CHANGE, OnTextChange)
 END_MESSAGE_MAP()
@@ -1308,6 +1316,21 @@ void CChordEaseView::OnUpdateNextPane(CCmdUI* pCmdUI)
 	pCmdUI->Enable();	
 }
 
+LRESULT CChordEaseView::OnCommandHelp(WPARAM wParam, LPARAM lParam)
+{
+	if (GetChordCount() && !m_InContextMenu) {	// if not empty and not in context menu
+		CPoint	ptCur;
+		GetCursorPos(&ptCur);
+		CRect	rWnd;
+		GetWindowRect(rWnd);
+		if (rWnd.PtInRect(ptCur)) {	// if cursor within view
+			theApp.WinHelp(IDR_CHORDEASEDOC);	// show doc help topic
+			return TRUE;	// stop routing
+		}
+	}
+	return FALSE;	// contine routing
+}
+
 void CChordEaseView::OnLButtonDown(UINT nFlags, CPoint point) 
 {
 	EndPopupEdit();
@@ -1332,8 +1355,8 @@ void CChordEaseView::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CChordEaseView::OnLButtonUp(UINT nFlags, CPoint point) 
 {
-	if (m_DragState != DTS_DRAG) {	// if dragging
-		if (m_EditChordIdx >= 0)
+	if (m_DragState != DTS_DRAG) {	// if not dragging
+		if (m_EditChordIdx >= 0)	// if select was deferred
 			SetCurChord(m_EditChordIdx);
 	}
 	if (m_DragState != DTS_NONE) {	// if dragging or tracking
@@ -1350,6 +1373,12 @@ void CChordEaseView::OnLButtonUp(UINT nFlags, CPoint point)
 		}
 	}
 	CScrollView::OnLButtonUp(nFlags, point);
+}
+
+void CChordEaseView::OnLButtonDblClk(UINT nFlags, CPoint point) 
+{
+	OnEditChordProps();
+	CScrollView::OnLButtonDblClk(nFlags, point);
 }
 
 void CChordEaseView::OnMouseMove(UINT nFlags, CPoint point) 
@@ -1436,8 +1465,7 @@ void CChordEaseView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		if (nChar == VK_ESCAPE)	// if escape pressed
 			CancelDrag();
 	} else {	// not dragging
-		// if at least one chord and song not playing, handle edit keys
-		if (GetChordCount() && !gEngine.IsPlaying()) {
+		if (GetChordCount()) {	// if at least one chord
 			bool	bSelect = (GetKeyState(VK_SHIFT) & GKS_DOWN) != 0;
 			switch (nChar) {
 			case VK_UP:
@@ -1463,6 +1491,9 @@ void CChordEaseView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 				break;
 			case VK_END:
 				SkipToPos(GetChordCount() - 1, bSelect);
+				break;
+			case VK_RETURN:
+				OnEditChordProps();
 				break;
 			}
 		}
@@ -1610,10 +1641,18 @@ void CChordEaseView::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu)
 	}
 }
 
+void CChordEaseView::OnEnterMenuLoop(BOOL bIsTrackPopupMenu)
+{
+	if (bIsTrackPopupMenu)	// if entering context menu
+		m_InContextMenu = TRUE;
+}
+
 void CChordEaseView::OnExitMenuLoop(BOOL bIsTrackPopupMenu)
 {
-	if (bIsTrackPopupMenu)	// if exiting context menu, restore status idle message
+	if (bIsTrackPopupMenu) {	// if exiting context menu, restore status idle message
 		AfxGetMainWnd()->SendMessage(WM_SETMESSAGESTRING, AFX_IDS_IDLEMESSAGE, 0);
+		m_InContextMenu = FALSE;
+	}
 }
 
 void CChordEaseView::OnParentNotify(UINT message, LPARAM lParam) 
@@ -1756,6 +1795,28 @@ void CChordEaseView::OnEditRename()
 }
 
 void CChordEaseView::OnUpdateEditRename(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(GetChordCount());
+}
+
+void CChordEaseView::OnEditChordProps()
+{
+	if (!GetChordCount())	// song can't be empty
+		return;
+	CInsertChordDlg	dlg(NULL, TRUE);	// edit existing chord's properties
+	int	iChord = GetCurChord();
+	int	iSongChord = GetSongChordIndex(iChord);
+	CSong::CChord	chord = gEngine.GetChord(iSongChord);
+	dlg.SetChord(chord);
+	if (dlg.DoModal() == IDOK) {
+		CSong::CChord	NewChord;
+		dlg.GetChord(NewChord);
+		if (NewChord != chord)	// if chord changed
+			SetChord(iChord, NewChord);
+	}
+}
+
+void CChordEaseView::OnUpdateEditChordProps(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(GetChordCount());
 }

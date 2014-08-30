@@ -252,6 +252,14 @@ SOURCE=.\DLLWrap.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DocManagerEx.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DocManagerEx.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\DragVirtualListCtrl.cpp
 # End Source File
 # Begin Source File
@@ -969,6 +977,14 @@ SOURCE=.\PopupEdit.cpp
 # Begin Source File
 
 SOURCE=.\PopupEdit.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PositionDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\PositionDlg.h
 # End Source File
 # Begin Source File
 

@@ -9,6 +9,7 @@
 		rev		date	comments
         00      14oct13	initial version
         01      23apr14	add tooltip support
+		02		05aug14	add OnCommandHelp
 
         options property page
  
@@ -44,6 +45,7 @@ protected:
 // Generated message map functions
 	//{{AFX_MSG(COptionsPage)
 	virtual BOOL OnInitDialog();
+	afx_msg	LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	afx_msg LRESULT OnKickIdle(WPARAM, LPARAM);
 	afx_msg BOOL OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);

@@ -9,6 +9,7 @@
 		rev		date	comments
         00      07may14	initial version
 		01		16may14	in MoveChords, rebuild section map before inserting
+		02		23jul14	add InsertSection
  
 		song editing container
 
@@ -272,10 +273,19 @@ void CSongState::MergeImplicitSections()
 
 void CSongState::CreateSection(CIntRange BeatRange)
 {
-	CSong::CSection	sec(0, 0, 0);
-	int	iSection = INT64TO32(m_Section.Add(sec));
-	m_SectionName.Add(_T(""));
+	CSong::CSection	sec(BeatRange.Start, BeatRange.LengthInclusive(), 0);
+	InsertSection(sec, _T(""));
+}
+
+bool CSongState::InsertSection(CSong::CSection& Section, CString Name)
+{
+	CIntRange	BeatRange(Section.m_Start, Section.End());
+	if (BeatRange.Start < 0 || BeatRange.End >= CSong::CountBeats(m_Chord))
+		return(FALSE);	// section not within song
+	int	iSection = INT64TO32(m_Section.Add(Section));
+	m_SectionName.Add(Name);
 	AssignToSection(BeatRange, iSection);
+	return(TRUE);
 }
 
 bool CSongState::DeleteSection(int Beat)
@@ -298,8 +308,24 @@ bool CSongState::EditSectionProperties(int Beat)
 	// if section not found, or section is implicit
 	if (iSection < 0 || m_Section[iSection].Implicit())
 		return(FALSE);
-	CSectionPropsDlg	dlg(m_Section[iSection], m_SectionName[iSection]);
-	return(dlg.DoModal() == IDOK);
+	CSong::CSection	sec(m_Section[iSection]);
+	CString	name(m_SectionName[iSection]);
+	CSectionPropsDlg	dlg(sec, name);
+	if (dlg.DoModal() != IDOK)
+		return(FALSE);
+	// if section start or length changed
+	if (sec.m_Start != m_Section[iSection].m_Start
+	|| sec.m_Length != m_Section[iSection].m_Length) {
+		if (!DeleteSection(Beat))	// delete section
+			return(FALSE);
+		MakeSectionMap();	// rebuild section map before inserting
+		if (!InsertSection(sec, name))	// reinsert section
+			return(FALSE);
+	} else {	// start and length unchanged
+		m_Section[iSection] = sec;
+		m_SectionName[iSection] = name;
+	}
+	return(TRUE);
 }
 
 void CSongState::RemoveSectionMap()

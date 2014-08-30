@@ -9,6 +9,7 @@
 		rev		date	comments
         00      20sep13	initial version
 		01		15may14	remove chromatic checkbox
+		02		07aug14	add approach trigger button
 
 		part bass dialog
  
@@ -20,6 +21,7 @@
 #include "stdafx.h"
 #include "ChordEase.h"
 #include "PartBassDlg.h"
+#include "MainFrm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -98,6 +100,8 @@ void CPartBassDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CPartBassDlg, CPartPageDlg)
 	//{{AFX_MSG_MAP(CPartBassDlg)
+	ON_BN_CLICKED(IDC_PART_BASS_APPROACH_TRIGGER, OnApproachTrigger)
+	ON_UPDATE_COMMAND_UI(IDC_PART_BASS_APPROACH_TRIGGER, OnUpdateApproachTrigger)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -113,4 +117,18 @@ BOOL CPartBassDlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CPartBassDlg::OnApproachTrigger()
+{
+	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
+	if (iPart >= 0)	// should be true but check anyway
+		gEngine.SetBassApproachTarget(iPart);	// trigger bass approach
+}
+
+void CPartBassDlg::OnUpdateApproachTrigger(CCmdUI* pCmdUI)
+{
+	// this handler must exist else button is disabled
+	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
+	pCmdUI->Enable(iPart >= 0 && gEngine.GetSong().GetChordCount());
 }

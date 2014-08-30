@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      14sep13	initial version
+		01		02jul14	add OnCommandHelp
 
         tabbed dialog
  
@@ -65,6 +66,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSelchange(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

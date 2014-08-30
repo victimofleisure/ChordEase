@@ -10,6 +10,7 @@
         00      21nov13	initial version
 		01		13feb14	add SetSelected
 		02		15jun14	add tool tip support
+		03		15jul14	fix OnToolHitTest return type
 
 		extended selection list control
  
@@ -70,7 +71,7 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CListCtrlExSel)
 	public:
-	virtual INT_PTR OnToolHitTest(CPoint point, TOOLINFO* pTI) const;
+	virtual W64INT OnToolHitTest(CPoint point, TOOLINFO* pTI) const;
 	//}}AFX_VIRTUAL
 
 // Generated message map functions

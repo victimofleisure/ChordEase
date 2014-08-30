@@ -12,6 +12,7 @@
 		02		20mar14	add output flag
 		03		22apr14	add context menu
 		04		23may14	add controller names
+		05		07jul14	add reset filters
 
         MIDI event dialog
  
@@ -57,6 +58,7 @@ public:
 	void	AddEvent(WPARAM wParam, LPARAM lParam);
 	void	RemoveAllEvents();
 	void	ResizeFilters(int ItemIdx = -1, int ItemWidth = 0);
+	void	ResetFilters();
 	void	UpdateDevices();
 	void	Pause(bool Enable);
 	void	EnableToolTips(BOOL bEnable = TRUE);
@@ -85,6 +87,7 @@ protected:
 	afx_msg void OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnClearHistory();
+	afx_msg void OnResetFilters();
 	afx_msg void OnPause();
 	afx_msg void OnUpdatePause(CCmdUI* pCmdUI);
 	afx_msg void OnShowCtrlrNames();
@@ -131,7 +134,7 @@ protected:
 	CString	m_NullDeviceName;		// device name for out of range port numbers
 	int		m_FilterHeight;			// height of filter drop list, in pixels
 	CComboBox	m_FilterCombo[COLUMNS];	// array of filter combo boxes
-	int		m_FilterSel[COLUMNS];	// array of filter combo box selections
+	int		m_FilterSel[COLUMNS];	// array of filter selections; -1 is wildcard
 	bool	m_Filtering;			// true if one or more columns are filtered
 	bool	m_IsOutput;				// true if output events, else input events
 	bool	m_ShowCtrlrNames;		// true if showing controller names

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      07may14	initial version
+		01		23jul14	add InsertSection
  
 		song editing container
 
@@ -42,6 +43,7 @@ public:
 	void	RemoveChords(CIntRange BeatRange);
 	int		MoveChords(CIntRange BeatRange, int Beat);
 	void	CreateSection(CIntRange BeatRange);
+	bool	InsertSection(CSong::CSection& Section, CString Name);
 	bool	DeleteSection(int Beat);
 	void	AssignToSection(CIntRange BeatRange, int SectionIdx);
 	bool	EditSectionProperties(int Beat);

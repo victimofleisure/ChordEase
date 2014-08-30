@@ -10,6 +10,7 @@
         00      12sep13	initial version
         01      02may14	add undo manager
 		02		27may14	add auto-record handling
+		03		01jul14	add handling for lead sheets
 
 		ChordEase document
  
@@ -23,6 +24,7 @@
 #include "ChordEaseDoc.h"
 #include "NotepadDlg.h"
 #include "MainFrm.h"
+#include "PathStr.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -211,6 +213,9 @@ BOOL CChordEaseDoc::OnOpenDocument(LPCTSTR lpszPathName)
 		return FALSE;
 	if (gEngine.ReadSong(lpszPathName))	// read song
 		AutoRecord(TRUE);	// start auto-recording if applicable
+	CString	ext(PathFindExtension(lpszPathName));
+	if (!ext.CompareNoCase(LEAD_SHEET_EXT))	// if lead sheet extension
+		UpdateSongText();	// update song text from song's binary data
 	// intentionally override read return code, so user can correct errors
 	return TRUE;
 }
@@ -220,3 +225,12 @@ void CChordEaseDoc::DeleteContents()
 	AutoRecord(FALSE);	// stop auto-recording
 	CDocument::DeleteContents();
 }
+
+BOOL CChordEaseDoc::DoSave(LPCTSTR lpszPathName, BOOL bReplace)
+{
+	CString	ext(PathFindExtension(lpszPathName));
+	if (!ext.CompareNoCase(LEAD_SHEET_EXT))	// if lead sheet extension
+		lpszPathName = NULL;	// force SaveAs to native file extension
+	return CDocument::DoSave(lpszPathName, bReplace);
+}
+

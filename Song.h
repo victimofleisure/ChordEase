@@ -12,6 +12,8 @@
 		02		16apr14	add section names; refactor command parsing
  		03		01may14	add write
  		04		26may14	preserve comments
+		05		01jul14	add ReadLeadSheet
+		06		28aug14	in IsMergeable, add chord arg
 
 		song container
 
@@ -146,7 +148,7 @@ public:
 	CString	GetSectionName(int SectionIdx) const;
 	int		FindSection(int BeatIdx) const;
 	int		FindSectionByChord(int ChordIdx) const;
-	bool	IsMergeable(int ChordIdx) const;
+	bool	IsMergeable(int ChordIdx, const CChord& Chord) const;
 	void	GetProperties(CProperties& Props) const;
 	void	SetProperties(const CProperties& Props);
 	CString	GetComments() const;
@@ -167,6 +169,7 @@ public:
 	void	DumpChords(const CChordArray& Chord) const;
 	void	DumpChords() const;
 	static	int		CountBeats(const CChordArray& Chord);
+	bool	ReadLeadSheet(LPCTSTR Path);
 
 protected:
 // Constants

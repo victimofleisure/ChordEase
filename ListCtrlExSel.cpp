@@ -10,6 +10,7 @@
         00      21nov13	initial version
 		01		13feb14	add SetSelected
 		02		15jun14	add tool tip support
+		03		15jul14	fix OnToolHitTest return type
 
 		extended selection list control
  
@@ -169,7 +170,7 @@ void CListCtrlExSel::FixContextMenuPoint(CPoint& Point)
 	}
 }
 
-INT_PTR CListCtrlExSel::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
+W64INT CListCtrlExSel::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
 {
 	LVHITTESTINFO	hti;
 	hti.pt = point;

@@ -12,6 +12,11 @@
 		02		28apr14	in OnEngineNotify, add device state change handler
 		03		30apr14	add OnDropFiles
 		04		04jun14	in CreateEngine, fix opening patch via command line
+		05		08jul14	in OnSongPositionChange, don't update status for empty song
+		06		15jul14	if OnMidiTargetChange, if chasing events, show hidden bar
+		07		23jul14	add OnTransportGoTo
+		08		04aug14	in SetPatch, if transposition changes, update chart view
+		09		12aug14	only enable parts list editing if list has focus
 
 		ChordEase main frame
  
@@ -36,6 +41,7 @@
 #include "MidiEventDlg.h"
 #include "MessageBoxCheck.h"
 #include "RecordPlayerDlg.h"
+#include "PositionDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -330,10 +336,14 @@ void CMainFrame::UpdateViews()
 
 bool CMainFrame::SetPatch(const CPatch& Patch, bool UpdatePorts)
 {
-	if (!gEngine.SetPatch(Patch, UpdatePorts))
+	// if transposition is changing, chart view is out of date
+	bool	StaleChart = Patch.m_Transpose != gEngine.GetPatch().m_Transpose;
+	if (!gEngine.SetPatch(Patch, UpdatePorts))	// update engine patch
 		return(FALSE);
 	// order matters; engine may modify patch ports if UpdatePorts is true
-	UpdateViews();
+	UpdateViews();	// update subsidiary views
+	if (StaleChart)	// if chart view is out of date
+		m_View->UpdateChart();	// update chart view
 	return(TRUE);
 }
 
@@ -442,10 +452,12 @@ void CMainFrame::OnUpdateSong()
 void CMainFrame::OnSongPositionChange()
 {
 	m_View->TimerHook();
-	int	pos = gEngine.GetTick();
-	if (pos != m_StatusCache.m_Pos) {
-		m_StatusBar.SetPaneText(SBP_POSITION, gEngine.GetTickString());
-		m_StatusCache.m_Pos = pos;
+	if (!gEngine.GetSong().IsEmpty()) {	// if song is open
+		int	pos = gEngine.GetTick();
+		if (pos != m_StatusCache.m_Pos) {	// if position changed
+			m_StatusBar.SetPaneText(SBP_POSITION, gEngine.GetTickString());
+			m_StatusCache.m_Pos = pos;
+		}
 	}
 }
 
@@ -840,6 +852,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_SHOWWINDOW()
 	ON_WM_TIMER()
 	ON_COMMAND(ID_TRANSPORT_AUTO_REWIND, OnTransportAutoRewind)
+	ON_COMMAND(ID_TRANSPORT_GO_TO, OnTransportGoTo)
 	ON_COMMAND(ID_TRANSPORT_NEXT_CHORD, OnTransportNextChord)
 	ON_COMMAND(ID_TRANSPORT_NEXT_SECTION, OnTransportNextSection)
 	ON_COMMAND(ID_TRANSPORT_PAUSE, OnTransportPause)
@@ -851,6 +864,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateEditCut)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditDelete)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_INSERT, OnUpdateEditInsert)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdateEditPaste)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_RENAME, OnUpdateEditRename)
@@ -862,6 +876,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_LEARN, OnUpdateMidiLearn)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_OUTPUT, OnUpdateMidiOutput)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_AUTO_REWIND, OnUpdateTransportAutoRewind)
+	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_GO_TO, OnUpdateTransportGoTo)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_NEXT_CHORD, OnUpdateTransportNextChord)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_NEXT_SECTION, OnUpdateTransportNextSection)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_PAUSE, OnUpdateTransportPause)
@@ -879,8 +894,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_VIEW_PARTS, OnViewParts)
 	ON_COMMAND(ID_VIEW_PATCH, OnViewPatch)
 	ON_COMMAND(ID_VIEW_PIANO, OnViewPiano)
-	ON_COMMAND(ID_VIEW_THREADS, OnViewThreads)
 	ON_COMMAND(ID_VIEW_RECORD_PLAYER, OnViewRecordPlayer)
+	ON_COMMAND(ID_VIEW_THREADS, OnViewThreads)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_METER, OnUpdateIndicatorMeter)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_KEY, OnUpdateIndicatorKey)
@@ -1195,6 +1210,8 @@ LRESULT	CMainFrame::OnMidiTargetChange(WPARAM wParam, LPARAM lParam)
 				if (m_MidiChaseEvents && !m_MidiLearn) {	// if chasing MIDI events
 					NotifyEdit(0, UCODE_MIDI_CHASE,	// save part/page indices
 						CUndoable::UE_COALESCE | CUndoable::UE_INSIGNIFICANT);
+					if (!m_PartsBar.IsWindowVisible())	// if parts bar hidden
+						ShowControlBar(&m_PartsBar, TRUE, 0);	// show parts bar
 					if (iPart != m_PartsBar.GetCurPart())
 						m_PartsBar.SetCurPart(iPart);	// chase to target's part
 					m_PartsBar.SetCurPage(iPage);	// chase to target's page
@@ -1210,6 +1227,8 @@ LRESULT	CMainFrame::OnMidiTargetChange(WPARAM wParam, LPARAM lParam)
 			if (m_MidiChaseEvents && !m_MidiLearn) {	// if chasing MIDI events
 				NotifyEdit(0, UCODE_MIDI_CHASE, // save part/page indices
 					CUndoable::UE_COALESCE | CUndoable::UE_INSIGNIFICANT);
+				if (!m_PatchBar.IsWindowVisible())	// if patch bar hidden
+					ShowControlBar(&m_PatchBar, TRUE, 0);	// show patch bar
 				m_PatchBar.SetCurPage(iPage);	// chase to target's page
 			}
 			m_PatchBar.UpdatePage(iPage, patch);	// update page
@@ -1402,7 +1421,7 @@ void CMainFrame::OnEditCopy()
 void CMainFrame::OnUpdateEditCopy(CCmdUI* pCmdUI) 
 {
 	if (!CFocusEdit::UpdateCopy(pCmdUI))
-		pCmdUI->Enable(m_PartsBar.HasSelection());
+		pCmdUI->Enable(m_PartsBar.ListHasFocus() && m_PartsBar.HasSelection());
 }
 
 void CMainFrame::OnEditCut() 
@@ -1416,7 +1435,7 @@ void CMainFrame::OnEditCut()
 void CMainFrame::OnUpdateEditCut(CCmdUI* pCmdUI) 
 {
 	if (!CFocusEdit::UpdateCut(pCmdUI))
-		pCmdUI->Enable(m_PartsBar.HasSelection());
+		pCmdUI->Enable(m_PartsBar.ListHasFocus() && m_PartsBar.HasSelection());
 }
 
 void CMainFrame::OnEditPaste() 
@@ -1432,7 +1451,7 @@ void CMainFrame::OnEditPaste()
 void CMainFrame::OnUpdateEditPaste(CCmdUI* pCmdUI) 
 {
 	if (!CFocusEdit::UpdatePaste(pCmdUI))
-		pCmdUI->Enable(m_PartsBar.CanPaste());
+		pCmdUI->Enable(m_PartsBar.ListHasFocus() && m_PartsBar.CanPaste());
 }
 
 void CMainFrame::OnEditInsert() 
@@ -1441,6 +1460,11 @@ void CMainFrame::OnEditInsert()
 	NotifyEdit(0, UCODE_INSERT);
 	m_PartsBar.InsertEmptyPart();
 	UpdateClipboardUndoInfo(UndoPos);
+}
+
+void CMainFrame::OnUpdateEditInsert(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_PartsBar.ListHasFocus());
 }
 
 void CMainFrame::OnEditDelete() 
@@ -1454,7 +1478,7 @@ void CMainFrame::OnEditDelete()
 void CMainFrame::OnUpdateEditDelete(CCmdUI* pCmdUI) 
 {
 	if (!CFocusEdit::UpdateDelete(pCmdUI))
-		pCmdUI->Enable(m_PartsBar.GetSelectedCount());
+		pCmdUI->Enable(m_PartsBar.ListHasFocus() && m_PartsBar.GetSelectedCount());
 }
 
 void CMainFrame::OnEditSelectAll() 
@@ -1466,7 +1490,7 @@ void CMainFrame::OnEditSelectAll()
 void CMainFrame::OnUpdateEditSelectAll(CCmdUI* pCmdUI) 
 {
 	if (!CFocusEdit::UpdateSelectAll(pCmdUI))
-		pCmdUI->Enable(m_PartsBar.GetPartCount());
+		pCmdUI->Enable(m_PartsBar.ListHasFocus() && m_PartsBar.GetPartCount());
 }
 
 void CMainFrame::OnEditRename() 
@@ -1476,7 +1500,7 @@ void CMainFrame::OnEditRename()
 
 void CMainFrame::OnUpdateEditRename(CCmdUI* pCmdUI) 
 {
-	pCmdUI->Enable(m_PartsBar.HasSelection());
+	pCmdUI->Enable(m_PartsBar.ListHasFocus() && m_PartsBar.HasSelection());
 }
 
 void CMainFrame::OnEditOptions() 
@@ -1627,6 +1651,25 @@ void CMainFrame::OnTransportPrevChord()
 void CMainFrame::OnUpdateTransportPrevChord(CCmdUI* pCmdUI) 
 {
 	pCmdUI->Enable(gEngine.GetSong().GetChordCount() > 1);
+}
+
+void CMainFrame::OnTransportGoTo() 
+{
+	CPositionDlg	dlg;
+	dlg.m_Pos = gEngine.GetTickString();
+	if (dlg.DoModal() == IDOK) {
+		int	tick;
+		if (gEngine.StringToTick(dlg.m_Pos, tick)) {	// if conversion succeeds
+			tick = CLAMP(tick, 0, gEngine.GetTickCount() - 1);
+			gEngine.SetTick(tick);
+			OnSongPositionChange();
+		}
+	}
+}
+
+void CMainFrame::OnUpdateTransportGoTo(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(gEngine.GetSong().GetChordCount());
 }
 
 void CMainFrame::OnTransportAutoRewind() 

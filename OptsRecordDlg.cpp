@@ -9,6 +9,7 @@
 		rev		date	comments
         00      26mar14	initial version
         01      16apr14	remove record folder type
+		02		08jul14	in OnFolderBrowse, set initial directory
 
         record options dialog
  
@@ -121,6 +122,13 @@ void COptsRecordDlg::OnFolderBrowse()
 {
 	CString	title(LPCTSTR(IDS_OPT_REC_OUTPUT_FOLDER));
 	CString	path;
-	if (CFolderDialog::BrowseFolder(title, path, NULL, BIF_NEWDIALOGSTYLE, NULL, m_hWnd))
+	GetDlgItem(IDC_OPT_REC_FOLDER_PATH)->GetWindowText(path);	// get current path
+	theApp.MakeAbsolutePath(path);	// make current path absolute
+	LPCTSTR	InitialDir;
+	if (PathFileExists(path))	// if current path exists
+		InitialDir = path;	// set initial directory
+	else
+		InitialDir = NULL;
+	if (CFolderDialog::BrowseFolder(title, path, NULL, BIF_NEWDIALOGSTYLE, path, m_hWnd))
 		GetDlgItem(IDC_OPT_REC_FOLDER_PATH)->SetWindowText(path);	// update edit control
 }

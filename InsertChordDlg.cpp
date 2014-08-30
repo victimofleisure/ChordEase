@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      13may14	initial version
+		01		28aug14	add SetChord and ability to edit existing chord
 
         insert chord dialog
  
@@ -43,7 +44,7 @@ static char THIS_FILE[] = __FILE__;
 #define RK_DURATION_UNIT	_T("DurationUnit")
 #define RK_INSERT_TYPE		_T("InsertType")
 
-CInsertChordDlg::CInsertChordDlg(CWnd* pParent /*=NULL*/)
+CInsertChordDlg::CInsertChordDlg(CWnd* pParent /*=NULL*/, bool IsEdit)
 	: CDialog(IDD, pParent), m_Beats(1, SHRT_MAX)
 {
 	//{{AFX_DATA_INIT(CInsertChordDlg)
@@ -53,13 +54,14 @@ CInsertChordDlg::CInsertChordDlg(CWnd* pParent /*=NULL*/)
 	m_DurationUnit = DU_MEASURES;
 	m_DurationPreset = CChordEaseView::FRAC_DUR_PRESETS;
 	m_InsertType = IT_AFTER;
+	m_IsEdit = IsEdit;
 	// for CNote members, use integer methods to avoid binary keys
 	m_Chord.m_Root = theApp.GetProfileInt(RK_SECTION, RK_ROOT, 0);
 	theApp.RdReg(RK_SECTION, RK_TYPE, m_Chord.m_Type);
 	m_Chord.m_Bass = theApp.GetProfileInt(RK_SECTION, RK_BASS, 0);
 	theApp.RdReg(RK_SECTION, RK_DURATION, m_Chord.m_Duration);
-	theApp.RdReg(RK_SECTION, RK_DURATION_UNIT, m_DurationUnit);
 	theApp.RdReg(RK_SECTION, RK_DURATION_PRESET, m_DurationPreset);
+	theApp.RdReg(RK_SECTION, RK_DURATION_UNIT, m_DurationUnit);
 	theApp.RdReg(RK_SECTION, RK_INSERT_TYPE, m_InsertType);
 }
 
@@ -70,9 +72,23 @@ CInsertChordDlg::~CInsertChordDlg()
 	theApp.WrReg(RK_SECTION, RK_TYPE, m_Chord.m_Type);
 	theApp.WriteProfileInt(RK_SECTION, RK_BASS, m_Chord.m_Bass);
 	theApp.WrReg(RK_SECTION, RK_DURATION, m_Chord.m_Duration);
-	theApp.WrReg(RK_SECTION, RK_DURATION_UNIT, m_DurationUnit);
 	theApp.WrReg(RK_SECTION, RK_DURATION_PRESET, m_DurationPreset);
+	theApp.WrReg(RK_SECTION, RK_DURATION_UNIT, m_DurationUnit);
 	theApp.WrReg(RK_SECTION, RK_INSERT_TYPE, m_InsertType);
+}
+
+int CInsertChordDlg::GetPresetIndex(int Duration)
+{
+	int	iPreset = CChordEaseView::DurationToPreset(Duration);
+	if (iPreset >= CChordEaseView::DURATION_OTHER)
+		iPreset = -1;
+	return(iPreset);
+}
+
+void CInsertChordDlg::SetChord(const CSong::CChord& Chord)
+{
+	m_Chord = Chord;
+	m_DurationPreset = GetPresetIndex(Chord.m_Duration);
 }
 
 int CInsertChordDlg::GetRadio(CWnd *pWnd, int FirstID, int LastID)
@@ -179,6 +195,12 @@ BOOL CInsertChordDlg::OnInitDialog()
 	SetRadio(this, IDC_INSCH_DURATION_UNIT, IDC_INSCH_DURATION_UNIT2, m_DurationUnit);
 	SetRadio(this, IDC_INSCH_INSERT_TYPE, IDC_INSCH_INSERT_TYPE2, m_InsertType);
 	EnableToolTips();
+	if (m_IsEdit) {	// if editing existing chord
+		SetWindowText(LDS(IDS_CHORD_PROPS));
+		GetDlgItem(IDC_INSCH_INSERT_TYPE_GROUP)->EnableWindow(FALSE);
+		GetDlgItem(IDC_INSCH_INSERT_TYPE)->EnableWindow(FALSE);
+		GetDlgItem(IDC_INSCH_INSERT_TYPE2)->EnableWindow(FALSE);
+	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -225,10 +247,7 @@ void CInsertChordDlg::OnSelchangeMeasures()
 
 void CInsertChordDlg::OnChangedBeats(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	int	iPreset = CChordEaseView::DurationToPreset(m_Beats.GetIntVal());
-	if (iPreset >= CChordEaseView::DURATION_OTHER)
-		iPreset = -1;
-	SetMeasures(iPreset);
+	SetMeasures(GetPresetIndex(m_Beats.GetIntVal()));
 }
 
 void CInsertChordDlg::OnDurationUnit(UINT nID)

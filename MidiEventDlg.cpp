@@ -12,6 +12,7 @@
 		02		20mar14	add output flag
 		03		22apr14	add context menu
 		04		23may14	add controller names
+		05		07jul14	add reset filters
 
         device dialog
  
@@ -65,7 +66,7 @@ CMidiEventDlg::CMidiEventDlg(bool IsOutput, CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CMidiEventDlg)
 	//}}AFX_DATA_INIT
 	m_FilterHeight = 0;
-	ZeroMemory(m_FilterSel, sizeof(m_FilterSel));
+	memset(m_FilterSel, -1, sizeof(m_FilterSel));	// -1 is wildcard
 	m_Filtering = FALSE;
 	m_IsOutput = IsOutput;
 	m_ShowCtrlrNames = FALSE;
@@ -192,16 +193,14 @@ void CMidiEventDlg::InitFilter(int ColIdx)
 bool CMidiEventDlg::ApplyFilters(WPARAM wParam) const
 {
 	int	sel;
-	sel = m_FilterSel[COL_TIMESTAMP] - 1;
+	sel = m_FilterSel[COL_TIMESTAMP];
 	if (sel >= 0 && m_Event.GetSize() > m_PauseEventIdx)
 		return(FALSE);
-	sel = m_FilterSel[COL_DEVICE] - 1;
+	sel = m_FilterSel[COL_DEVICE];
 	if (sel >= 0 && GetDevice(wParam) != sel)	// if device matches
 		return(FALSE);
-	sel = m_FilterSel[COL_PORT] - 1;
-	if (sel >= 0 && GetDevice(wParam) != sel)	// if port matches
-		return(FALSE);
-	sel = m_FilterSel[COL_MESSAGE] - 1;
+	// needn't check port since it's in sync with device
+	sel = m_FilterSel[COL_MESSAGE];
 	if (sel >= 0) {
 		if (sel < SPECIAL_MSG_FILTERS) {	// if special message filter
 			if (!sel && MIDI_STAT(wParam) >= SYSEX)	// if channel wildcard matches
@@ -215,17 +214,28 @@ bool CMidiEventDlg::ApplyFilters(WPARAM wParam) const
 				return(FALSE);
 		}
 	}
-	sel = m_FilterSel[COL_CHANNEL] - 1;
+	sel = m_FilterSel[COL_CHANNEL];
 	if (sel >= 0 && (int(MIDI_CHAN(wParam)) != sel 	// if channel number matches
 	|| MIDI_STAT(wParam) >= SYSEX))	// or system message
 		return(FALSE);
-	sel = m_FilterSel[COL_P1] - 1;
+	sel = m_FilterSel[COL_P1];
 	if (sel >= 0 && MIDI_P1(wParam) != sel)	// if parameter 1 matches
 		return(FALSE);
-	sel = m_FilterSel[COL_P2] - 1;
+	sel = m_FilterSel[COL_P2];
 	if (sel >= 0 && MIDI_P2(wParam) != sel)	// if parameter 2 matches
 		return(FALSE);
 	return(TRUE);
+}
+
+void CMidiEventDlg::ResetFilters()
+{
+	for (int iCol = 0; iCol < COLUMNS; iCol++)	// for each column
+		m_FilterCombo[iCol].SetCurSel(0);	// reset filter combo
+	memset(m_FilterSel, -1, sizeof(m_FilterSel));	// reset filter selections
+	m_Filtering = FALSE;
+	m_PauseEventIdx = 0;
+	m_PassEventIdx.RemoveAll();	// reset filter pass events
+	m_List.SetItemCountEx(GetEventCount(), LVSICF_NOSCROLL);
 }
 
 void CMidiEventDlg::InitDeviceNames()
@@ -238,9 +248,18 @@ void CMidiEventDlg::InitDeviceNames()
 
 void CMidiEventDlg::UpdateDevices()
 {
+	int	iSel = m_FilterSel[COL_DEVICE];	// save device filter selection
+	CString	sDevName;
+	if (iSel >= 0)	// if filtering for device
+		sDevName = m_DeviceName[iSel];	// save device name
 	InitDeviceNames();
-	InitFilter(COL_DEVICE);
+	InitFilter(COL_DEVICE);	// resets filter selection as side effect
 	InitFilter(COL_PORT);
+	if (iSel >= 0 && iSel < m_DeviceName.GetSize()	// if valid device filter
+	&& m_DeviceName[iSel] == sDevName) {	// and selected device has same name
+		m_FilterCombo[COL_DEVICE].SetCurSel(iSel + 1);	// restore filter selection
+		OnSelChangeCombo(FILTER_ID + COL_DEVICE);	// update filter state
+	}
 	m_List.Invalidate();
 }
 
@@ -271,6 +290,7 @@ BEGIN_MESSAGE_MAP(CMidiEventDlg, CChildDlg)
 	ON_COMMAND(ID_MIDI_EVENT_SHOW_CTRLR_NAMES, OnShowCtrlrNames)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_EVENT_SHOW_CTRLR_NAMES, OnUpdateShowCtrlrNames)
 	ON_WM_MENUSELECT()
+	ON_COMMAND(ID_MIDI_EVENT_RESET_FILTERS, OnResetFilters)
 	//}}AFX_MSG_MAP
 	ON_CONTROL_RANGE(CBN_SELCHANGE, 0, USHRT_MAX, OnSelChangeCombo)
 	ON_MESSAGE(UWM_RESIZE_FILTERS, OnResizeFilters)
@@ -298,7 +318,6 @@ BOOL CMidiEventDlg::OnInitDialog()
 	CFont	*pFont = GetFont();
 	// create list filter combos
 	for (int iCol = 0; iCol < COLUMNS; iCol++) {	// for each column
-		const CListCtrlExSel::COL_INFO&	info = m_ColInfo[iCol];
 		CComboBox&	filter = m_FilterCombo[iCol];
 		UINT	style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL 
 			| CBS_DROPDOWNLIST;
@@ -400,14 +419,16 @@ void CMidiEventDlg::OnSelChangeCombo(UINT nID)
 	ASSERT(nID >= FILTER_ID && nID < FILTER_ID + COLUMNS);
 	nID -= FILTER_ID;
 	int	iSel = m_FilterCombo[nID].GetCurSel();
+	ASSERT(iSel >= 0);	// filter drop list should always have selection
 	if (nID == COL_DEVICE || nID == COL_PORT) {	// if device or port filter changed
 		int	iOtherCol = (nID == COL_DEVICE) ? COL_PORT : COL_DEVICE;
 		m_FilterCombo[iOtherCol].SetCurSel(iSel);	// keep other filter in sync
+		m_FilterSel[iOtherCol] = iSel - 1;
 	}
-	m_FilterSel[nID] = iSel;
+	m_FilterSel[nID] = iSel - 1;	// store filter selection; -1 is wildcard
 	m_Filtering = FALSE;
 	for (int iCol = 0; iCol < COLUMNS; iCol++) {	// for each column
-		if (m_FilterSel[iCol] > 0) {	// if column has a filter selection
+		if (m_FilterSel[iCol] >= 0) {	// if column has a filter selection
 			m_Filtering = TRUE;	// set filtering flag and early out
 			break;
 		}
@@ -465,6 +486,11 @@ void CMidiEventDlg::OnPause()
 void CMidiEventDlg::OnUpdatePause(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(IsPaused());
+}
+
+void CMidiEventDlg::OnResetFilters()
+{
+	ResetFilters();
 }
 
 void CMidiEventDlg::OnShowCtrlrNames()

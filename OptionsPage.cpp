@@ -9,6 +9,7 @@
 		rev		date	comments
         00      14oct13	initial version
         01      23apr14	add tooltip support
+		02		05aug14	add OnCommandHelp
 
         options property page
  
@@ -41,6 +42,7 @@ COptionsPage::COptionsPage(COptionsInfo& Info, UINT nIDTemplate, UINT nIDCaption
 
 BEGIN_MESSAGE_MAP(COptionsPage, CPropertyPage)
 	//{{AFX_MSG_MAP(COptionsPage)
+	ON_MESSAGE(WM_COMMANDHELP, OnCommandHelp)
 	//}}AFX_MSG_MAP
 	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
 	ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnToolTipNeedText)
@@ -68,4 +70,11 @@ LRESULT COptionsPage::OnKickIdle(WPARAM, LPARAM)
 BOOL COptionsPage::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 {
 	return theApp.OnToolTipNeedText(id, pNMHDR, pResult);
+}
+
+LRESULT COptionsPage::OnCommandHelp(WPARAM wParam, LPARAM lParam)
+{
+	if (theApp.DlgCtrlHelp(m_hWnd))	// show topic for focused control if any
+		return TRUE;	// skip default handling
+	return CPropertyPage::OnCommandHelp(wParam, lParam);	// default to base class
 }

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		20sep13	initial version
+		01		12aug14	add ListHasFocus
 
         parts bar
  
@@ -52,6 +53,7 @@ public:
 	const CPartPageView	*GetPageView() const;
 	CPartsListCtrl&	GetListCtrl();
 	const CPartsListCtrl&	GetListCtrl() const;
+	bool	ListHasFocus() const;
 	void	SetPatch(const CPatch& Patch);
 	void	SetPart(int PartIdx, const CPart& Part);
 	int		GetCurPart() const;
@@ -156,6 +158,11 @@ inline CPartsListCtrl& CPartsBar::GetListCtrl()
 inline const CPartsListCtrl& CPartsBar::GetListCtrl() const
 {
 	return(m_ListView->GetList());
+}
+
+inline bool CPartsBar::ListHasFocus() const
+{
+	return(::GetFocus() == GetListCtrl().m_hWnd);
 }
 
 inline int CPartsBar::GetCurPart() const

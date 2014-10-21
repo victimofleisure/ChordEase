@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		12sep13	initial version
+ 		01		09sep14	use default memberwise copy
+		02		07oct14	in ReferencePort and UpdatePort, add Enable argument
  
 		patch container
 
@@ -52,17 +54,6 @@ double CBasePatch::GetTempo() const
 	return(m_Tempo * pow(2, m_TempoMultiple));
 }
 
-void CPatch::Copy(const CPatch& Patch)
-{
-	#define PATCHDEF(name, init) m_##name = Patch.m_##name;
-	#include "PatchDef.h"	// generate code to copy members
-	CopyMemory(m_MidiTarget, Patch.m_MidiTarget, sizeof(m_MidiTarget));	// copy MIDI targets
-	m_Part = Patch.m_Part;	// copy part array
-	m_InPortID = Patch.m_InPortID;	// copy port ID arrays
-	m_OutPortID = Patch.m_OutPortID;
-	CopyMemory(m_MidiShadow, Patch.m_MidiShadow, sizeof(m_MidiShadow));
-}
-
 bool CPatch::operator==(const CPatch& Patch) const
 {
 	#define PATCHDEF(name, init) if (m_##name != Patch.m_##name) return(FALSE);
@@ -81,7 +72,7 @@ bool CPatch::operator==(const CPatch& Patch) const
 void CPatch::Reset()
 {
 	CPatch	patch;
-	Copy(patch);
+	*this = patch;
 }
 
 bool CPatch::Read(LPCTSTR Path)
@@ -171,9 +162,9 @@ void CPatch::GetDeviceIDs(CMidiDeviceID& DevID) const
 	m_OutPortID.GetDeviceIDs(DevID.m_Out);
 }
 
-inline void CPatch::ReferencePort(int Port, CIntArrayEx& Refs)
+inline void CPatch::ReferencePort(int Port, CIntArrayEx& Refs, bool Enable)
 {
-	if (Port >= 0 && Port < Refs.GetSize())
+	if (Port >= 0 && Port < Refs.GetSize() && Enable)
 		Refs[Port]++;
 }
 
@@ -188,12 +179,16 @@ void CPatch::GetDeviceRefs(int InDevs, int OutDevs, CIntArrayEx& InRefs, CIntArr
 	#include "PatchPortIterator.h"	// generate code to iterate ports
 }
 
-bool CPatch::UpdatePort(int& Port, const CIntArrayEx& DevMap)
+bool CPatch::UpdatePort(int& Port, const CIntArrayEx& DevMap, bool Enable)
 {
 	if (Port < 0 || Port >= DevMap.GetSize())	// if port out of range
 		return(TRUE);	// ignore it
-	if (DevMap[Port] < 0)	// if device is missing
-		return(FALSE);	// fail
+	if (DevMap[Port] < 0) {	// if device is missing
+		if (Enable)	// if port is enabled
+			return(FALSE);	// fail
+		else	// port is disabled
+			return(TRUE);	// succeed without updating port
+	}
 	Port = DevMap[Port];	// translate port to new device index
 	return(TRUE);
 }

@@ -9,15 +9,13 @@
 		rev		date	comments
         00      08oct13	initial version
         01      07may14	refactor into abstract base class
+		02		09sep14	in TimerProc, change idEvent type to fix compiler error
 
 		automated undo test
  
 */
 
 #include "stdafx.h"
-
-// this should always be zero in a shipping version, to avoid needless bloat
-#define UNDO_TEST 0	// set non-zero to enable undo test
 
 #if UNDO_TEST
 
@@ -274,7 +272,7 @@ bool CUndoTest::Run(bool Enable)
 	return(TRUE);
 }
 
-VOID CALLBACK CUndoTest::TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+VOID CALLBACK CUndoTest::TimerProc(HWND hwnd, UINT uMsg, W64UINT idEvent, DWORD dwTime)
 {
 	m_This->OnTimer();
 }

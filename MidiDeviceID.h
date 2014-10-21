@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		08nov13	initial version
+		01		09sep14	use default memberwise copy
  
 		MIDI device ID container
 
@@ -18,17 +19,15 @@
 
 #include "ArrayEx.h"
 
-class CMidiDeviceID : public WObject {
+class CMidiDeviceID : public WCopyable {
 public:
 // Construction
 	CMidiDeviceID();
-	CMidiDeviceID(const CMidiDeviceID& DevID);
-	CMidiDeviceID&	operator=(const CMidiDeviceID& DevID);
 	void	Create();
 
 // Public data
-	CStringArray	m_In;		// array of MIDI input device identifiers
-	CStringArray	m_Out;		// array of MIDI output device identifiers
+	CStringArrayEx	m_In;		// array of MIDI input device identifiers
+	CStringArrayEx	m_Out;		// array of MIDI output device identifiers
 
 // Attributes
 	void	GetUpdateMaps(const CMidiDeviceID& NewDevID, CIntArrayEx& InDevMap, CIntArrayEx& OutDevMap) const;
@@ -37,26 +36,10 @@ public:
 	bool	operator==(const CMidiDeviceID& DevID) const;
 	bool	operator!=(const CMidiDeviceID& DevID) const;
 	void	Print() const;
-
-protected:
-// Helpers
-	void	Copy(const CMidiDeviceID& DevID);
 };
 
 inline CMidiDeviceID::CMidiDeviceID()
 {
-}
-
-inline CMidiDeviceID::CMidiDeviceID(const CMidiDeviceID& DevID)
-{
-	Copy(DevID);
-}
-
-inline CMidiDeviceID& CMidiDeviceID::operator=(const CMidiDeviceID& DevID)
-{
-	if (&DevID != this)
-		Copy(DevID);
-	return(*this);
 }
 
 inline bool CMidiDeviceID::operator!=(const CMidiDeviceID& DevID) const

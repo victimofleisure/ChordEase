@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      22nov13	initial version
+		01		24sep14	add find and replace
 
         notepad-style text editor dialog
  
@@ -54,7 +55,12 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	virtual void OnOK();
+	afx_msg void OnFind();
+	afx_msg void OnFindNext();
+	afx_msg void OnReplace();
+    afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
 	//}}AFX_MSG
+	afx_msg LRESULT OnFindDialogMessage(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 // Constants
@@ -62,8 +68,22 @@ protected:
 
 // Data members
 	CCtrlResize	m_Resize;		// control resizer
+	CSize	m_InitSize;			// dialog initial size in screen coords
 	CString&	m_Text;			// reference to caller's text
 	CString	m_Caption;			// text to display in caption bar
+	CFindReplaceDialog	*m_pFindDialog;	// pointer to modeless find/replace dialog
+	static	UINT	m_FindDialogMessage;	// find registered message ID
+	CString	m_FindWhat;			// find text
+	CString	m_ReplaceWith;		// replace text
+	bool	m_SearchDown;		// true if searching down
+	bool	m_MatchCase;		// true if matching case
+
+// Helpers
+	void	CreateFindDlg(bool FindOnly);
+	void	GetFindState();
+	bool	FindNext(bool ForceSearchDown = FALSE);
+	bool	ReplaceCurrent();
+	bool	ReplaceAll();
 };
 
 //{{AFX_INSERT_LOCATION}}

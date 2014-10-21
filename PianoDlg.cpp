@@ -9,6 +9,7 @@
 		rev		date	comments
         00      22apr14	initial version
 		01		15may14	in UpdateKeyLabels, add non-diatonic rules
+		02		09sep14	in OnShowWindow, reference note map instead of copying
 
 		piano dialog
 
@@ -531,7 +532,7 @@ void CPianoDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 		CMidiInst	inst(m_State.Port, m_State.Channel);
 		int	notes = NoteMap.GetSize();
 		for (int iNote = 0; iNote < notes; iNote++) {	// for each note
-			const CEngine::CNoteMap	map = NoteMap[iNote];
+			const CEngine::CNoteMap&	map = NoteMap[iNote];
 			DWORD	MidiMsg = CEngine::MakeMidiMsg(
 				NOTE_ON, inst.Chan, map.m_InNote, map.m_InVel);
 			OnMidiIn(inst.Port, MidiMsg);

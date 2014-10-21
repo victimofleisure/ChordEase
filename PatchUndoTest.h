@@ -9,6 +9,7 @@
 		rev		date	comments
         00      08oct13	initial version
         01      07may14	move generic functionality to base class
+		02		09sep14	add CPatchObject
 
 		automated undo test for patch editing
  
@@ -30,6 +31,10 @@ public:
 protected:
 // Types
 	typedef CArrayEx<HWND, HWND>	CHWNDArray;
+	class CPatchObject : public CObject, public CPatch {
+	public:
+		virtual void Serialize(CArchive& ar);
+	};
 
 // Constants
 	static const EDIT_INFO	m_EditInfo[];	// array of edit properties

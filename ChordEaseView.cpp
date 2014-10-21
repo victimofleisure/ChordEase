@@ -18,6 +18,10 @@
 		08		15jul14	add OnCommandHelp
 		09		28aug14	in OnCommandHelp, do default help while in context menu
 		10		28aug14	add OnEditChordProps
+		11		18sep14	invalidate selection on focus change
+		12		18sep14	add transpose and length commands
+		13		20sep14	add ApplyMeter; update chord durations on meter change
+		14		19oct14	in ApplyMeter, ChangeLength now modifies selection arg
 
 		ChordEase view
  
@@ -38,6 +42,8 @@
 #include "InsertChordDlg.h"
 #include "SectionListDlg.h"
 #include "SongPropsDlg.h"
+#include "TransposeDlg.h"
+#include "ChangeLengthDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -101,6 +107,8 @@ CChordEaseView::CChordEaseView() :
 	m_DragScrollDelta = CSize(0, 0);
 	m_DragScrollTimer = FALSE;
 	m_InContextMenu = FALSE;
+	m_PrevTranspose = 0;
+	m_PrevLengthChange = 100;
 }
 
 CChordEaseView::~CChordEaseView()
@@ -452,7 +460,8 @@ void CChordEaseView::InvalidateSelection()
 		CIntRange	sel = GetSelection();
 		for (int iChord = sel.Start; iChord <= sel.End; iChord++)
 			InvalidateRect(m_ChordSymbol[iChord].m_Rect - GetScrollPosition());
-	}
+	} else	// no selection
+		InvalidateCurrentChord();
 }
 
 void CChordEaseView::SelectToChord(int ChordIdx)
@@ -943,6 +952,58 @@ bool CChordEaseView::SetChord(int ChordIdx, const CSong::CChord& Chord)
 	return(TRUE);
 }
 
+bool CChordEaseView::ApplyMeter(CSong::CMeter& Meter, CSongState& State)
+{
+	CSong::CMeter	OldMeter(gEngine.GetSong().GetMeter());	// copy original meter
+	CSong::CMeter	NewMeter(Meter);	// copy requested meter
+	CSongState	ReqState;
+	int	nBeats = gEngine.GetSong().GetBeatCount();
+	bool	Canceled = FALSE;
+	// if rounding errors occur while scaling chord durations, redo scaling
+	// with meter doubled, and if that doesn't help, try doubling it again;
+	// if meter doubling does help, ask user for permission to change meter
+	const int	nPasses = 3;	// double meter twice before giving up
+	int	iPass;
+	for (iPass = 0; iPass < nPasses; iPass++) {	// for each pass
+		if (iPass && NewMeter == OldMeter) {	// if updated meter equals original
+			Canceled = TRUE;	// doubling meter can't help in this case
+			break;	// early out
+		}
+		gEngine.GetSongState(State);	// get chord progression
+		double	fScale = double(NewMeter.m_Numerator) / OldMeter.m_Numerator;
+		CIntRange	sel(0, nBeats - 1);	// select all beats
+		// note that ChangeLength modifies its selection argument
+		bool	CleanScaling = State.ChangeLength(sel, fScale);
+		if (!iPass)	// if first pass (requested meter, no doubling yet)
+			ReqState = State;	// save scaled durations for requested meter
+		if (CleanScaling) {	// if durations were scaled without rounding errors
+			if (iPass) {	// if meter was doubled at least once
+				CString	msg;	// offer to change meter as needed
+				msg.Format(IDS_CHANGE_TIME_SIGNATURE,
+					NewMeter.m_Numerator, NewMeter.m_Denominator);
+				if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES)
+					Meter = NewMeter;	// return updated meter to caller
+				else	// user refused offer to change meter
+					Canceled = TRUE;
+			}
+			break;	// no rounding errors, so early out
+		}
+		NewMeter.m_Numerator *= 2;	// double meter
+		NewMeter.m_Denominator *= 2;
+		if (!NewMeter.IsValidMeter()) {	// if updated meter is invalid
+			Canceled = TRUE;
+			break;
+		}
+	}
+	// if rounding errors unavoidable or meter doubling was canceled
+	if (iPass >= nPasses || Canceled) {
+		if (AfxMessageBox(IDS_CHORD_DURATION_ROUNDING, MB_OKCANCEL) != IDOK)
+			return(FALSE);	// user chickened out
+		State = ReqState;	// restore state corresponding to requested meter
+	}
+	return(TRUE);
+}
+
 void CChordEaseView::SaveUndoState(CUndoState& State)
 {
 //	_tprintf(_T("SaveUndoState %d %d\n"), State.GetCtrlID(), State.GetCode());
@@ -976,6 +1037,8 @@ void CChordEaseView::SaveUndoState(CUndoState& State)
 	case CHART_UCODE_SECTION_DELETE:
 	case CHART_UCODE_SECTION_PROPS:
 	case CHART_UCODE_MULTI_CHORD_EDIT:
+	case CHART_UCODE_TRANSPOSE:
+	case CHART_UCODE_CHANGE_LENGTH:
 		{
 			CRefPtr<CClipboardEditUndoInfo>	uip;
 			uip.CreateObj();
@@ -991,6 +1054,11 @@ void CChordEaseView::SaveUndoState(CUndoState& State)
 			CRefPtr<CSongPropertiesUndoInfo>	uip;
 			uip.CreateObj();
 			gEngine.GetSongProperties(uip->m_Props);
+			if (State.GetCtrlID()) {	// if saving chords due to meter change
+				uip->m_pState.CreateObj();
+				gEngine.GetSongState(uip->m_pState);
+				uip->m_pState->RemoveSectionMap();	// saves some memory
+			}
 			State.SetObj(uip);
 		}
 		break;
@@ -1032,6 +1100,8 @@ void CChordEaseView::RestoreUndoState(const CUndoState& State)
 	case CHART_UCODE_SECTION_DELETE:
 	case CHART_UCODE_SECTION_PROPS:
 	case CHART_UCODE_MULTI_CHORD_EDIT:
+	case CHART_UCODE_TRANSPOSE:
+	case CHART_UCODE_CHANGE_LENGTH:
 		{
 			const CClipboardEditUndoInfo	*uip = 
 				static_cast<CClipboardEditUndoInfo *>(State.GetObj());
@@ -1046,6 +1116,8 @@ void CChordEaseView::RestoreUndoState(const CUndoState& State)
 			const CSongPropertiesUndoInfo	*uip = 
 				static_cast<CSongPropertiesUndoInfo *>(State.GetObj());
 			gEngine.SetSongProperties(uip->m_Props);
+			if (!uip->m_pState.IsEmpty())	// if song state is present
+				gEngine.SetSongState(uip->m_pState);
 			theApp.GetMain()->UpdateViews();
 			UpdateViews(CChordEaseDoc::HINT_CHART);
 		}
@@ -1095,7 +1167,7 @@ void CChordEaseView::OnDraw(CDC* pDC)
 	}
 	SelectFont(pDC);
 	COLORREF	CurChordTextColor, CurChordBkColor;
-	if (::GetFocus() == m_hWnd) {	// if we have focus
+	if (HasFocus()) {	// if we have focus
 		CurChordTextColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
 		CurChordBkColor = GetSysColor(COLOR_HIGHLIGHT);
 	} else {
@@ -1254,10 +1326,14 @@ BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, OnUpdateEditSelectAll)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT_SETUP, OnUpdateFilePrint)
+	ON_UPDATE_COMMAND_UI(ID_PREV_PANE, OnUpdateNextPane)
+	ON_COMMAND(ID_EDIT_TRANSPOSE, OnEditTranspose)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_TRANSPOSE, OnUpdateEditTranspose)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT_PREVIEW, OnUpdateFilePrint)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
-	ON_UPDATE_COMMAND_UI(ID_PREV_PANE, OnUpdateNextPane)
 	ON_UPDATE_COMMAND_UI(ID_NEXT_PANE, OnUpdateNextPane)
+	ON_COMMAND(ID_EDIT_LENGTH, OnEditLength)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_LENGTH, OnUpdateEditLength)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CScrollView::OnFilePrint)
@@ -1448,14 +1524,14 @@ void CChordEaseView::OnTimer(W64UINT nIDEvent)
 void CChordEaseView::OnSetFocus(CWnd* pOldWnd) 
 {
 	CScrollView::OnSetFocus(pOldWnd);
-	InvalidateCurrentChord();
+	InvalidateSelection();
 	m_HasFocus = TRUE;
 }
 
 void CChordEaseView::OnKillFocus(CWnd* pNewWnd) 
 {
 	CScrollView::OnKillFocus(pNewWnd);
-	InvalidateCurrentChord();
+	InvalidateSelection();
 	m_HasFocus = FALSE;
 }
 
@@ -1682,9 +1758,19 @@ void CChordEaseView::OnFileProperties()
 {
 	CSong::CProperties	props;
 	gEngine.GetSongProperties(props);
+	CSong::CProperties	OldProps(props);
 	CSongPropsDlg	dlg(props);
 	if (dlg.DoModal() == IDOK) {
-		NotifyUndoableEdit(0, CHART_UCODE_SONG_PROPS);
+		// if song is non-empty and time signature was changed,
+		// chord durations need to be updated to fit time signature
+		bool	UpdateDurs = !gEngine.GetSong().IsEmpty() 
+			&& props.m_Meter.m_Numerator != OldProps.m_Meter.m_Numerator;
+		CSongState	state;
+		if (UpdateDurs && !ApplyMeter(props.m_Meter, state))
+			return;
+		NotifyUndoableEdit(UpdateDurs, CHART_UCODE_SONG_PROPS);
+		if (UpdateDurs)	// if chord durations were updated
+			gEngine.SetSongState(state);	// pass updated chords to engine
 		gEngine.SetSongProperties(props);
 		theApp.GetMain()->UpdateViews();
 		UpdateViews(CChordEaseDoc::HINT_CHART);
@@ -1871,4 +1957,54 @@ void CChordEaseView::OnEditSectionList()
 {
 	CSectionListDlg	dlg;
 	dlg.DoModal();
+}
+
+void CChordEaseView::OnEditTranspose() 
+{
+	CTransposeDlg	dlg;
+	dlg.m_Steps = m_PrevTranspose;
+	if (dlg.DoModal() == IDOK && dlg.m_Steps) {
+		m_PrevTranspose = dlg.m_Steps;
+		CSongState	state;
+		gEngine.GetSongState(state);
+		CIntRange	sel(GetBeatSelection());
+		state.Transpose(sel, dlg.m_Steps);	// transpose selected chords
+		NotifyUndoableEdit(0, CHART_UCODE_TRANSPOSE);
+		gEngine.SetSongState(state);
+		UpdateViews(CChordEaseDoc::HINT_CHART);	// update clears selection
+		SetBeatSelection(sel);	// restore selection
+	}
+}
+
+void CChordEaseView::OnUpdateEditTranspose(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(GetChordCount());
+}
+
+void CChordEaseView::OnEditLength() 
+{
+	CChangeLengthDlg	dlg;
+	dlg.m_Percent = m_PrevLengthChange;
+	if (dlg.DoModal() == IDOK && dlg.m_Percent != 100) {
+		m_PrevLengthChange = dlg.m_Percent;
+		CSongState	state;
+		gEngine.GetSongState(state);
+		CIntRange	sel(GetBeatSelection());
+		double	fScale = dlg.m_Percent / 100;
+		// note that ChangeLength modifies its selection argument
+		if (!state.ChangeLength(sel, fScale)) {	// change length of selected chords
+			if (AfxMessageBox(IDS_CHORD_DURATION_ROUNDING, MB_OKCANCEL) != IDOK)
+				return;
+		}
+		NotifyUndoableEdit(0, CHART_UCODE_CHANGE_LENGTH);
+		gEngine.SetSongState(state);
+		UpdateViews(CChordEaseDoc::HINT_CHART);	// update clears selection
+		SetBeatSelection(sel);	// show scaled selection
+		SetCurBeat(sel.Start);	// move to start of selection
+	}
+}
+
+void CChordEaseView::OnUpdateEditLength(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(GetChordCount());
 }

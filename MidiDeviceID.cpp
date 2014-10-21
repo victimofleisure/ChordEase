@@ -8,7 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		08nov13	initial version
- 
+ 		01		09sep14	use default memberwise copy
+
 		MIDI device ID container
 
 */
@@ -17,12 +18,6 @@
 #include "ChordEase.h"
 #include "MidiDeviceID.h"
 #include "MidiWrap.h"
-
-void CMidiDeviceID::Copy(const CMidiDeviceID& DevID)
-{
-	m_In.Copy(DevID.m_In);
-	m_Out.Copy(DevID.m_Out);
-}
 
 bool CMidiDeviceID::operator==(const CMidiDeviceID& DevID) const
 {

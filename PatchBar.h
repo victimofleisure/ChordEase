@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		14sep13	initial version
+		01		07oct14	add sync page
 
         patch bar
  
@@ -29,6 +30,7 @@
 #include "TabbedDlg.h"
 #include "PatchGeneralDlg.h"
 #include "PatchMetronomeDlg.h"
+#include "PatchSyncDlg.h"
 #include "PatchMidiTargetDlg.h"
 
 class CPatchBar : public CMySizingControlBar

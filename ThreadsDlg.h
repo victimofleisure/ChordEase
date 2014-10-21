@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      26nov13	initial version
+		01		26sep14	use default memberwise copy
 
 		list threads owned by current process
  
@@ -67,15 +68,17 @@ protected:
 	typedef HANDLE (WINAPI *LPOPENTHREAD)(DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwThreadId);
 #endif
 	typedef CRefPtr<CSafeHandle> CHandlePtr;	// reference-counted pointer to safe handle
-	class CThreadInfo : public WObject {
+	struct THREAD_DATA {
+		DWORD	m_ThreadID;				// unique identifier
+		int		m_BasePriority;			// base priority
+		ULARGE_INTEGER	m_KernelTime;	// total kernel mode time, in 100-nanosecond units
+		ULARGE_INTEGER	m_UserTime;		// total user mode time, in 100-nanosecond units
+	};
+	typedef CArrayEx<THREAD_DATA, THREAD_DATA&> CThreadDataArray;
+	class CThreadInfo : public THREAD_DATA, public WCopyable {
 	public:
 		CThreadInfo();
-		CThreadInfo& operator=(const CThreadInfo& Info);
 		CHandlePtr	m_pThreadHandle;	// reference-counted pointer to thread handle
-		DWORD	m_ThreadID;			// unique identifier
-		int		m_BasePriority;		// base priority
-		ULARGE_INTEGER	m_KernelTime;	// total kernel mode time, in 100-nanosecond units
-		ULARGE_INTEGER	m_UserTime;	// total user mode time, in 100-nanosecond units
 	};
 	typedef CArrayEx<CThreadInfo, CThreadInfo&> CThreadInfoArray;
 	

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		19nov13	initial version
+		01		07oct14	add enable argument for sync ports
  
 		port iterator template
 
@@ -26,7 +27,7 @@
 // otherwise it must be defined as empty.
 
 {	// enclose in scope
-	#define PATCHPORTDEF(port, dir) PORT_ITERATOR(port, dir##Refs);
+	#define PATCHPORTDEF(port, dir, enable) PORT_ITERATOR(port, dir##Refs, enable);
 	#include "PatchPortDef.h"
 	int	parts = m_Part.GetSize();
 	// iterate parts

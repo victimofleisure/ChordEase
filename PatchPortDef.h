@@ -8,12 +8,15 @@
 		revision history:
 		rev		date	comments
 		00		08nov13	initial version
+		01		07oct14	add input and output sync ports
  
 		define patch ports and their directions
 
 */
 
-//				port					dir
-PATCHPORTDEF(	m_Metronome.Inst.Port,	Out	)
+//				port					dir		enable
+PATCHPORTDEF(	m_Metronome.Inst.Port,	Out,	TRUE)
+PATCHPORTDEF(	m_Sync.In.Port,			In,		m_Sync.In.Enable)
+PATCHPORTDEF(	m_Sync.Out.Port,		Out,	m_Sync.Out.Enable)
 
 #undef PATCHPORTDEF

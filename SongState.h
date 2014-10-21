@@ -9,6 +9,8 @@
 		rev		date	comments
         00      07may14	initial version
 		01		23jul14	add InsertSection
+ 		02		09sep14	use default memberwise copy
+		03		18sep14	add Transpose and ChangeLength
  
 		song editing container
 
@@ -19,12 +21,10 @@
 
 #include "Song.h"
 
-class CSongState : public WObject {
+class CSongState : public WCopyable {
 public:
 // Construction
 	CSongState();
-	CSongState(const CSongState& State);
-	CSongState&	operator=(const CSongState& State);
 
 // Attributes
 	int		GetChordCount() const;
@@ -35,6 +35,7 @@ public:
 	void	GetChords(CSong::CChordArray& Chord) const;
 	void	GetChords(CIntRange BeatRange, CSong::CChordArray& Chord) const;
 	void	SetChord(CIntRange BeatRange, const CSong::CChord& Chord);
+	int		GetStartBeat(int ChordIdx) const;
 
 // Operations
 	int		FindChord(int Beat, int& Offset) const;
@@ -48,17 +49,17 @@ public:
 	void	AssignToSection(CIntRange BeatRange, int SectionIdx);
 	bool	EditSectionProperties(int Beat);
 	void	RemoveSectionMap();
+	void	Transpose(CIntRange BeatRange, int Steps);
+	bool	ChangeLength(CIntRange& BeatRange, double Scale);
 
 protected:
 // Member data
-	// don't forget to add new members to Copy
 	CSong::CChordArray	m_Chord;		// array of song chords
 	CSong::CSectionArray	m_Section;	// array of song sections
-	CStringArray	m_SectionName;		// array of song section names
+	CStringArrayEx	m_SectionName;		// array of song section names
 	CIntArrayEx	m_SectionMap;			// array of section indices, one per chord
 
 // Helpers
-	void	Copy(const CSongState& State);
 	int		GetSection(int ChordIdx);
 	void	InsertAt(int ChordIdx, CSong::CChord Chord);
 	void	InsertAt(int ChordIdx, const CSong::CChordArray& Chord);
@@ -73,17 +74,6 @@ protected:
 
 inline CSongState::CSongState()
 {
-}
-
-inline CSongState::CSongState(const CSongState& State)
-{
-	Copy(State);
-}
-
-inline CSongState& CSongState::operator=(const CSongState& State)
-{
-	Copy(State);
-	return(*this);
 }
 
 inline int CSongState::GetChordCount() const

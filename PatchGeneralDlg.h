@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		14sep13	initial version
+		01		07oct14	add OnUpdatePPQ
 
         patch general dialog
  
@@ -71,10 +72,11 @@ protected:
 	afx_msg void OnSelchangeKey();
 	//}}AFX_MSG
 	afx_msg void OnTranspose(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnUpdatePPQ(CCmdUI* pCmdUI);
 	DECLARE_MESSAGE_MAP()
 
 // Constants
-	static const int m_PPQVal[];
+	static const int m_PPQVal[];	// pulses per quarter note presets
 
 // Helpers
 	int		FindPPQ(int PPQ) const;

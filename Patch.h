@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		12sep13	initial version
+ 		01		09sep14	use default memberwise copy
+		02		07oct14	add input and output MIDI clock sync
  
 		patch container
 
@@ -23,7 +25,7 @@
 typedef CArrayEx<CMidiTarget, CMidiTarget&> CMidiTargetArray;
 
 // new members must also be added to PatchDef.h, and to the appropriate dialog
-struct CBasePatch {	// binary copy OK
+struct CBasePatch : public WCopyable {
 public:
 // Constants
 	enum {
@@ -48,7 +50,20 @@ public:
 		int		AccentVel;			// accent velocity
 		bool	AccentSameNote;		// true if accent uses normal note
 	};
+	struct SYNC {
+		struct INPUT {
+			bool	Enable;			// if true, sync to external MIDI clock
+			int		Port;			// receive clock from this port number
+		};
+		struct OUTPUT {
+			bool	Enable;			// if true, send MIDI clock
+			int		Port;			// send clock to this port number
+		};
+		INPUT	In;
+		OUTPUT	Out;
+	};
 	METRONOME	m_Metronome;	// metronome settings
+	SYNC	m_Sync;				// synchronization settings
 	double	m_Tempo;			// tempo, in beats per minute
 	double	m_TempoMultiple;	// tempo multiplier
 	int		m_LeadIn;			// lead in length, in measures
@@ -70,12 +85,10 @@ inline bool CBasePatch::CompareTargets(const CBasePatch& Patch) const
 	return(!memcmp(&m_MidiTarget, &Patch.m_MidiTarget, sizeof(m_MidiTarget)));	// binary comparison
 }
 
-class CPatch : public CObject, public CBasePatch {
+class CPatch : public CBasePatch {
 public:
 // Construction
 	CPatch();
-	CPatch(const CPatch& Patch);
-	CPatch&	operator=(const CPatch& Patch);
 
 // Public data
 	CPartArray	m_Part;		// array of part info
@@ -110,22 +123,9 @@ public:
 
 protected:
 // Helpers
-	void	Copy(const CPatch& Patch);
-	static	void	ReferencePort(int Port, CIntArrayEx& Refs);
-	static	bool	UpdatePort(int& Port, const CIntArrayEx& DevMap);
+	static	void	ReferencePort(int Port, CIntArrayEx& Refs, bool Enable = TRUE);
+	static	bool	UpdatePort(int& Port, const CIntArrayEx& DevMap, bool Enable = TRUE);
 };
-
-inline CPatch::CPatch(const CPatch& Patch)
-{
-	Copy(Patch);
-}
-
-inline CPatch& CPatch::operator=(const CPatch& Patch)
-{
-	if (&Patch != this)
-		Copy(Patch);
-	return(*this);
-}
 
 inline int CPatch::GetPartCount() const
 {

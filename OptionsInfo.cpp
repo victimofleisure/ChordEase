@@ -9,6 +9,7 @@
 		rev		date	comments
         00      13oct13	initial version
 		01		29apr14	add data folder path
+ 		02		09sep14	use default memberwise copy
 
 		container for options information
  
@@ -23,13 +24,6 @@ COptionsInfo::COptionsInfo()
 	LOGFONT	DefaultFont = {0};
 	#define OPTIONDEF(name, defval) m_##name = defval;
 	#include "OptionDef.h"
-}
-
-void COptionsInfo::Copy(const COptionsInfo& Info)
-{
-	OPTIONS_INFO::operator=(Info);	// copy base struct
-	m_DataFolderPath = Info.m_DataFolderPath;
-	m_RecordFolderPath = Info.m_RecordFolderPath;
 }
 
 void COptionsInfo::Load()

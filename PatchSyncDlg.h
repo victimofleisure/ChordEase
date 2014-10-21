@@ -7,33 +7,32 @@
  
 		revision history:
 		rev		date	comments
-		00		14sep13	initial version
-		01		07oct14	add device name
+		00		07oct14	initial version
 
-        patch metronome dialog
+        patch sync dialog
  
 */
 
-#if !defined(AFX_PATCHMETRONOMEDLG_H__F352C13B_F7F1_4873_8524_D86EEB346600__INCLUDED_)
-#define AFX_PATCHMETRONOMEDLG_H__F352C13B_F7F1_4873_8524_D86EEB346600__INCLUDED_
+#if !defined(AFX_PATCHSYNCDLG_H__F352C13B_F7F1_4873_8524_D86EEB346600__INCLUDED_)
+#define AFX_PATCHSYNCDLG_H__F352C13B_F7F1_4873_8524_D86EEB346600__INCLUDED_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-// PatchMetronomeDlg.h : header file
+// PatchSyncDlg.h : header file
 //
 
 /////////////////////////////////////////////////////////////////////////////
-// CPatchMetronomeDlg dialog
+// CPatchSyncDlg dialog
 
 #include "PatchPageDlg.h"
 
-class CPatchMetronomeDlg : public CPatchPageDlg
+class CPatchSyncDlg : public CPatchPageDlg
 {
-	DECLARE_DYNAMIC(CPatchMetronomeDlg);
+	DECLARE_DYNAMIC(CPatchSyncDlg);
 // Construction
 public:
-	CPatchMetronomeDlg(CWnd* pParent = NULL);
+	CPatchSyncDlg(CWnd* pParent = NULL);
 
 // Attributes
 	static	UINT	GetTemplateID();
@@ -42,7 +41,7 @@ public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CPatchMetronomeDlg)
+	//{{AFX_VIRTUAL(CPatchSyncDlg)
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
@@ -50,34 +49,30 @@ public:
 // Implementation
 protected:
 // Dialog Data
-	//{{AFX_DATA(CPatchMetronomeDlg)
-	enum { IDD = IDD_PATCH_METRONOME };
-	CEdit	m_DeviceName;
-	CButton	m_AccentSameNote;
-	CSpinNoteEdit	m_Note;
-	CSpinNoteEdit	m_AccentNote;
-	CMidiValEdit	m_AccentVel;
-	CPatchEdit	m_Patch;
-	CMidiValEdit	m_Velocity;
-	CPortEdit	m_Port;
-	CButton	m_Enable;
-	CChannelEdit	m_Channel;
-	CPatchEdit	m_Volume;
+	//{{AFX_DATA(CPatchSyncDlg)
+	enum { IDD = IDD_PATCH_SYNC };
+	CPortEdit	m_OutPort;
+	CPortEdit	m_InPort;
+	CButton	m_OutEnable;
+	CButton	m_InEnable;
+	CEdit	m_OutDevName;
+	CEdit	m_InDevName;
 	//}}AFX_DATA
 
 // Generated message map functions
-	//{{AFX_MSG(CPatchMetronomeDlg)
+	//{{AFX_MSG(CPatchSyncDlg)
 	virtual BOOL OnInitDialog();
-	afx_msg void OnUpdateAccentNote(CCmdUI* pCmdUI);
 	afx_msg void OnChangedPort(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnSyncInEnable();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 // Helpers
-	void	UpdateDeviceName(int Port);
+	void	UpdateInputDeviceName(int Port);
+	void	UpdateOutputDeviceName(int Port);
 };
 
-inline UINT CPatchMetronomeDlg::GetTemplateID()
+inline UINT CPatchSyncDlg::GetTemplateID()
 {
 	return(IDD);
 }
@@ -85,4 +80,4 @@ inline UINT CPatchMetronomeDlg::GetTemplateID()
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_PATCHMETRONOMEDLG_H__F352C13B_F7F1_4873_8524_D86EEB346600__INCLUDED_)
+#endif // !defined(AFX_PATCHSYNCDLG_H__F352C13B_F7F1_4873_8524_D86EEB346600__INCLUDED_)

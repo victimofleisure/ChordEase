@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      28nov13	initial version
+		01		30sep14	overload ctor
 
 		reference-countable handle wrapper
  
@@ -19,6 +20,11 @@
 CSafeHandle::CSafeHandle()
 {
 	m_Handle = NULL;
+}
+
+CSafeHandle::CSafeHandle(HANDLE Handle)
+{
+	m_Handle = Handle;
 }
 
 CSafeHandle::~CSafeHandle()

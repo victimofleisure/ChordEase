@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      12may14	initial version
+		01		09sep14	move enable flag to Globals.h
 
 		automated undo test for chart editing
  
@@ -15,10 +16,8 @@
 
 #include "stdafx.h"
 
-// base class UNDO_TEST must also be non-zero, else linker errors result
-#define UNDO_TEST 0	// set non-zero to enable undo test
-
-#if UNDO_TEST
+// if enabled, base class UNDO_TEST must also be non-zero, else linker errors result
+#if CHART_UNDO_TEST
 
 #include "ChordEase.h"
 #include "ChartUndoTest.h"
@@ -74,7 +73,7 @@ LONGLONG CChartUndoTest::GetSnapshot() const
 	gEngine.GetSongState(state);
 	CSong::CChordArray	chord;
 	state.GetChords(chord);
-	return(Fletcher64(chord.GetData(), chord.GetSize() * sizeof(CSong::CChord())));
+	return(Fletcher64(chord.GetData(), chord.GetSize() * sizeof(CSong::CChord)));
 }
 
 CIntRange CChartUndoTest::GetRandomSelection() const

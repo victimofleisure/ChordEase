@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      02may14	initial version
+		01		18sep14	add transpose and length
 
 		chart undo code data
  
@@ -25,5 +26,7 @@ UCODE_DEF(SECTION_DELETE)
 UCODE_DEF(SECTION_PROPS)
 UCODE_DEF(SONG_PROPS)
 UCODE_DEF(MULTI_CHORD_EDIT)
+UCODE_DEF(TRANSPOSE)
+UCODE_DEF(CHANGE_LENGTH)
 
 #undef UCODE_DEF

@@ -10,6 +10,8 @@
         00      07may14	initial version
 		01		16may14	in MoveChords, rebuild section map before inserting
 		02		23jul14	add InsertSection
+ 		03		09sep14	use default memberwise copy
+		04		18sep14	add Transpose and ChangeLength
  
 		song editing container
 
@@ -19,14 +21,7 @@
 #include "Resource.h"
 #include "SongState.h"
 #include "SectionPropsDlg.h"
-
-void CSongState::Copy(const CSongState& State)
-{
-	m_Chord		= State.m_Chord;
-	m_Section	= State.m_Section;
-	m_SectionName.Copy(State.m_SectionName);
-	m_SectionMap = State.m_SectionMap;
-}
+#include <math.h>	// for fabs in ChangeLength
 
 void CSongState::MakeSectionMap()
 {
@@ -45,7 +40,7 @@ void CSongState::MakeSectionMap()
 void CSongState::MakeSections()
 {
 	CSong::CSectionArray	Section;
-	CStringArray	SectionName;
+	CStringArrayEx	SectionName;
 	int	nChords = m_SectionMap.GetSize();
 	if (nChords) {	// if at least one chord
 		int	iPrevSec = -1;
@@ -74,7 +69,7 @@ void CSongState::MakeSections()
 		}
 	}
 	m_Section = Section;
-	m_SectionName.Copy(SectionName);
+	m_SectionName = SectionName;
 }
 
 void CSongState::MergeDuplicateChords()
@@ -99,6 +94,14 @@ void CSongState::OnChordCountChange()
 {
 	MergeDuplicateChords();
 	MakeSections();	// rebuild sections from section map
+}
+
+int CSongState::GetStartBeat(int ChordIdx) const
+{
+	int iBeat = 0;
+	for (int iChord = 0; iChord < ChordIdx; iChord++)	// for each preceding chord
+		iBeat += m_Chord[iChord].m_Duration;	// add chord's duration to sum
+	return(iBeat);
 }
 
 int CSongState::FindChord(int Beat, int& Offset) const
@@ -331,4 +334,38 @@ bool CSongState::EditSectionProperties(int Beat)
 void CSongState::RemoveSectionMap()
 {
 	m_SectionMap.RemoveAll();
+}
+
+void CSongState::Transpose(CIntRange BeatRange, int Steps)
+{
+	CIntRange	ChordRange, Offset;
+	ChordRange = FindChordRange(BeatRange, Offset);
+	for (int iChord = ChordRange.Start; iChord <= ChordRange.End; iChord++) {
+		CSong::CChord&	ch = m_Chord[iChord];
+		ch.m_Root = CNote(ch.m_Root + Steps).Normal();
+		ch.m_Bass = CNote(ch.m_Bass + Steps).Normal();
+	}
+}
+
+bool CSongState::ChangeLength(CIntRange& BeatRange, double Scale)
+{
+	CIntRange	ChordRange, Offset;
+	ChordRange = FindChordRange(BeatRange, Offset);
+	bool	RoundingError = FALSE;
+	int	NewSelDur = 0;
+	for (int iChord = ChordRange.Start; iChord <= ChordRange.End; iChord++) {
+		CSong::CChord&	ch = m_Chord[iChord];
+		double	fDur = ch.m_Duration * Scale;	// scale chord duration
+		int	iDur = round(fDur);	// chord durations are stored as integers
+		if (fabs(iDur - fDur) > .01)	// if rounding error exceeds +/- 1%
+			RoundingError = TRUE;	// set flag
+		iDur = max(iDur, 1);	// enforce minimum duration
+		ch.m_Duration = iDur;	// update chord duration
+		NewSelDur += iDur;	// add duration to selection length
+	}
+	MakeSections();	// rebuild sections from section map
+	// return scaled beat range to caller by overwriting beat range argument
+	int	iStartBeat = GetStartBeat(ChordRange.Start);
+	BeatRange = CIntRange(iStartBeat, iStartBeat + NewSelDur - 1);
+	return(!RoundingError);	// return false if rounding errors occurred
 }

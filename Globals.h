@@ -9,6 +9,8 @@
 		rev		date	comments
         00		08mar10	initial version
 		01		01jul14	add lead sheet file extension
+		02		09sep14	add undo test flags
+		03		29sep14	add OpenThread for MFC 6
 
 		global definitions and inlines
 
@@ -182,6 +184,10 @@ inline CString Tokenize(const CString& Str, LPCTSTR pszTokens, int& iStart)
 CString Tokenize(const CString& Str, LPCTSTR pszTokens, int& iStart);
 #endif
 
+#if _MFC_VER <= 0x0600
+HANDLE WINAPI OpenThread(DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwThreadId);
+#endif
+
 enum {	// user windows messages
 	UWM_FIRST = WM_APP,
 	UWM_HANDLEDLGKEY,		// wParam: MSG pointer, lParam: none
@@ -212,3 +218,11 @@ enum {	// user windows messages
 
 // set non-zero for undo natter
 #define UNDO_NATTER 0
+
+// these flags enable undo tests should always be zero in a shipping version;
+// only one undo test can be enabled at a time, else CUndoTest ctor asserts
+#define PATCH_UNDO_TEST 0	// set non-zero to enable patch undo test
+#define CHART_UNDO_TEST 0	// set non-zero to enable chart undo test
+
+// if testing undo, UNDO_TEST must also be non-zero, else linker errors result
+#define UNDO_TEST (PATCH_UNDO_TEST || CHART_UNDO_TEST)

@@ -9,6 +9,7 @@
 		rev		date	comments
         00      08oct13	initial version
         01      07may14	refactor into abstract base class
+		02		09sep14	in TimerProc, change idEvent type to fix compiler error
 
 		automated undo test
  
@@ -127,7 +128,7 @@ protected:
 	void	SetState(int State);
 	void	OnTimer();
 	int		DoPass();
-	static	VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+	static	VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, W64UINT idEvent, DWORD dwTime);
 };
 
 inline bool CUndoTest::IsRunning() const

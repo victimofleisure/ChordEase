@@ -12,6 +12,7 @@
 		02		23nov07	support Unicode
 		03		03jan08	replace CSmartBuf with CRefPtr
 		04		18mar08	make CRefPtr a template
+ 		05		09sep14	use default memberwise copy
 
         undo state container
  
@@ -19,26 +20,6 @@
 
 #include "stdafx.h"
 #include "UndoState.h"
-
-CUndoState::CUndoState(const CUndoState& State) :
-	CRefPtr<CRefObj>(State)	// call base class copy constructor
-{
-	Copy(State);
-}
-
-CUndoState& CUndoState::operator=(const CUndoState& State)
-{
-	CRefPtr<CRefObj>::operator=(State);	// call base class assignment operator
-    Copy(State);
-	return(*this);
-}
-
-void CUndoState::Copy(const CUndoState& State)
-{
-	m_Val = State.m_Val;
-	m_CtrlID = State.m_CtrlID;
-	m_Code = State.m_Code;
-}
 
 CString CUndoState::DumpState() const
 {

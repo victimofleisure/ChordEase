@@ -17,6 +17,9 @@
 		07		23jul14	add OnTransportGoTo
 		08		04aug14	in SetPatch, if transposition changes, update chart view
 		09		12aug14	only enable parts list editing if list has focus
+		10		29sep14	in OnDelayedCreate, add BoostThreads
+		11		07oct14	in OnEngineNotify, add transport change notification
+		12		07oct14	in OnUpdateIndicatorTempo, add MIDI sync indicator
 
 		ChordEase main frame
  
@@ -985,7 +988,7 @@ void CMainFrame::OnTimer(W64UINT nIDEvent)
 		OnSongPositionChange();	// update song position in UI
 		if (gEngine.GetSectionIndex() != m_StatusCache.m_SectionIndex
 		|| gEngine.SectionLastPass() != m_StatusCache.m_SectionLastPass) {
-			m_ToolBar.OnUpdateCmdUI(this, FALSE);
+			m_ToolBar.OnUpdateCmdUI(this, FALSE);	// update toolbar buttons
 			m_StatusCache.m_SectionIndex = gEngine.GetSectionIndex(); 
 			m_StatusCache.m_SectionLastPass = gEngine.SectionLastPass();
 		}
@@ -1036,13 +1039,20 @@ void CMainFrame::OnUpdateIndicatorKey(CCmdUI *pCmdUI)
 void CMainFrame::OnUpdateIndicatorTempo(CCmdUI *pCmdUI)
 {
 	const CPatch&	patch = gEngine.GetPatch();
-	if (patch.m_Tempo != m_StatusCache.m_Tempo 
+	double	tempo;
+	if (patch.m_Sync.In.Enable)	// if sync to external MIDI clock
+		tempo = -1;	// value reserved for sync
+	else	// normal case
+		tempo = patch.m_Tempo;
+	if (tempo != m_StatusCache.m_Tempo	// if tempo differs from cached value
 	|| patch.m_TempoMultiple != m_StatusCache.m_TempoMultiple) {
-		double	tempo = patch.GetTempo();
 		CString	s;
-		s.Format(_T("%.2f"), tempo);
+		if (patch.m_Sync.In.Enable)	// if sync to external MIDI clock
+			s = _T("SYNC");	// indicate sync
+		else	// normal case
+			s.Format(_T("%.2f"), tempo);
 		pCmdUI->SetText(s);
-		m_StatusCache.m_Tempo = patch.m_Tempo;
+		m_StatusCache.m_Tempo = tempo;
 		m_StatusCache.m_TempoMultiple = patch.m_TempoMultiple;
 	}
 }
@@ -1128,6 +1138,7 @@ LRESULT	CMainFrame::OnHideSizingBar(WPARAM wParam, LPARAM lParam)
 
 LRESULT	CMainFrame::OnDelayedCreate(WPARAM wParam, LPARAM lParam)
 {
+	theApp.BoostThreads();	// boost priority of MIDI input callbacks (if needed)
 	gEngine.Run(TRUE);	// start engine after document loads song
 	LoadToolDialogState();	// order matters; do before updating hook states
 	UpdateHookMidiInput();
@@ -1175,6 +1186,9 @@ LRESULT	CMainFrame::OnEngineNotify(WPARAM wParam, LPARAM lParam)
 		break;
 	case CEngine::NC_MIDI_REPEAT_OFF:
 		gEngine.SetRepeat(FALSE);
+		break;
+	case CEngine::NC_TRANSPORT_CHANGE:
+		m_ToolBar.OnUpdateCmdUI(this, FALSE);	// update toolbar buttons
 		break;
 	}
 	return(0);

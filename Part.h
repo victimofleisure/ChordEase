@@ -9,7 +9,9 @@
 		rev		date	comments
 		00		12sep13	initial version
 		01		15may14	replace bass chromatic with non-diatonic rules
- 
+ 		02		09sep14	use default memberwise copy
+		03		13oct14	add thirds non-diatonic rule
+
 		part container
 
 */
@@ -21,7 +23,7 @@
 #include "MidiTarget.h"
 
 // new members must also be added to PartDef.h, and to the appropriate dialog
-class CBasePart {	// binary copy OK
+class CBasePart : public WCopyable {
 public:
 // Constants
 	enum {
@@ -96,6 +98,7 @@ public:
 			NDR_QUANTIZE,		// input is quantized to nearest diatonic note
 			NDR_DISABLE,		// non-diatonic input notes are disabled
 			NDR_SKIP,			// non-diatonic input notes are skipped
+			NDR_THIRDS,			// diatonic notes form cycle of thirds
 			NON_DIATONIC_RULES
 		};
 		MIDI_INST	Inst;		// MIDI instrument
@@ -126,12 +129,10 @@ public:
 	char	m_MidiShadow[MIDI_TARGETS];	// MIDI controller value for each target
 };
 
-class CPart : public WObject, public CBasePart {
+class CPart : public CBasePart {
 public:
 // Construction
 	CPart();
-	CPart(const CPart& Part);
-	CPart&	operator=(const CPart& Part);
 
 // Attributes
 	void	SetBaseInfo(const CBasePart& Part);
@@ -147,23 +148,7 @@ public:
 
 // Public data
 	CString	m_Name;			// part name
-
-protected:
-// Helpers
-	void	Copy(const CPart& Part);
 };
-
-inline CPart::CPart(const CPart& Part)
-{
-	Copy(Part);
-}
-
-inline CPart& CPart::operator=(const CPart& Part)
-{
-	if (&Part != this)
-		Copy(Part);
-	return(*this);
-}
 
 inline void CPart::SetBaseInfo(const CBasePart& Part)
 {

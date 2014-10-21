@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		20sep13	initial version
 		01		12aug14	add ListHasFocus
+		02		09sep14	in ListHasFocus, add exception for patch undo test
 
         parts bar
  
@@ -162,7 +163,10 @@ inline const CPartsListCtrl& CPartsBar::GetListCtrl() const
 
 inline bool CPartsBar::ListHasFocus() const
 {
-	return(::GetFocus() == GetListCtrl().m_hWnd);
+	if (PATCH_UNDO_TEST)	// if testing patch undo
+		return TRUE;	// enable editing commands regardless of focus
+	else
+		return(::GetFocus() == GetListCtrl().m_hWnd);
 }
 
 inline int CPartsBar::GetCurPart() const

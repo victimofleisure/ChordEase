@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		12sep13	initial version
+ 		01		09sep14	use default memberwise copy
  
 		part container
 
@@ -33,14 +34,6 @@ CPart::CPart()
 	#define PARTDEF(name, init) m_##name = init;
 	#include "PartDef.h"	// generate code to initialize members
 	ZeroMemory(m_MidiShadow, sizeof(m_MidiShadow));
-}
-
-void CPart::Copy(const CPart& Part)
-{
-	#define PARTDEF(name, init) m_##name = Part.m_##name;
-	#include "PartDef.h"	// generate code to copy members
-	CopyMemory(m_MidiTarget, Part.m_MidiTarget, sizeof(m_MidiTarget));	// copy MIDI targets
-	CopyMemory(m_MidiShadow, Part.m_MidiShadow, sizeof(m_MidiShadow));
 }
 
 bool CPart::operator==(const CPart& Part) const

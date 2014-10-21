@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      26nov13	initial version
+		01		26sep14	fix stale data when thread count unchanged
 
 		list threads owned by current process
  
@@ -54,18 +55,6 @@ CThreadsDlg::CThreadInfo::CThreadInfo()
 	m_UserTime.QuadPart = 0;
 }
 
-CThreadsDlg::CThreadInfo& CThreadsDlg::CThreadInfo::operator=(const CThreadInfo& Info)
-{
-	if (&Info != this) {
-		m_ThreadID = Info.m_ThreadID;
-		m_BasePriority = Info.m_BasePriority;
-		m_pThreadHandle = Info.m_pThreadHandle;
-		m_KernelTime = Info.m_KernelTime;
-		m_UserTime = Info.m_UserTime;
-	}
-	return(*this);
-}
-
 void CThreadsDlg::UpdateList()
 {
 	HANDLE	hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
@@ -75,19 +64,23 @@ void CThreadsDlg::UpdateList()
 	te.dwSize = sizeof(te);	// must init size before Thread32First
 	DWORD	pid = GetCurrentProcessId();
 	bool	ListSizeChange = FALSE;
-	CIntArrayEx	ThreadAliveFlag;
-	ThreadAliveFlag.SetSize(m_ThreadInfo.GetSize());
+	int	nPrevThreads = m_ThreadInfo.GetSize();
+	CIntArrayEx	ThreadAlive;
+	ThreadAlive.SetSize(nPrevThreads);
+	CThreadDataArray	PrevThreadData;
+	PrevThreadData.SetSize(nPrevThreads);
 	if (Thread32First(hSnap, &te)) {	// if first thread entry available
 		do {	// for each thread entry
 			if (te.th32OwnerProcessID == pid) {	// if thread belongs to process
 				int iThread;
-				int	threads = m_ThreadInfo.GetSize();	// for each thread in our list
-				for (iThread = 0; iThread < threads; iThread++) {
+				for (iThread = 0; iThread < nPrevThreads; iThread++) {
 					if (m_ThreadInfo[iThread].m_ThreadID == te.th32ThreadID)
 						break;	// thread found in our list
 				}
-				if (iThread < threads) {	// if thread found in our list
-					ThreadAliveFlag[iThread] = TRUE;	// mark it alive
+				if (iThread < nPrevThreads) {	// if thread found in our list
+					ThreadAlive[iThread] = TRUE;	// mark thread alive
+					PrevThreadData[iThread] = m_ThreadInfo[iThread];	// save thread data
+					m_ThreadInfo[iThread].m_BasePriority = te.tpBasePri;	// update priority
 				} else {	// thread not found, so add it
 					ListSizeChange = TRUE;
 					CThreadInfo	info;
@@ -115,18 +108,17 @@ void CThreadsDlg::UpdateList()
 	}
 	CloseHandle(hSnap);	// avoid leak
 	// reverse iterate for deletion stability
-	int	alives = ThreadAliveFlag.GetSize();
-	for (int iAlive = alives - 1; iAlive >= 0; iAlive--) {	// for each preexisting thread
-		if (!ThreadAliveFlag[iAlive]) {	// if thread no longer exists
-			m_ThreadInfo.RemoveAt(iAlive);	// remove thread from list
+	for (int iPT = nPrevThreads - 1; iPT >= 0; iPT--) {	// for each preexisting thread
+		if (!ThreadAlive[iPT]) {	// if thread no longer exists
+			m_ThreadInfo.RemoveAt(iPT);	// remove thread from our list
 			ListSizeChange = TRUE;
 		}
 	}
-	int	threads = m_ThreadInfo.GetSize();
-	for (int iThread = 0; iThread < threads; iThread++) {	// for each thread
+	int	nThreads = m_ThreadInfo.GetSize();	// thread count may have changed above
+	for (int iThread = 0; iThread < nThreads; iThread++) {	// for each thread
 		CThreadInfo&	info = m_ThreadInfo[iThread];
 		if (info.m_pThreadHandle) {	// if valid thread handle
-			HANDLE	hThread = info.m_pThreadHandle->GetHandle();
+			HANDLE	hThread = *info.m_pThreadHandle;
 			FILETIME	ftCreation, ftExit, ftKernel, ftUser;
 			if (GetThreadTimes(hThread, &ftCreation, &ftExit, &ftKernel, &ftUser)) {
 				info.m_KernelTime.LowPart = ftKernel.dwLowDateTime;
@@ -138,12 +130,19 @@ void CThreadsDlg::UpdateList()
 	}
 	if (ListSizeChange) {	// if list size changed
 		m_List.DeleteAllItems();
-		int	threads = m_ThreadInfo.GetSize();
-		for (int iThread = 0; iThread < threads; iThread++) {	// for each thread
+		for (int iThread = 0; iThread < nThreads; iThread++)	// for each thread
 			m_List.InsertCallbackRow(iThread, iThread);
+	} else {	// list size unchanged
+		for (int iThread = 0; iThread < nThreads; iThread++) {	// for each thread
+			const THREAD_DATA&	cur = m_ThreadInfo[iThread];
+			const THREAD_DATA&	old = PrevThreadData[iThread];
+			// if priority, kernel time, or user time changed
+			if (cur.m_BasePriority != old.m_BasePriority
+			|| cur.m_KernelTime.QuadPart != old.m_KernelTime.QuadPart
+			|| cur.m_UserTime.QuadPart != old.m_UserTime.QuadPart)
+				m_List.RedrawItems(iThread, iThread);	// redraw list item
 		}
-	} else	// list size unchanged
-		Invalidate();
+	}
 }
 
 void CThreadsDlg::DoDataExchange(CDataExchange* pDX)

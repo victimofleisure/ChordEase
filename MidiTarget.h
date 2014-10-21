@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		19nov13	initial version
+ 		01		09sep14	use default memberwise copy
  
 		MIDI target container
 
@@ -19,12 +20,10 @@
 #include "MidiInst.h"
 #include "Note.h"
 
-class CMidiTarget : public WObject {
+class CMidiTarget : public WCopyable {
 public:
 // Construction
 	CMidiTarget();
-	CMidiTarget(const CMidiTarget& Target);
-	CMidiTarget&	operator=(const CMidiTarget& Target);
 
 // Constants
 	enum {	// event types
@@ -62,28 +61,7 @@ public:
 	static const CMidiTarget	m_Default;	// default state
 	static const int	m_EventTypeName[EVENT_TYPES];	// event type string IDs
 	static const LPCTSTR	m_ControllerName[];
-
-protected:
-// Helpers
-	void	Copy(const CMidiTarget& Target);
 };
-
-inline CMidiTarget::CMidiTarget(const CMidiTarget& Target)
-{
-	Copy(Target);
-}
-
-inline CMidiTarget& CMidiTarget::operator=(const CMidiTarget& Target)
-{
-	if (&Target != this)
-		Copy(Target);
-	return(*this);
-}
-
-inline void CMidiTarget::Copy(const CMidiTarget& Target)
-{
-	CopyMemory(this, &Target, sizeof(CMidiTarget));	// binary copy OK
-}
 
 inline bool CMidiTarget::operator==(const CMidiTarget& Target) const
 {

@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		14sep13	initial version
+		01		07oct14	add OnUpdatePPQ
+
 
         patch general dialog
  
@@ -34,7 +36,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CPatchGeneralDlg, CPatchPageDlg);
 
-const int CPatchGeneralDlg::m_PPQVal[] = {
+const int CPatchGeneralDlg::m_PPQVal[] = {	// integer multiples of 24 only
 	24, 48, 72, 96, 120, 144, 168, 192, 216, 240, 
 	288, 336, 360, 384, 480, 504, 672, 768, 840, 960,
 };
@@ -109,6 +111,9 @@ void CPatchGeneralDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CPatchGeneralDlg, CPatchPageDlg)
 	//{{AFX_MSG_MAP(CPatchGeneralDlg)
 	ON_CBN_SELCHANGE(IDC_PATCH_GEN_KEY, OnSelchangeKey)
+	ON_UPDATE_COMMAND_UI(IDC_PATCH_GEN_PPQ, OnUpdatePPQ)
+	ON_UPDATE_COMMAND_UI(IDC_PATCH_GEN_TEMPO, OnUpdatePPQ)
+	ON_UPDATE_COMMAND_UI(IDC_PATCH_GEN_TEMPO_MULTIPLE, OnUpdatePPQ)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NEN_CHANGED, IDC_PATCH_GEN_TRANSPOSE, OnTranspose)
 END_MESSAGE_MAP()
@@ -147,4 +152,10 @@ void CPatchGeneralDlg::OnSelchangeKey()
 	ASSERT(sel >= 0 && sel < NOTES);
 	int	iTranspose = sel.LeastInterval(gEngine.GetSong().GetKey());
 	m_Transpose.SetVal(iTranspose, CNumEdit::NTF_PARENT);	// notify parent
+}
+
+void CPatchGeneralDlg::OnUpdatePPQ(CCmdUI* pCmdUI)
+{
+	// if sync to external MIDI clock, PPQ is restricted so disable its control
+	pCmdUI->Enable(!theApp.m_Engine.GetPatch().m_Sync.In.Enable);
 }

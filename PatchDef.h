@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		14sep13	initial version
+		01		07oct14	add sync page
  
 		patch definitions
 
@@ -24,6 +25,10 @@ PATCHDEF(	Metronome.Velocity,			100)
 PATCHDEF(	Metronome.AccentNote,		48 + Eb) // Eb3
 PATCHDEF(	Metronome.AccentVel,		127)
 PATCHDEF(	Metronome.AccentSameNote,	TRUE)
+PATCHDEF(	Sync.In.Enable,				FALSE)
+PATCHDEF(	Sync.In.Port,				0)
+PATCHDEF(	Sync.Out.Enable,			FALSE)
+PATCHDEF(	Sync.Out.Port,				0)
 PATCHDEF(	Tempo,						120)
 PATCHDEF(	TempoMultiple,				0)
 PATCHDEF(	LeadIn,						1)

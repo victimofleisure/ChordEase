@@ -12,6 +12,7 @@
 		02		22apr14	add OnToolTipNeedText
 		03		30apr14	add patch path
 		04		05aug14	add DlgCtrlHelp
+		05		29sep14	add ThreadBoost DLL
 
 		ChordEase application
  
@@ -34,6 +35,7 @@
 #include "resource.h"       // main symbols
 #include "WinAppCK.h"
 #include "Engine.h"
+#include "DllWrap.h"
 
 // MFC6 may not define DWORD_PTR, needed by WinHelpInternal override
 #if _MFC_VER < 0x0700 && !defined(_WIN64) && !defined(DWORD_PTR)
@@ -91,6 +93,7 @@ public:
 	static	void	InitNumericCombo(CComboBox& Combo, CIntRange Range, int SelIdx);
 	bool	DlgCtrlHelp(HWND DlgWnd);
 	static	int		FindHelpID(int ResID);
+	bool	BoostThreads();
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -122,6 +125,7 @@ protected:
 
 // Data members
 	bool	m_HelpInit;			// true if help was initialized
+	CDLLWrap	m_ThreadBoost;	// DLL to boost MIDI input callback priority
 };
 
 inline CMainFrame *CChordEaseApp::GetMain()

@@ -12,7 +12,8 @@
 		02		04mar13	add int and DWORD arrays
 		03		09oct13	add BYTE array with attach/detach/swap
 		04		21feb14	add GetData to CIntArrayEx
-		
+		05		09sep14	add CStringArrayEx
+
 		enhanced array with copy ctor, assignment, and fast const access
  
 */
@@ -356,6 +357,30 @@ AFX_INLINE BYTE CByteArrayEx::operator[](W64INT nIndex) const
 AFX_INLINE BYTE& CByteArrayEx::operator[](W64INT nIndex)
 { 
 	return ElementAt(nIndex);
+}
+
+class CStringArrayEx : public CStringArray
+{
+public:
+	CStringArrayEx();
+	CStringArrayEx(const CStringArrayEx& arr);
+	CStringArrayEx& operator=(const CStringArrayEx& arr);
+};
+
+AFX_INLINE CStringArrayEx::CStringArrayEx()
+{
+}
+
+AFX_INLINE CStringArrayEx::CStringArrayEx(const CStringArrayEx& arr)
+{
+	*this = arr;
+}
+
+AFX_INLINE CStringArrayEx& CStringArrayEx::operator=(const CStringArrayEx& arr)
+{
+	if (this != &arr)
+		Copy(arr);
+	return *this;
 }
 
 #endif

@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="ChordEase"
 	ProjectGUID="{92F97E14-0B2E-4EF6-BD99-B23DF2EDD353}"
+	RootNamespace="ChordEase"
 	Keyword="MFCProj"
 	TargetFrameworkVersion="0"
 	>
@@ -194,6 +195,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -690,6 +692,14 @@
 			</File>
 			<File
 				RelativePath=".\BoundArray.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ChangeLengthDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ChangeLengthDlg.h"
 				>
 			</File>
 			<File
@@ -2433,6 +2443,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PatchSyncDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PatchSyncDlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PatchUndoTest.cpp"
 				>
 			</File>
@@ -3053,6 +3071,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\StringUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\StringUtil.h"
+				>
+			</File>
+			<File
 				RelativePath="TabbedDlg.cpp"
 				>
 				<FileConfiguration
@@ -3134,6 +3160,14 @@
 			</File>
 			<File
 				RelativePath=".\TokenFile.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TransposeDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TransposeDlg.h"
 				>
 			</File>
 			<File

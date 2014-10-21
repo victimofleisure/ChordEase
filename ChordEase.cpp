@@ -13,6 +13,7 @@
 		03		30apr14	add patch path
 		04		01jul14	add custom document manager
 		05		05aug14	add DlgCtrlHelp
+		06		29sep14	add ThreadBoost DLL
 
 		ChordEase application
  
@@ -35,6 +36,7 @@
 #include "htmlhelp.h"	// needed for HTML Help API
 #include "HelpIDs.h"
 #include "DocManagerEx.h"
+#include "SafeHandle.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -266,17 +268,26 @@ void CChordEaseApp::WinHelp(DWORD dwData, UINT nCmd)
 	HWND	hMainWnd = GetMain()->m_hWnd;
 	UINT	ResID = LOWORD(dwData);
 	int	HelpID = FindHelpID(ResID);
-	HWND	retc = 0;	// assume failure
+	HWND	hWnd = 0;	// assume failure
 	if (HelpID)	// if context help ID was found
-		retc = ::HtmlHelp(hMainWnd, HelpPath, HH_HELP_CONTEXT, HelpID);
-	if (!retc) {	// if context help wasn't available or failed
-		retc = ::HtmlHelp(hMainWnd, HelpPath, HH_DISPLAY_TOC, 0);	// show contents
-		if (!retc) {	// if help file not found
+		hWnd = ::HtmlHelp(hMainWnd, HelpPath, HH_HELP_CONTEXT, HelpID);
+	if (!hWnd) {	// if context help wasn't available or failed
+		hWnd = ::HtmlHelp(hMainWnd, HelpPath, HH_DISPLAY_TOC, 0);	// show contents
+		if (!hWnd) {	// if help file not found
 			CString	s;
 			AfxFormatString1(s, IDS_APP_HELP_FILE_MISSING, HelpPath);
 			AfxMessageBox(s);
 			return;
 		}
+	}
+	// ThreadBoost DLL boosts priority of MIDI input callbacks, but also boosts
+	// other normal threads, including HtmlHelp's, which is counterproductive
+	if (m_ThreadBoost.IsLoaded()) {	// if boosting normal priority threads
+		DWORD	ThreadID = GetWindowThreadProcessId(hWnd, NULL);
+		// obtain set info access to HtmlHelp's thread and set its priority to normal
+		CSafeHandle	hThread(OpenThread(THREAD_SET_INFORMATION, FALSE, ThreadID));
+		if (hThread == NULL || !::SetThreadPriority(hThread, THREAD_PRIORITY_NORMAL))
+			AfxMessageBox(GetLastErrorString());
 	}
 	m_HelpInit = TRUE;
 }
@@ -522,6 +533,29 @@ void CChordEaseApp::InitNumericCombo(CComboBox& Combo, CIntRange Range, int SelI
 			iSel = iItem - Range.Start;
 	}
 	Combo.SetCurSel(iSel);
+}
+
+bool CChordEaseApp::BoostThreads()
+{
+	// In Vista and later, MIDI input callbacks run at priority 0 instead of 15.
+	// Consequently input callbacks no longer preempt normal threads, including
+	// the GUI thread, and this can increase the latency of our response to MIDI
+	// input, particularly if all CPUs are saturated with normal priority work.
+	// We solve this by loading a DLL that catches thread launching, and boosts
+	// any threads having priority 0 (normal) to priority 1 (above normal).
+	OSVERSIONINFO	osvi;
+	osvi.dwOSVersionInfoSize = sizeof(osvi);	// init struct size before call
+	if (!GetVersionEx(&osvi))
+		return(FALSE);
+	if (osvi.dwMajorVersion < 6)	// if before Vista
+		return(TRUE);	// no need for thread boost
+	LPCTSTR	DLLPath = _T("ThreadBoost.dll");
+	if (!m_ThreadBoost.LoadLibrary(DLLPath)) {	// if DLL not loaded
+		CString	msg;
+		AfxFormatString2(msg, IDS_CKUP_CANT_LOAD_DLL, DLLPath, GetLastErrorString());
+		AfxMessageBox(msg);
+	}
+	return(TRUE);
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      28nov13	initial version
+		01		30sep14	overload ctor
 
 		reference-countable handle wrapper
  
@@ -22,10 +23,12 @@ class CSafeHandle : public CRefObj {
 public:
 // Construction
 	CSafeHandle();
+	CSafeHandle(HANDLE Handle);
 	~CSafeHandle();
 
 // Attributes
 	HANDLE	GetHandle() const;
+	operator HANDLE() const;
 
 // Operations
 	void	Attach(HANDLE Handle);
@@ -36,6 +39,11 @@ protected:
 };
 
 inline HANDLE CSafeHandle::GetHandle() const
+{
+	return(m_Handle);
+}
+
+inline CSafeHandle::operator HANDLE() const
 {
 	return(m_Handle);
 }

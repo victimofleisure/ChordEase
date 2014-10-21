@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		23aug13	initial version
+		01		07oct14	add OutputSystem and transport change notification
  
 		engine MIDI support
  
@@ -39,6 +40,7 @@ public:
 		NC_MIDI_RESUME,
 		NC_MIDI_REPEAT_ON,
 		NC_MIDI_REPEAT_OFF,
+		NC_TRANSPORT_CHANGE,
 		NOTIFICATION_CODES
 	};
 
@@ -71,6 +73,7 @@ public:
 	void	OutputChannelAftertouch(MIDI_INST Inst, int Val);
 	void	OutputChord(MIDI_INST Inst, const CScale& Chord, int Vel);
 	void	OutputMetronome(bool Accent);
+	void	OutputSystem(int Port, int Cmd, int P1 = 0, int P2 = 0);
 	bool	OpenInputDevice(int InDevIdx);
 	bool	OpenOutputDevice(int OutDevIdx);
 	bool	CloseInputDevice(int InDevIdx);
@@ -213,6 +216,11 @@ inline void CEngineMidi::OutputMetronome(bool Accent)
 		vel = m_Patch.m_Metronome.Velocity;
 	}
 	OutputNote(m_Patch.m_Metronome.Inst, note, vel);
+}
+
+inline void CEngineMidi::OutputSystem(int Port, int Cmd, int P1, int P2)
+{
+	OutputMidi(CMidiInst(Port, 0), Cmd, P1, P2);
 }
 
 inline int CEngineMidi::GetInputDeviceCount() const

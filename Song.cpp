@@ -15,6 +15,7 @@
 		05		20jun14	in ReadChordDictionary, add support for aliases
 		06		01jul14	add ReadLeadSheet
 		07		28aug14	in IsMergeable, add chord arg
+ 		08		09sep14	use default memberwise copy
 
 		song container
 
@@ -34,14 +35,6 @@ const LPCTSTR CSong::m_Command[COMMANDS] = {
 	#define SONGCOMMANDDEF(name, str) _T(str),
 	#include "SongCommandDef.h"
 };
-
-void CSong::CChordInfo::Copy(const CChordInfo& Info)
-{
-	m_Name		= Info.m_Name;
-	m_Scale		= Info.m_Scale;
-	m_Mode		= Info.m_Mode;
-	CopyMemory(m_Comp, Info.m_Comp, sizeof(m_Comp));
-}
 
 bool CSong::CMeter::IsValidMeter() const
 {
@@ -70,15 +63,6 @@ int CSong::CSectionArray::FindImplicit() const
 	return(-1);
 }
 
-void CSong::CProperties::Copy(const CProperties& Props)
-{
-	m_Meter			= Props.m_Meter;
-	m_Key			= Props.m_Key;
-	m_Transpose		= Props.m_Transpose;
-	m_Tempo			= Props.m_Tempo;
-	m_Comments		= Props.m_Comments;
-}
-
 CSong::CSong()
 {
 	Reset();
@@ -101,21 +85,6 @@ void CSong::Reset()
 	m_Section.RemoveAll();
 	m_SectionName.RemoveAll();
 	m_Comments.Empty();
-}
-
-void CSong::Copy(const CSong& Song)
-{
-	m_Meter = Song.m_Meter;
-	m_Key = Song.m_Key;
-	m_Transpose = Song.m_Transpose;
-	m_Tempo = Song.m_Tempo;
-	m_Chord = Song.m_Chord;
-	m_BeatMap = Song.m_BeatMap;
-	m_StartBeat = Song.m_StartBeat;
-	m_Dictionary = Song.m_Dictionary;
-	m_Section = Song.m_Section;
-	m_SectionName.Copy(Song.m_SectionName);
-	m_Comments = Song.m_Comments;
 }
 
 bool CSong::IsValid(const CChord& Chord) const
@@ -151,7 +120,7 @@ void CSong::GetState(CSongState& State) const
 {
 	State.m_Chord = m_Chord;
 	State.m_Section = m_Section;
-	State.m_SectionName.Copy(m_SectionName);
+	State.m_SectionName = m_SectionName;
 	State.MakeSectionMap();
 }
 
@@ -159,7 +128,7 @@ void CSong::SetState(const CSongState& State)
 {
 	m_Chord = State.m_Chord;
 	m_Section = State.m_Section;
-	m_SectionName.Copy(State.m_SectionName);
+	m_SectionName = State.m_SectionName;
 	MakeBeatMap(CountBeats(m_Chord));
 }
 

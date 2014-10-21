@@ -9,6 +9,7 @@
 		rev		date	comments
         00      18may14	initial version
 		01		09jul14	show device names in port popup menu
+		02		09sep14	in UpdateNotes, reference note map instead of copying
 
         output notes bar
  
@@ -94,7 +95,7 @@ void COutputNotesBar::UpdateNotes()
 	gEngine.GetNoteMap(NoteMap);	// get currently active notes
 	int	notes = NoteMap.GetSize();
 	for (int iNote = 0; iNote < notes; iNote++) {	// for each mapped input note
-		const CEngine::CNoteMap	map = NoteMap[iNote];
+		const CEngine::CNoteMap&	map = NoteMap[iNote];
 		int	nOutNotes = map.m_OutNote.GetSize();
 		for (int iOut = 0; iOut < nOutNotes; iOut++) {	// for each output note
 			const CPart&	part = gEngine.GetPart(map.m_PartIdx);

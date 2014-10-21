@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		08nov13	initial version
+ 		01		09sep14	use default memberwise copy
  
 		MIDI port ID container
 
@@ -18,13 +19,11 @@
 
 #include "ArrayEx.h"
 
-class CMidiPortID : public WObject {
+class CMidiPortID : public WCopyable {
 public:
 // Construction
 	CMidiPortID();
 	CMidiPortID(int Port, const CString& Name);
-	CMidiPortID(const CMidiPortID& PortID);
-	CMidiPortID&	operator=(const CMidiPortID& PortID);
 
 // Public data
 	int		m_Port;			// port index
@@ -33,23 +32,7 @@ public:
 // Operations
 	bool	operator==(const CMidiPortID& PortID) const;
 	bool	operator!=(const CMidiPortID& PortID) const;
-
-protected:
-// Helpers
-	void	Copy(const CMidiPortID& PortID);
 };
-
-inline CMidiPortID::CMidiPortID(const CMidiPortID& PortID)
-{
-	Copy(PortID);
-}
-
-inline CMidiPortID& CMidiPortID::operator=(const CMidiPortID& PortID)
-{
-	if (&PortID != this)
-		Copy(PortID);
-	return(*this);
-}
 
 inline bool CMidiPortID::operator!=(const CMidiPortID& PortID) const
 {

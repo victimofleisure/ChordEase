@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		02nov97 initial version
 		01		17aug13	refactor
+		02		07oct14	add MIDI clock constants
 
 		midi types and constants
 
@@ -57,6 +58,8 @@ enum {	// generate MIDI controller enum from header file via macro
 #define MIDI_CMD(msg)		(msg & 0xf0)
 #define MIDI_CHAN(msg)		(msg & 0x0f)
 #define CHAN_MODE_MSG(ctrl)	(ctrl >= 120)
+#define MIDI_CLOCK_PPQ		24
+#define MIDI_BEAT_CLOCKS	6
 
 union MIDI_MSG {
 	struct {

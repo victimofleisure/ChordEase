@@ -128,6 +128,14 @@ SOURCE=.\BoundArray.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ChangeLengthDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChangeLengthDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ChartUndoCodeData.h
 # End Source File
 # Begin Source File
@@ -908,6 +916,14 @@ SOURCE=.\PatchPortIterator.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\PatchSyncDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\PatchSyncDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\PatchUndoTest.cpp
 # End Source File
 # Begin Source File
@@ -1181,6 +1197,14 @@ SOURCE=.\SteadyStatic.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\StringUtil.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\StringUtil.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\TabbedDlg.cpp
 # End Source File
 # Begin Source File
@@ -1214,6 +1238,14 @@ SOURCE=.\TokenFile.cpp
 # Begin Source File
 
 SOURCE=.\TokenFile.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TransposeDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\TransposeDlg.h
 # End Source File
 # Begin Source File
 

@@ -9,6 +9,9 @@
 		rev		date	comments
 		00		23aug13	initial version
 		01		16apr14	fix anticipation during section repeat
+		02		09sep14	in nested classes, use default memberwise copy
+		03		25sep14	raise timer thread priority
+		04		07oct14	add input and output MIDI clock sync
  
 		engine
  
@@ -48,7 +51,7 @@ public:
 		bool	m_PrevRun;		// true if previously running
 		bool	m_Succeeded;	// true if run/stop succeeded
 	};
-	class CHarmony {	// binary copy OK
+	class CHarmony : public WCopyable {
 	public:
 		int		m_Type;			// chord info index
 		CNote	m_Bass;			// normalized bass note, or -1 if unspecified
@@ -58,7 +61,7 @@ public:
 		CScale	m_ChordScale;	// chord scale
 	};
 	typedef CArrayEx<CHarmony, CHarmony&> CHarmonyArray;
-	class CNoteMap {	// binary copy OK
+	class CNoteMap : public WCopyable {
 	public:
 		CNoteMap();
 		CNoteMap(CNote InNote, int InVel, int PartIdx, CNote OutNote);
@@ -108,6 +111,7 @@ public:
 	int		GetTicksPerMeasure() const;
 	int		GetTickCount() const;
 	int		GetElapsedTime() const;
+	int		GetStartTick() const;
 	CString	GetTickString() const;
 	CString	TickToString(int Tick) const;
 	CString TickSpanToString(int TickSpan) const;
@@ -169,7 +173,7 @@ protected:
 		virtual	void	OnError(LPCTSTR Msg);
 		CEngine	*m_Engine;
 	};
-	class CPartState {	// binary copy OK
+	class CPartState : public WCopyable {
 	public:
 		CPartState();
 		int		m_Anticipation;		// harmony anticipation in ticks
@@ -197,7 +201,7 @@ protected:
 		double	Tempo;		// tempo in beats per minute, or zero if none
 		int		Transpose;	// transposition in half-steps, or INT_MAX if none
 	};
-	class CMySection : public CSong::CSection {	// binary copy OK
+	class CMySection : public CSong::CSection {
 	public:
 		CMySection();
 		void	OnTimeChange(int TicksPerBeat);
@@ -228,7 +232,7 @@ protected:
 	};
 	static const double	m_Quant[QUANTS];	// quantization values
 	enum {
-		TIMER_PRIORITY = THREAD_PRIORITY_ABOVE_NORMAL,
+		TIMER_PRIORITY = THREAD_PRIORITY_HIGHEST,
 	};
 
 // Member data
@@ -245,15 +249,17 @@ protected:
 	int		m_PrevHarmIdx;		// previous harmony index
 	volatile int	m_Tick;		// current position in ticks
 	volatile int	m_Elapsed;	// elapsed time since start of play, in ticks
+	volatile int	m_SyncOutClock;	// sync out clock counter, in ticks
 	int		m_TicksPerBeat;		// number of ticks per beat
 	int		m_TicksPerMeasure;	// number of ticks per measure
 	int		m_StartTick;		// starting position, in elapsed ticks
-	bool	m_IsRunning;		// true if engine is running
-	bool	m_IsPlaying;		// true if engine is playing
-	bool	m_IsPaused;			// true if engine is paused
-	bool	m_IsRepeating;		// true if repeating song
+	volatile bool	m_IsRunning;	// true if engine is running
+	volatile bool	m_IsPlaying;	// true if engine is playing
+	volatile bool	m_IsPaused;		// true if engine is paused
+	volatile bool	m_IsRepeating;	// true if repeating song
 	bool	m_AutoRewind;		// true if song automatically rewinds on stop
 	bool	m_PatchUpdatePending;	// true if deferred patch update is pending
+	bool	m_SyncOutPlaying;	// true if synchronized output is playing
 	CPartStateArray	m_PartState;	// array of part states
 	PATCH_BACKUP	m_PatchBackup;	// backup of patch members overridden by song
 	CMySection	m_Section;		// section state
@@ -505,6 +511,11 @@ inline int CEngine::GetTickCount() const
 inline int CEngine::GetElapsedTime() const
 {
 	return(m_Elapsed);
+}
+
+inline int CEngine::GetStartTick() const
+{
+	return(m_StartTick);
 }
 
 inline CString CEngine::GetTickString() const

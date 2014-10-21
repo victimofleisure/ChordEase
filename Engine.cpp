@@ -11,6 +11,8 @@
 		01		16apr14	fix anticipation during section repeat
 		02		28jun14	defer updating patches until after devices reopen
 		03		01jul14	in ReadSong, add handling for lead sheets
+		04		07oct14	add input and output MIDI clock sync
+		05		13oct14	add thirds non-diatonic rule
 
 		engine
  
@@ -127,6 +129,7 @@ CEngine::CEngine()
 	m_PrevHarmIdx = -1;
 	m_Tick = 0;
 	m_Elapsed = 0;
+	m_SyncOutClock = 0;
 	m_TicksPerBeat = 1;
 	m_TicksPerMeasure = 1;
 	m_StartTick = 0;
@@ -134,6 +137,7 @@ CEngine::CEngine()
 	m_IsPlaying = FALSE;
 	m_IsPaused = FALSE;
 	m_IsRepeating = TRUE;
+	m_SyncOutPlaying = FALSE;
 	m_AutoRewind = TRUE;
 	m_PatchUpdatePending = FALSE;
 	m_PatchBackup.Tempo = 0;
@@ -276,6 +280,12 @@ inline void CEngine::FastUpdateDevices()
 
 bool CEngine::UpdateTempo()
 {
+	if (m_Patch.m_Sync.In.Enable) {	// if sync to external MIDI clock
+		if (m_Timer.IsCreated())	// if timer exists
+			m_Timer.Destroy();	// destroy timer to avoid competition
+		m_Patch.m_PPQ = MIDI_CLOCK_PPQ;	// force PPQ to MIDI clock PPQ
+		return(TRUE);	// tempo is determined by MIDI clock
+	}
 	double	tempo = m_Patch.GetTempo();
 	UINT	TimerPeriod = round(60 / tempo / m_Patch.m_PPQ * 1000);
 //	_tprintf(_T("Tempo=%g TimerPeriod=%d\n"), tempo, TimerPeriod);
@@ -325,6 +335,7 @@ void CEngine::PlayInit()
 	m_Tick -= LeadInTicks;
 	m_StartTick = LeadInTicks;
 	m_Elapsed = 0;
+	m_SyncOutClock = 0;
 	UpdateSection();
 }
 
@@ -356,6 +367,8 @@ bool CEngine::Play(bool Enable)
 		}
 		PlayInit();
 	} else {	// stopping
+		if (m_Patch.m_Sync.Out.Enable)	// if sending MIDI clocks
+			OutputSystem(m_Patch.m_Sync.Out.Port, STOP);	// send stop
 		if (m_AutoRewind) {	// if automatically rewinding song
 			AutoPlayNotesOff();	// avoid glitch from fixing held auto-play notes
 			SetBeat(0);	// rewind song
@@ -363,12 +376,19 @@ bool CEngine::Play(bool Enable)
 	}
 	m_IsPaused = FALSE;	// reset pause
 	m_IsPlaying = Enable;
+	m_SyncOutPlaying = FALSE;	// reset sync output playing state
 	return(TRUE);
 }
 
 void CEngine::Pause(bool Enable)
 {
-	m_IsPaused = Enable;
+	if (m_Patch.m_Sync.Out.Enable) {	// if sending MIDI clocks
+		CRunTimer	stop(*this);	// stop timer thread for thread safety
+		if (!Enable)	// if continuing
+			m_SyncOutClock = m_Tick;	// resync output clock
+		m_IsPaused = Enable;
+	} else	// not sending MIDI clocks
+		m_IsPaused = Enable;
 }
 
 void CEngine::Record(bool Enable)
@@ -442,6 +462,16 @@ void CEngine::SetTick(int Tick)
 	m_StartTick = 0;	// disable lead-in
 	UpdateSection();
 	FixHeldNotes();	// correct held notes for new harmony
+	if (m_Patch.m_Sync.Out.Enable) {	// if sending MIDI clocks
+		if (m_SyncOutPlaying) {	// song position can only be sent while stopped
+			OutputSystem(m_Patch.m_Sync.Out.Port, STOP);	// send stop
+			m_SyncOutPlaying = FALSE;	// timer thread sends continue when it resumes
+			m_SyncOutClock = Tick;	// resync output clock
+		}
+		int	MidiBeat = m_Tick / (m_Patch.m_PPQ / MIDI_CLOCK_PPQ) / MIDI_BEAT_CLOCKS;
+		if (MidiBeat >= 0 && MidiBeat < 0x4000)	// if within range of song position message
+			OutputSystem(m_Patch.m_Sync.Out.Port, SONG_POSITION, MidiBeat & 0x7f, MidiBeat >> 7);
+	}
 }
 
 void CEngine::OnSongEdit()
@@ -498,20 +528,21 @@ void CEngine::SetBasePatch(const CBasePatch& Patch)
 //	_tprintf(_T("CEngine::SetBasePatch\n"));
 	CBasePatch	PrevPatch;
 	GetBasePatch(PrevPatch);
-	m_Patch.CBasePatch::operator=(Patch);
-	// if tempo or PPQ changed
-	if (Patch.m_Tempo != PrevPatch.m_Tempo || Patch.m_PPQ != PrevPatch.m_PPQ
-	|| Patch.m_TempoMultiple != PrevPatch.m_TempoMultiple)
+	m_Patch.CBasePatch::operator=(Patch);	// first copy patch base class to member
+	// if tempo or PPQ changed, or external sync enable changed
+	if (m_Patch.m_Tempo != PrevPatch.m_Tempo || m_Patch.m_PPQ != PrevPatch.m_PPQ
+	|| m_Patch.m_TempoMultiple != PrevPatch.m_TempoMultiple
+	|| m_Patch.m_Sync.In.Enable != PrevPatch.m_Sync.In.Enable)
 		UpdateTempo();	// update tempo timer
-	if (Patch.m_PPQ != PrevPatch.m_PPQ) {	// if PPQ changed
+	if (m_Patch.m_PPQ != PrevPatch.m_PPQ) {	// if PPQ changed
 		OnTimeChange();	// update time-dependent states and compensate position
-		SetTick(round(double(m_Tick) / PrevPatch.m_PPQ * Patch.m_PPQ));
+		SetTick(round(double(m_Tick) / PrevPatch.m_PPQ * m_Patch.m_PPQ));
 	}
-	if (Patch.m_Transpose != PrevPatch.m_Transpose)	// if transpose changed
+	if (m_Patch.m_Transpose != PrevPatch.m_Transpose)	// if transpose changed
 		MakeHarmony();	// update harmony array
 	FastUpdateDevices();
-	UpdatePatch(Patch, &PrevPatch);
-	if (!Patch.CompareTargets(PrevPatch) && IsRunning())	// if MIDI targets changed
+	UpdatePatch(m_Patch, &PrevPatch);
+	if (!m_Patch.CompareTargets(PrevPatch) && IsRunning())	// if MIDI targets changed
 		UpdateMidiAssigns();
 }
 
@@ -1334,6 +1365,14 @@ bool CEngine::ApplyNonDiatonicRule(int Rule, CNote& Note)
 			return(FALSE);	// reject note; MapChromatic doesn't handle negatives
 		Note = CDiatonic::MapChromatic(Note);	// map diatonic scale to chromatic scale
 		break;
+	case CPart::INPUT::NDR_THIRDS:
+		{
+			static const int	ThirdsMap[] =
+				// map chromatic scale so that diatonic notes form cycle of thirds
+				{C - 12, D - 12, E - 12, F - 12, G - 12, B - 12, C, D, E, F, G, A};
+			Note = (Note.Octave() - 2) * OCTAVE * 2 + ThirdsMap[Note.Normal()];
+		}
+		break;
 	}
 	return(TRUE);
 }
@@ -1563,6 +1602,38 @@ __forceinline void CEngine::OnMidiIn(int Port, MIDI_MSG Msg)
 	case WHEEL:
 		OnWheel(inst, (Msg.p2 << 7) + Msg.p1);
 		break;
+	default:
+		// if sync to external MIDI clock and message came from expected device
+		if (m_Patch.m_Sync.In.Enable && Port == m_Patch.m_Sync.In.Port) {
+			switch (Msg.stat) {
+			case CLOCK:
+				m_TimerEvent.Set();	// unblock timer thread
+				break;
+			case START:
+				Play(FALSE);	// stop
+				SetBeat(0);	// rewind
+				Play(TRUE);	// start
+				Notify(NC_TRANSPORT_CHANGE);
+				break;
+			case CONTINUE:
+				if (IsPaused())	// if paused
+					Pause(FALSE);	// continue
+				else	// not paused
+					Play(TRUE);	// start
+				Notify(NC_TRANSPORT_CHANGE);
+				break;
+			case STOP:
+				Pause(TRUE);	// pause
+				Notify(NC_TRANSPORT_CHANGE);
+				break;
+			case SONG_POSITION:
+				{
+					int	MidiBeat = (Msg.p1 & 0x7f) + ((Msg.p2 & 0x7f) << 7);
+					SetTick(MidiBeat * MIDI_BEAT_CLOCKS);	// set song position
+				}
+				break;
+			}
+		}
 	}
 #if SHOW_ENGINE_STATS
 	m_MidiInStats.Add(b.Elapsed());
@@ -1655,7 +1726,8 @@ inline void CEngine::TimerWork()
 		m_TimerBench.Reset();
 #endif
 		bool	IsChordChange = FALSE;
-		if (IsPlaying() && !IsPaused()) {	// if time is running
+		bool	playing = IsPlaying() && !IsPaused();
+		if (playing) {	// if time is running
 			if (m_Patch.m_Metronome.Enable) {
 				if (!(m_Tick % m_Patch.m_PPQ))	// if on metronome beat
 					OutputMetronome(!(m_Tick % m_TicksPerMeasure));
@@ -1673,6 +1745,16 @@ inline void CEngine::TimerWork()
 			}
 		} else	// time is stopped
 			AutoPlayNotesOff();	// turn off any pending auto-played notes
+		if (m_Patch.m_Sync.Out.Enable) {	// if sending MIDI clocks
+			// if playing state differs from output sync state and not counting off
+			if (playing != m_SyncOutPlaying && !IsLeadIn()) {
+				OutputSystem(m_Patch.m_Sync.Out.Port, playing ? CONTINUE : STOP);
+				m_SyncOutPlaying = playing;	// update sync output playing state
+			}
+			if (!(m_SyncOutClock % (m_Patch.m_PPQ / MIDI_CLOCK_PPQ)))	// if on MIDI clock boundary
+				OutputSystem(m_Patch.m_Sync.Out.Port, CLOCK);	// send MIDI clock
+			m_SyncOutClock++;	// increment sync out clock
+		}
 		int	parts = GetPartCount();
 		for (int iPart = 0; iPart < parts; iPart++) {	// for each part
 			const CPart&	part = m_Patch.m_Part[iPart];
@@ -1732,10 +1814,10 @@ inline void CEngine::TimerWork()
 				break;
 			}
 		}
-		if (IsPlaying() && !IsPaused()) {	// if time is running
+		if (playing) {	// if time is running
 			if (IsChordChange)	// if chord changed
 				FixHeldNotes();	// check and fix notes spanning chord change
-			m_Elapsed++;
+			m_Elapsed++;	// increment elapsed time
 			if (m_Tick < m_Section.m_EndTick)	// if before end of section
 				m_Tick++;	// proceed to next tick
 			else {	// at end of section

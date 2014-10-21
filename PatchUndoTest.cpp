@@ -9,6 +9,7 @@
 		rev		date	comments
         00      08oct13	initial version
         01      07may14	move generic functionality to base class
+		02		09sep14	move enable flag to Globals.h
 
 		automated undo test for patch editing
  
@@ -16,10 +17,8 @@
 
 #include "stdafx.h"
 
-// base class UNDO_TEST must also be non-zero, else linker errors result
-#define UNDO_TEST 0	// set non-zero to enable undo test
-
-#if UNDO_TEST
+// if enabled, base class UNDO_TEST must also be non-zero, else linker errors result
+#if PATCH_UNDO_TEST
 
 #include "ChordEase.h"
 #include "PatchUndoTest.h"
@@ -135,9 +134,16 @@ CString	CPatchUndoTest::PrintSelection(CIntArrayEx& Sel) const
 	return(str);
 }
 
+void CPatchUndoTest::CPatchObject::Serialize(CArchive& ar)
+{ 
+	// override CObject::Serialize to call CPatch::Serialize so StoreToBuffer works
+	CPatch::Serialize(ar);
+}
+
 LONGLONG CPatchUndoTest::GetSnapshot() const
 {
-	CPatch	patch(gEngine.GetPatch());
+	CPatchObject	patch;
+	patch.CPatch::operator=(gEngine.GetPatch());
 	CByteArrayEx	ba;
 	StoreToBuffer(patch, ba);
 	LONGLONG	sum = Fletcher64(ba.GetData(), ba.GetSize());
@@ -191,7 +197,7 @@ bool CPatchUndoTest::DoPageEdit(CWnd *pParent, CString& PageName, CString& CtrlC
 	if (pCombo != NULL) {
 		int	nItems = pCombo->GetCount();
 		if (nID == IDC_PATCH_GEN_PPQ)	// if PPQ combo
-			nItems /= 2;	// limit range to avoid zero timer period
+			nItems /= 4;	// limit range to avoid zero timer period
 		int	iItem = RandomExcluding(nItems, pCombo->GetCurSel());
 		if (iItem < 0)
 			return(FALSE);

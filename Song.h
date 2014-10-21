@@ -14,6 +14,7 @@
  		04		26may14	preserve comments
 		05		01jul14	add ReadLeadSheet
 		06		28aug14	in IsMergeable, add chord arg
+ 		07		09sep14	use default memberwise copy
 
 		song container
 
@@ -28,16 +29,14 @@
 class CTokenFile;
 class CSongState;
 
-class CSong : public WObject {
+class CSong : public WCopyable {
 public:
 // Construction
 	CSong();
 	virtual	~CSong();
-	CSong(const CSong& Song);
-	CSong& operator=(const CSong& Song);
 
 // Types
-	class CChord {	// binary copy OK
+	class CChord : public WCopyable {
 	public:
 		CChord();
 		CChord(int Duration, CNote Root, CNote Bass, int Type);
@@ -50,25 +49,21 @@ public:
 		int		m_Type;			// chord info index
 	};
 	typedef CArrayEx<CChord, CChord&> CChordArray;
-	class CChordInfo : public WObject {
+	class CChordInfo : public WCopyable {
 	public:
 		enum {	// comp variants
 			COMP_A,
 			COMP_B,
 			COMP_VARIANTS = 2
 		};
-		// don't forget to add new members to Copy method
 		CChordInfo();
-		CChordInfo(const CChordInfo& Info);
-		CChordInfo&	operator=(const CChordInfo& Info);
 		CString	m_Name;			// chord name
 		int		m_Scale;		// scale index
 		int		m_Mode;			// mode index
 		CScale	m_Comp[COMP_VARIANTS];	// comp chord tones
-		void	Copy(const CChordInfo& Info);
 	};
 	typedef CArrayEx<CChordInfo, CChordInfo&> CChordInfoArray;
-	class CMeter {	// binary copy OK
+	class CMeter : public WCopyable {
 	public:
 		enum {
 			MIN_BEATS = 1,		// minimum numerator
@@ -86,7 +81,7 @@ public:
 		int		m_Denominator;
 		bool	IsValidMeter() const;
 	};
-	class CSection {	// binary copy OK
+	class CSection : public WCopyable {
 	public:
 		enum {	// flags
 			F_IMPLICIT	= 0x01	// section was generated implicitly
@@ -107,17 +102,14 @@ public:
 		int		FindBeat(int Beat) const;
 		int		FindImplicit() const;
 	};
-	class CProperties : public WObject {
+	class CProperties : public WCopyable {
 	public:
 		CProperties();
-		CProperties(const CProperties& Props);
-		CProperties&	operator=(const CProperties& Props);
 		CMeter	m_Meter;		// meter
 		CNote	m_Key;			// key signature
 		int		m_Transpose;	// transposition in half steps
 		double	m_Tempo;		// tempo in beats per minute
 		CString	m_Comments;		// one or more comment lines, CRLF terminated
-		void	Copy(const CProperties& Props);
 	};
 
 // Attributes
@@ -181,7 +173,6 @@ protected:
 	static const LPCTSTR	m_Command[COMMANDS];	// array of commands
 
 // Member data
-	// don't forget to add new members to copy ctor!
 	CMeter	m_Meter;		// meter
 	CNote	m_Key;			// key signature
 	int		m_Transpose;	// transposition in half steps
@@ -191,14 +182,13 @@ protected:
 	CIntArrayEx	m_StartBeat;	// array of starting beats, one per chord
 	CChordInfoArray	m_Dictionary;	// array of chord info, one per chord type
 	CSectionArray	m_Section;	// array of sections
-	CStringArray	m_SectionName;	// array of section names
+	CStringArrayEx	m_SectionName;	// array of section names
 	CString	m_Comments;		// one or more newline-terminated comments
 
 // Overrideables
 	virtual	void	OnError(LPCTSTR Msg);
 
 // Helpers
-	void	Copy(const CSong& Song);
 	bool	ReadChord(CTokenFile& File, CScale& Chord);
 	void	ReportError(CTokenFile& File, int MsgFmtID, ...);
 	int		FindCommand(CString Command) const;
@@ -295,47 +285,13 @@ inline CSong::CChordInfo::CChordInfo()
 {
 }
 
-inline CSong::CChordInfo::CChordInfo(const CChordInfo& Info)
-{
-	Copy(Info);
-}
-
-inline CSong::CChordInfo& CSong::CChordInfo::operator=(const CChordInfo& Info)
-{
-	Copy(Info);
-	return(*this);
-}
-
 inline CSong::CProperties::CProperties()
 {
-}
-
-inline CSong::CProperties::CProperties(const CProperties& Props)
-{
-	Copy(Props);
-}
-
-inline CSong::CProperties& CSong::CProperties::operator=(const CProperties& Props)
-{
-	Copy(Props);
-	return(*this);
 }
 
 inline CSong::CMeter CSong::GetMeter() const
 {
 	return(m_Meter);
-}
-
-inline CSong::CSong(const CSong& Song)
-{
-	Copy(Song);
-}
-
-inline CSong& CSong::operator=(const CSong& Song)
-{
-	if (&Song != this)
-		Copy(Song);
-	return(*this);
 }
 
 inline CNote CSong::GetKey() const

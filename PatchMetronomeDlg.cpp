@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		14sep13	initial version
+		01		07oct14	add device name
 
         patch metronome dialog
  
@@ -66,22 +67,29 @@ void CPatchMetronomeDlg::SetPatch(const CBasePatch& Patch)
 	m_AccentNote.SetVal(Inst.AccentNote);
 	m_AccentVel.SetVal(Inst.AccentVel);
 	m_AccentSameNote.SetCheck(Inst.AccentSameNote);
+	UpdateDeviceName(Inst.Inst.Port);
+}
+
+void CPatchMetronomeDlg::UpdateDeviceName(int Port)
+{
+	m_DeviceName.SetWindowText(gEngine.GetSafeOutputDeviceName(Port));
 }
 
 void CPatchMetronomeDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CPatchPageDlg::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CPatchMetronomeDlg)
+	DDX_Control(pDX, IDC_PATCH_METRO_DEVICE_NAME, m_DeviceName);
+	DDX_Control(pDX, IDC_PATCH_METRO_ACCENT_SAME_NOTE, m_AccentSameNote);
+	DDX_Control(pDX, IDC_PATCH_METRO_NOTE, m_Note);
+	DDX_Control(pDX, IDC_PATCH_METRO_ACCENT_NOTE, m_AccentNote);
+	DDX_Control(pDX, IDC_PATCH_METRO_ACCENT_VEL, m_AccentVel);
 	DDX_Control(pDX, IDC_PATCH_METRO_PATCH, m_Patch);
 	DDX_Control(pDX, IDC_PATCH_METRO_VELOCITY, m_Velocity);
 	DDX_Control(pDX, IDC_PATCH_METRO_PORT, m_Port);
 	DDX_Control(pDX, IDC_PATCH_METRO_ENABLE, m_Enable);
 	DDX_Control(pDX, IDC_PATCH_METRO_CHANNEL, m_Channel);
 	DDX_Control(pDX, IDC_PATCH_METRO_VOLUME, m_Volume);
-	DDX_Control(pDX, IDC_PATCH_METRO_ACCENT_SAME_NOTE, m_AccentSameNote);
-	DDX_Control(pDX, IDC_PATCH_METRO_NOTE, m_Note);
-	DDX_Control(pDX, IDC_PATCH_METRO_ACCENT_NOTE, m_AccentNote);
-	DDX_Control(pDX, IDC_PATCH_METRO_ACCENT_VEL, m_AccentVel);
 	//}}AFX_DATA_MAP
 }
 
@@ -91,6 +99,7 @@ void CPatchMetronomeDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CPatchMetronomeDlg, CPatchPageDlg)
 	//{{AFX_MSG_MAP(CPatchMetronomeDlg)
 	ON_UPDATE_COMMAND_UI(IDC_PATCH_METRO_ACCENT_NOTE, OnUpdateAccentNote)
+	ON_NOTIFY(NEN_CHANGED, IDC_PATCH_METRO_PORT, OnChangedPort)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -108,4 +117,10 @@ BOOL CPatchMetronomeDlg::OnInitDialog()
 void CPatchMetronomeDlg::OnUpdateAccentNote(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(!m_AccentSameNote.GetCheck());
+}
+
+void CPatchMetronomeDlg::OnChangedPort(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	UpdateDeviceName(m_Port.GetIntVal());
+	OnChangedNumEdit(UINT64TO32(pNMHDR->idFrom), pNMHDR, pResult);	// relay to base class
 }

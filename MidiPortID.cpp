@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		08nov13	initial version
+ 		01		09sep14	use default memberwise copy
  
 		MIDI port ID container
 
@@ -30,12 +31,6 @@ CMidiPortID::CMidiPortID(int Port, const CString& Name)
 {
 	m_Port = Port;
 	m_Name = Name;
-}
-
-void CMidiPortID::Copy(const CMidiPortID& PortID)
-{
-	m_Port = PortID.m_Port;
-	m_Name = PortID.m_Name;
 }
 
 bool CMidiPortID::operator==(const CMidiPortID& PortID) const

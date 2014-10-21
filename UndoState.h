@@ -15,6 +15,7 @@
 		05		18mar08	make CRefPtr a template
 		06		28may10	add IsInsignificant
 		07		01may14	widen CtrlID and Code to 32-bit
+ 		08		09sep14	use default memberwise copy
 
         undo state container
  
@@ -83,8 +84,6 @@ public:
 
 // Construction
 	CUndoState();
-	CUndoState(const CUndoState& State);
-	CUndoState& operator=(const CUndoState& State);
 
 // Operations
 	CString	DumpState() const;
@@ -97,8 +96,6 @@ private:
 	int		m_Code;		// edit function code
 
 // Helpers
-	void	Copy(const CUndoState& State);
-
 	friend CUndoManager;
 };
 

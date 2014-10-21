@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		02sep13	initial version
+		01		07oct14	add sync page
  
 		define patch pages
 
@@ -15,6 +16,7 @@
 
 PATCHPAGEDEF(General)
 PATCHPAGEDEF(Metronome)
+PATCHPAGEDEF(Sync)
 PATCHPAGEDEF(MidiTarget)
 
 #undef PATCHPAGEDEF

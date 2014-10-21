@@ -11,6 +11,7 @@
         01      16apr14	remove record folder type
         02      22apr14	add show tooltips
 		03		29apr14	add data folder path
+ 		04		09sep14	use default memberwise copy
 
 		container for options information
  
@@ -41,12 +42,10 @@ struct OPTIONS_INFO {
 	OTHER	m_Other;			// other options
 };
 
-class COptionsInfo : public WObject, public OPTIONS_INFO {
+class COptionsInfo : public WCopyable, public OPTIONS_INFO {
 public:
 // Construction
 	COptionsInfo();
-	COptionsInfo(const COptionsInfo& Info);
-	COptionsInfo& operator=(const COptionsInfo& Info);
 
 // Attributes
 	CString	GetTempFolderPath() const;
@@ -65,19 +64,4 @@ public:
 	CString	m_RecordFolderPath;		// path of destination folder for recordings
 
 // Operations
-
-protected:
-// Helpers
-	void	Copy(const COptionsInfo& Info);
 };
-
-inline COptionsInfo::COptionsInfo(const COptionsInfo& Info)
-{
-	Copy(Info);
-}
-
-inline COptionsInfo& COptionsInfo::operator=(const COptionsInfo& Info)
-{
-	Copy(Info);
-	return(*this);
-}

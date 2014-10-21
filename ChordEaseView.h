@@ -13,6 +13,8 @@
 		03		10jun14	add SetChord
 		04		15jul14	add OnCommandHelp
 		05		28aug14	add OnEditChordProps
+		06		18sep14	add transpose and length commands
+		07		20sep14	add ApplyMeter; update chord durations on meter change
 
 		ChordEase view
  
@@ -187,6 +189,10 @@ protected:
 	afx_msg void OnUpdateEditUndo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFilePrint(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateNextPane(CCmdUI* pCmdUI);
+	afx_msg void OnEditTranspose();
+	afx_msg void OnUpdateEditTranspose(CCmdUI* pCmdUI);
+	afx_msg void OnEditLength();
+	afx_msg void OnUpdateEditLength(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	afx_msg void OnChordDuration(UINT nID);
 	afx_msg void OnChordRoot(UINT nID);
@@ -270,9 +276,13 @@ protected:
 		CIntRange	m_Selection;	// selection range
 		int		m_Beat;				// current beat
 	};
+	class CSongStateRefObj : public CRefObj, public CSongState {
+	};
+	typedef CRefPtr<CSongStateRefObj> CSongStateRefPtr;
 	class CSongPropertiesUndoInfo : public CRefObj {
 	public:
 		CSong::CProperties	m_Props;	// song properties
+		CSongStateRefPtr	m_pState;	// pointer to song state if any
 	};
 
 // Data members
@@ -305,6 +315,8 @@ protected:
 	CSize	m_DragScrollDelta;		// drag scrolling deltas
 	bool	m_DragScrollTimer;		// true if drag scrolling timer exists
 	bool	m_InContextMenu;		// true if tracking context menu
+	int		m_PrevTranspose;		// previous transposition in steps
+	double	m_PrevLengthChange;		// previous length change percentage
 
 // Overrides
 	virtual	void	SaveUndoState(CUndoState& State);
@@ -328,6 +340,7 @@ protected:
 	CPoint	GetMaxScrollPos() const;
 	static	void	Quantize(long& Val, int Unit);
 	bool	MakeChordPopups(CMenu& Menu, int ChordIdx);
+	static	bool	ApplyMeter(CSong::CMeter& Meter, CSongState& State);
 };
 
 inline CChordEaseView::CSymbol::CSymbol()

@@ -9,6 +9,8 @@
 		rev		date	comments
         00      12sep13	initial version
 		01		12aug14	fix memory leak in LoadFromBuffer
+		02		09sep14	in LoadFromBuffer, destroy CArchive before deleting buffer
+		03		29sep14	add OpenThread for MFC 6
 
 */
 
@@ -18,6 +20,7 @@
 
 #include "stdafx.h"
 #include "ArrayEx.h"
+#include "DLLWrap.h"
 
 void DDV_Fail(CDataExchange* pDX, int nIDC)
 {
@@ -66,10 +69,12 @@ void LoadFromBuffer(CObject& obj, CByteArrayEx& ba)
 	CMemFile	fp;
 	ASSERT(nSize >= 0 && nSize < UINT_MAX);
 	fp.Attach(pData, static_cast<UINT>(nSize));	// attach CMemFile to buffer
-	CArchive	ar(&fp, CArchive::load);
-	obj.Serialize(ar);	// load object from buffer
-	// don't rely on CMemFile dtor to delete buffer, else memory leak occurs;
-	// CMemFile::Free assumes buffer was allocated via malloc instead of new
+	{
+		CArchive	ar(&fp, CArchive::load);
+		obj.Serialize(ar);	// load object from buffer
+		// don't rely on CMemFile dtor to delete buffer, else memory leak occurs;
+		// CMemFile::Free assumes buffer was allocated via malloc instead of new
+	}	// exit scope to destroy CArchive before deleting buffer
 	delete fp.Detach();	// detach CMemFile from buffer and delete buffer
 }
 
@@ -101,5 +106,20 @@ CString Tokenize(const CString& Str, LPCTSTR pszTokens, int& iStart)
 	// return empty string, done tokenizing
 	iStart = -1;
 	return(_T(""));
+}
+#endif
+
+#if _MFC_VER <= 0x0600
+HANDLE WINAPI OpenThread(DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwThreadId)
+{
+	HANDLE	hThread = NULL;
+	typedef HANDLE (WINAPI* lpfnOpenThread)(DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwThreadId);
+	CDLLWrap	dll;
+	if (dll.LoadLibrary(_T("kernel32.dll"))) {
+		lpfnOpenThread	pOpenThread = (lpfnOpenThread)dll.GetProcAddress(_T("OpenThread"));
+		if (pOpenThread)
+			hThread = pOpenThread(dwDesiredAccess, bInheritHandle, dwThreadId);
+	}
+	return(hThread);
 }
 #endif

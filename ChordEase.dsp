@@ -316,6 +316,10 @@ SOURCE=.\Event.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\FixedArray.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\FocusEdit.cpp
 # End Source File
 # Begin Source File
@@ -973,6 +977,14 @@ SOURCE=.\PianoDlg.h
 # Begin Source File
 
 SOURCE=.\PianoSizeDef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PianoSizeDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\PianoSizeDlg.h
 # End Source File
 # Begin Source File
 

@@ -989,6 +989,19 @@ BEGIN
     EDITTEXT        IDC_PATCH_SYNC_OUT_PORT,139,63,34,12,ES_AUTOHSCROLL
 END
 
+IDD_PIANO_SIZE DIALOG DISCARDABLE  0, 0, 121, 60
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Piano Size"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Start note:",IDC_STATIC,7,7,34,8
+    EDITTEXT        IDC_PIANO_SIZE_START_NOTE,7,17,40,14,ES_AUTOHSCROLL
+    LTEXT           "&Keys:",IDC_STATIC,54,7,18,8
+    EDITTEXT        IDC_PIANO_SIZE_KEYS,54,17,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,7,39,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,64,39,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1213,6 +1226,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 96
     END
+
+    IDD_PIANO_SIZE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 114
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 53
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1434,6 +1455,9 @@ BEGIN
     IDS_UC_SELECT_PART      "Select Part"
     IDS_UC_SELECT_PART_PAGE "Select Part Page"
     IDS_UC_SELECT_PATCH_PAGE "Select Patch Page"
+    IDS_MIDI_ASS_COL_SHARED "Shared"
+    IDS_MIDI_TARG_PREV_ASSIGNS 
+                            "Remove previous assignments?\n\nController is already assigned to:\n"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -1704,6 +1728,7 @@ BEGIN
     IDC_MIDI_TARG_RANGE_END "End of normalized controller range"
     IDC_MIDI_TARG_RANGE_START "Start of normalized controller range"
     IDC_MIDI_TARG_VALUE     "Current value of MIDI controller"
+    IDS_CUSTOM_MENU_ITEM    "Custom..."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

@@ -9,7 +9,9 @@
 		rev		date	comments
 		00		19nov13	initial version
  		01		09sep14	use default memberwise copy
- 
+		02		11nov14	add GetAssignee
+		03		23dec14	uninline GetEventTypeName
+
 		MIDI target container
 
 */
@@ -32,13 +34,27 @@ public:
 		EVENT_TYPES
 	};
 
+// Types
+	union ASSIGNEE {	// pack assignment attributes into single identifier
+		struct {
+			UINT	Port:16;	// port number
+			UINT	Event:4;	// event type; see enum
+			UINT	Chan:4;		// channel number
+			UINT	Control:8;	// controller number if applicable, else zero
+		};
+		UINT	id;	// packed identifier
+	};
+
 // Attributes
 	bool	IsDefault() const;
 	double	GetNormPos(int MidiVal) const;
 	static	CString	GetEventTypeName(int EventType);
 	bool	IsMatch(CMidiInst Inst, int Event, int Ctrl) const;
+	ASSIGNEE	GetAssignee() const;
+	bool	IsMatch(ASSIGNEE Assignee) const;
 	static	LPCTSTR	GetControllerName(int Ctrl);
 	static	int		GetControllerName(LPTSTR Text, int TextMax, int Ctrl);
+	static	void	GetControllerName(CString& Str, int Ctrl);
 
 // Operations
 	void	Reset();
@@ -93,16 +109,27 @@ inline double CMidiTarget::GetNormPos(int MidiVal) const
 	return(m_RangeStart + MidiVal * (m_RangeEnd - m_RangeStart) / MIDI_NOTE_MAX);
 }
 
-inline CString CMidiTarget::GetEventTypeName(int EventType)
-{
-	ASSERT(EventType >= 0 && EventType < EVENT_TYPES);
-	return(LDS(m_EventTypeName[EventType]));
-}
-
 inline LPCTSTR CMidiTarget::GetControllerName(int Ctrl)
 {
 	ASSERT(Ctrl >= 0 && Ctrl < MIDI_NOTES);
 	return(m_ControllerName[Ctrl]);
+}
+
+inline bool CMidiTarget::IsMatch(ASSIGNEE Assignee) const
+{
+	return(GetAssignee().id == Assignee.id);
+}
+
+template<>
+AFX_INLINE UINT AFXAPI HashKey<CMidiTarget::ASSIGNEE>(CMidiTarget::ASSIGNEE Assignee)
+{
+	return(Assignee.id);	// no hashing needed; indentifier fits in a UINT
+}
+
+template<>
+AFX_INLINE BOOL AFXAPI CompareElements(const CMidiTarget::ASSIGNEE* pElement1, const CMidiTarget::ASSIGNEE* pElement2)
+{
+	return pElement1->id == pElement2->id;	// compare identifiers
 }
 
 #endif

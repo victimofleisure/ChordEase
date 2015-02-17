@@ -8,16 +8,20 @@
 		revision history:
 		rev		date	comments
         00      18may14	initial version
+		01		15nov14	add custom piano size
 
 		output notes bar state definitions
 
 */
 
-//					name			default
-OUTNOTESSTATEDEF(	PianoSize,		PS_128			)
-OUTNOTESSTATEDEF(	ShowKeyLabels,	TRUE			)
-OUTNOTESSTATEDEF(	RotateLabels,	TRUE			)
-OUTNOTESSTATEDEF(	ShowMetronome,	FALSE			)
+//					name				default
+OUTNOTESSTATEDEF(	PianoSize,			PS_128			)
+OUTNOTESSTATEDEF(	ShowKeyLabels,		TRUE			)
+OUTNOTESSTATEDEF(	RotateLabels,		TRUE			)
+OUTNOTESSTATEDEF(	ShowMetronome,		FALSE			)
+OUTNOTESSTATEDEF(	UseCustomSize,		FALSE			)
+OUTNOTESSTATEDEF(	CustomStartNote,	48				)
+OUTNOTESSTATEDEF(	CustomKeyCount,		37				)
 
 #undef OUTNOTESSTATEDEF
 

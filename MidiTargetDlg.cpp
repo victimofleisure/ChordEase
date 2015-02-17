@@ -10,6 +10,7 @@
         00      19nov13	initial version
         01      23apr14	define columns via macro
 		02		12jun14	refactor to use grid control instead of row view
+		03		11nov14	add CheckSharers, refactor OnTargetChange
 
 		MIDI target dialog
  
@@ -164,7 +165,9 @@ void CMidiTargetDlg::CTargetGridCtrl::OnItemChange(LPCTSTR Text)
 	default:
 		NODEFAULTCASE;
 	}
-	m_pParent->OnTargetChange(m_EditRow, m_EditCol);	// update target
+	// must post message instead of calling OnTargetChange directly, else
+	// popup edit fails if derived OnTargetChange displays a modal dialog
+	m_pParent->PostMessage(UWM_TARGET_CHANGE, m_EditRow, m_EditCol);	// update target
 }
 
 int CMidiTargetDlg::CTargetGridCtrl::GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text)
@@ -172,7 +175,7 @@ int CMidiTargetDlg::CTargetGridCtrl::GetToolTipText(const LVHITTESTINFO* pHTI, C
 	return(m_pParent->GetToolTipText(pHTI, Text));
 }
 
-void CMidiTargetDlg::OnTargetChange(int RowIdx, int ColIdx)
+void CMidiTargetDlg::OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode)
 {
 }
 
@@ -194,6 +197,44 @@ void CMidiTargetDlg::UpdateShadowVal(int RowIdx)
 	CRect	rItem;
 	m_List.GetSubItemRect(RowIdx, COL_VALUE, LVIR_LABEL, rItem);
 	m_List.InvalidateRect(rItem);
+}
+
+int CMidiTargetDlg::CheckSharers(const CMidiTarget& Target)
+{
+	if (!gEngine.GetPatch().HasSharers(Target))	// if no previous assignments
+		return(CSR_NONE);
+	CMidiAssignArray	Sharer;
+	gEngine.GetPatch().GetSharers(Target, Sharer);	// get detailed sharer info
+	CString	sPrevAssign;
+	int	nSharers = Sharer.GetSize();
+	for (int iSharer = 0; iSharer < nSharers; iSharer++) {	// for each sharer
+		const CMidiAssign&	shr = Sharer[iSharer]; 
+		CString	s;
+		s.Format(_T("%s / %s\n"), shr.m_PartName, shr.m_TargetName);
+		sPrevAssign += s;	// append sharer's info to previous assignments
+	}
+	HWND	hFocusWnd = ::GetFocus();	// message box steals focus
+	CString	msg((LPCTSTR)IDS_MIDI_TARG_PREV_ASSIGNS);
+	int	retc = AfxMessageBox(msg + sPrevAssign, MB_YESNOCANCEL | MB_ICONQUESTION);
+	::SetFocus(hFocusWnd);	// restore focus
+	switch (retc) {
+	case IDYES:	// remove previous assignments
+		{
+			theApp.GetMain()->NotifyEdit(0, UCODE_MIDI_TARGETS);
+			CPatch	patch(gEngine.GetPatch());
+			int	nSharers = Sharer.GetSize();
+			for (int iSharer = 0; iSharer < nSharers; iSharer++) {
+				const CMidiAssign&	shr = Sharer[iSharer];
+				theApp.GetMain()->ResetMidiTarget(shr.m_PartIdx, shr.m_TargetIdx);
+			}
+		}
+		return(CSR_REPLACE);
+	case IDNO:	// retain previous assignments
+		return(CSR_SHARE);
+	default:	// user cancel
+		theApp.GetMain()->UpdateViews();
+		return(CSR_CANCEL);
+	}
 }
 
 void CMidiTargetDlg::DoDataExchange(CDataExchange* pDX)
@@ -218,6 +259,7 @@ BEGIN_MESSAGE_MAP(CMidiTargetDlg, CChildDlg)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_LEARN, OnUpdateMidiLearn)
 	ON_COMMAND(ID_MIDI_TARGET_RESET, OnMidiTargetReset)
 	//}}AFX_MSG_MAP
+	ON_MESSAGE(CTargetGridCtrl::UWM_TARGET_CHANGE, OnPostTargetChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -356,7 +398,24 @@ void CMidiTargetDlg::OnMidiTargetReset()
 	int	iSel = m_List.GetSelection();
 	if (iSel >= 0) {
 		m_Target[iSel].Reset();
-		OnTargetChange(iSel, 0);
+		OnTargetChange(m_Target[iSel], iSel, 0);
 		m_List.Invalidate();
 	}
+}
+
+LRESULT CMidiTargetDlg::OnPostTargetChange(WPARAM wParam, LPARAM lParam)
+{
+	int	iRow = INT64TO32(wParam);
+	int	iCol = INT64TO32(lParam);
+	// must copy modified target before calling CheckSharers, because in 
+	// replace case, CheckSharers updates our derived object's target array
+	CMidiTarget	targ(m_Target[iRow]);
+	int	ShareCode;
+	if (iCol <= COL_CONTROL)	// if controller changed
+		ShareCode = CheckSharers(targ);	// check for controller sharing
+	else	// controller didn't change
+		ShareCode = CSR_NONE;	// previous assignments don't matter
+	if (ShareCode != CSR_CANCEL)	// if user didn't cancel
+		OnTargetChange(targ, iRow, iCol, ShareCode);	// call derived handler
+	return(0);
 }

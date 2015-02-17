@@ -9,6 +9,7 @@
 		rev		date	comments
         00      19nov13	initial version
 		01		12jun14	refactor to use grid control instead of row view
+		02		11nov14	refactor OnTargetChange
 
 		MIDI target dialog
  
@@ -46,7 +47,7 @@ public:
 	static	int		FindTargetByCtrlID(int CtrlID);
 
 // Overrides
-	virtual	void	OnTargetChange(int RowIdx, int ColIdx);
+	virtual	void	OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode = 0);
 	virtual	int		GetShadowValue(int RowIdx);
 	virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 

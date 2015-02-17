@@ -10,6 +10,7 @@
 		00		12sep13	initial version
  		01		09sep14	use default memberwise copy
 		02		07oct14	in ReferencePort and UpdatePort, add Enable argument
+		03		11nov14	add GetMidiAssignments, GetSharers, etc.
  
 		patch container
 
@@ -235,6 +236,22 @@ void CPatch::CreatePortIDs()
 	}
 }
 
+const CMidiTarget& CPatch::GetMidiTarget(int PartIdx, int TargetIdx) const
+{
+	if (PartIdx >= 0)	// if part target
+		return(m_Part[PartIdx].m_MidiTarget[TargetIdx]);
+	else	// base patch target
+		return(m_MidiTarget[TargetIdx]);
+}
+
+void CPatch::SetMidiTarget(int PartIdx, int TargetIdx, const CMidiTarget& Target)
+{
+	if (PartIdx >= 0)	// if part target
+		m_Part[PartIdx].m_MidiTarget[TargetIdx] = Target;
+	else	// base patch target
+		m_MidiTarget[TargetIdx] = Target;
+}
+
 void CPatch::GetMidiTargets(CMidiTargetArray& Target) const
 {
 	int	parts = m_Part.GetSize();
@@ -258,4 +275,79 @@ void CPatch::ResetMidiTargets()
 	CPatch&	patch = *this;
 	#define MIDI_TARGET_ITER(part, targ) targ.Reset();
 	#include "PatchMidiTargetIter.h"
+}
+
+inline CMidiAssign::CMidiAssign(const CMidiTarget& Target, int PartIdx, int TargetIdx)
+	: CMidiTarget(Target)
+{
+	m_PartIdx = PartIdx;
+	m_TargetIdx = TargetIdx;
+}
+
+void CPatch::GetMidiAssignments(CMidiAssignArray& Assign) const
+{
+	Assign.RemoveAll();	// remove any existing assignments
+	// generate code to iterate targets and populate assignment array
+	const CPatch&	patch = *this;
+	#define MIDI_TARGET_ITER(part, targ) \
+		CMidiAssign	ass(targ, part, iTarg); \
+		if (targ.m_Event) \
+			Assign.Add(ass);
+	#include "PatchMidiTargetIter.h"
+	// create map of number of targets sharing each unique controller
+	CMap<CMidiTarget::ASSIGNEE, CMidiTarget::ASSIGNEE, int, int> CtrlrMap;
+	int	nAssigns = Assign.GetSize();
+	int	iAss;
+	for (iAss = 0; iAss < nAssigns; iAss++) {	// for each assignment
+		CMidiTarget::ASSIGNEE	id = Assign[iAss].GetAssignee();
+		int	nSharers;
+		if (CtrlrMap.Lookup(id, nSharers))	// if already in map
+			nSharers++;	// increment sharer count
+		else	// not in map
+			nSharers = 1;	// initialize sharer count
+		CtrlrMap.SetAt(id, nSharers);	// update map entry
+	}
+	// finish initializing assignment array elements
+	for (iAss = 0; iAss < nAssigns; iAss++) {	// for each assignment
+		CMidiAssign&	ass = Assign[iAss];
+		CMidiTarget::ASSIGNEE	id = ass.GetAssignee();
+		CtrlrMap.Lookup(id, ass.m_Sharers);	// get sharer count from map
+		ass.m_DeviceName = gEngine.GetSafeInputDeviceName(ass.m_Inst.Port);
+		int	TargCapID;
+		if (ass.m_PartIdx >= 0) {	// if part target
+			TargCapID = CPart::m_MidiTargetNameID[ass.m_TargetIdx];
+			ass.m_PartName = gEngine.GetPart(ass.m_PartIdx).m_Name;
+		} else {	// patch target
+			TargCapID = CPatch::m_MidiTargetNameID[ass.m_TargetIdx];
+			ass.m_PartName = _T("Patch");
+		}
+		ass.m_TargetName = LDS(TargCapID);
+	}
+}
+
+bool CPatch::HasSharers(const CMidiTarget& Target) const
+{
+	CMidiTargetArray	TargArr;
+	GetMidiTargets(TargArr);
+	int	nTargets = TargArr.GetSize();
+	CMidiTarget::ASSIGNEE	id = Target.GetAssignee();
+	for (int iTarget = 0; iTarget < nTargets; iTarget++) {	// for each target
+		const CMidiTarget&	targ = TargArr[iTarget];
+		if (targ.m_Event && targ.IsMatch(id))	// if assigned to specified controller
+			return(TRUE);
+	}
+	return(FALSE);
+}
+
+void CPatch::GetSharers(const CMidiTarget& Target, CMidiAssignArray& Sharer) const
+{
+	CMidiAssignArray	Assign;
+	GetMidiAssignments(Assign);
+	CMidiTarget::ASSIGNEE	id = Target.GetAssignee();
+	int nAssigns = Assign.GetSize();
+	Sharer.RemoveAll();
+	for (int iAssign = 0; iAssign < nAssigns; iAssign++) {	// for each assignment
+		if (Assign[iAssign].IsMatch(id))	// if sharing specified controller
+			Sharer.Add(Assign[iAssign]);	// add to sharer array
+	}
 }

@@ -14,6 +14,7 @@
 		04		01jul14	add custom document manager
 		05		05aug14	add DlgCtrlHelp
 		06		29sep14	add ThreadBoost DLL
+		07		22dec14	add CloseHtmlHelp
 
 		ChordEase application
  
@@ -219,11 +220,18 @@ BOOL CChordEaseApp::InitInstance()
 
 int CChordEaseApp::ExitInstance() 
 {
-	// if HTML help was initialized, close all topics
-	if (m_HelpInit)
-		::HtmlHelp(NULL, NULL, HH_CLOSE_ALL, 0);
+	CloseHtmlHelp();
 	CoUninitialize();
 	return CWinAppCK::ExitInstance();
+}
+
+void CChordEaseApp::CloseHtmlHelp()
+{
+	// if HTML help was initialized, close all topics
+	if (m_HelpInit) {
+		::HtmlHelp(NULL, NULL, HH_CLOSE_ALL, 0);
+		m_HelpInit = FALSE;
+	}
 }
 
 int CChordEaseApp::FindHelpID(int ResID)

@@ -13,6 +13,7 @@
 		03		30apr14	add patch path
 		04		05aug14	add DlgCtrlHelp
 		05		29sep14	add ThreadBoost DLL
+		06		22dec14	add CloseHtmlHelp
 
 		ChordEase application
  
@@ -94,6 +95,7 @@ public:
 	bool	DlgCtrlHelp(HWND DlgWnd);
 	static	int		FindHelpID(int ResID);
 	bool	BoostThreads();
+	void	CloseHtmlHelp();
 
 // Overrides
 	// ClassWizard generated virtual function overrides

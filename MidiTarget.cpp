@@ -9,6 +9,8 @@
 		rev		date	comments
 		00		19nov13	initial version
 		01		22apr14	remove generic text macro from controller name
+		02		11nov14	add GetAssignee
+		03		23dec14	in GetEventTypeName, add range check 
 
 		MIDI target container
 
@@ -107,10 +109,44 @@ void CMidiTarget::Serialize(CArchive& ar, CMidiTarget *Target, int nTargets)
 		ar.Write(Target, nTargets * sizeof(CMidiTarget));
 }
 
+CString CMidiTarget::GetEventTypeName(int EventType)
+{
+	ASSERT(EventType >= 0 && EventType < EVENT_TYPES);
+	// prevent crash in case later version specifies unknown event type
+	int	nID;
+	if (EventType < EVENT_TYPES)	// if event type in range
+		nID = m_EventTypeName[EventType];
+	else	// event type out of range
+		nID = 0;	// empty string
+	return(LDS(nID));
+}
+
 int CMidiTarget::GetControllerName(LPTSTR Text, int TextMax, int Ctrl)
 {
 	LPCTSTR	pName = CMidiTarget::GetControllerName(Ctrl);
 	if (pName == NULL)
 		pName = _T("Undefined");
 	return(_sntprintf(Text, TextMax, _T("%d (%s)"), Ctrl, pName));
+}
+
+void CMidiTarget::GetControllerName(CString& Str, int Ctrl)
+{
+	CString	sName(CMidiTarget::GetControllerName(Ctrl));
+	if (sName.IsEmpty())
+		sName = _T("Undefined");
+	Str.Format(_T("%d (%s)"), Ctrl, sName);
+}
+
+CMidiTarget::ASSIGNEE CMidiTarget::GetAssignee() const
+{
+	ASSIGNEE	ass;
+	ass.id = 0;	// initialize indentifier to zero
+	ass.Port = m_Inst.Port;
+	ass.Chan = m_Inst.Chan;
+	ass.Event = m_Event;
+	switch (m_Event) {	// for event types that use controller number
+	case EVT_CONTROL:
+		ass.Control = m_Control;
+	}
+	return(ass);
 }

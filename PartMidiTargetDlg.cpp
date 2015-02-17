@@ -10,6 +10,7 @@
         00      19nov13	initial version
 		01		25may14	override target name tool tip
 		02		12jun14	refactor to use grid control instead of row view
+		03		11nov14	refactor OnTargetChange
 
 		part MIDI target dialog
  
@@ -59,15 +60,16 @@ void CPartMidiTargetDlg::SetPart(const CPart& Part)
 	m_List.Invalidate();
 }
 
-void CPartMidiTargetDlg::OnTargetChange(int RowIdx, int ColIdx)
+void CPartMidiTargetDlg::OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode)
 {
 	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
 	if (CPartsBar::IsValidPartIdx(iPart)) {	// if current part is valid
-		theApp.GetMain()->NotifyEdit(
-			m_ColInfo[ColIdx].TitleID, UCODE_PART, CUndoable::UE_COALESCE);
-		CPart	part(gEngine.GetPart(iPart));
-		GetPart(part);
-		gEngine.SetPart(iPart, part);
+		// if replacing previous assignments, CheckSharers already notified undo
+		if (ShareCode != CSR_REPLACE) {
+			theApp.GetMain()->NotifyEdit(
+				m_ColInfo[ColIdx].TitleID, UCODE_PART, CUndoable::UE_COALESCE);
+		}
+		theApp.GetMain()->SetMidiTarget(iPart, RowIdx, Target);
 	}
 }
 

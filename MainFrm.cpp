@@ -20,6 +20,9 @@
 		10		29sep14	in OnDelayedCreate, add BoostThreads
 		11		07oct14	in OnEngineNotify, add transport change notification
 		12		07oct14	in OnUpdateIndicatorTempo, add MIDI sync indicator
+		13		11nov14	in OnMidiInputData, add CheckSharers
+		14		22dec14	in DestroyWindow, add CloseHtmlHelp
+		15		11jan15	in OnUpdateIndicatorTempo, apply tempo multiple
 
 		ChordEase main frame
  
@@ -495,6 +498,22 @@ int CMainFrame::GetCtrlMidiTarget(CWnd *pWnd, int& PartIdx) const
 	return(iTarget);
 }
 
+void CMainFrame::SetMidiTarget(int PartIdx, int TargetIdx, const CMidiTarget& Target)
+{
+	CPatch	patch(gEngine.GetPatch());
+	patch.SetMidiTarget(PartIdx, TargetIdx, Target);
+	if (PartIdx >= 0)	// if part target
+		SetPart(PartIdx, patch.m_Part[PartIdx]);
+	else	// base patch target
+		SetBasePatch(patch);
+}
+
+void CMainFrame::ResetMidiTarget(int PartIdx, int TargetIdx)
+{
+	CMidiTarget	targ;
+	SetMidiTarget(PartIdx, TargetIdx, targ);
+}
+
 void CMainFrame::ApplyOptions(const COptionsInfo& PrevOpts, bool ForceUpdate)
 {
 	// if chart measures per line or font changed
@@ -954,6 +973,7 @@ BOOL CMainFrame::DestroyWindow()
 	}
 	SaveBarState(REG_SETTINGS);
 	SaveToolDialogState();
+	theApp.CloseHtmlHelp();	// avoids crash if modeless dialog has focus
 	return CFrameWnd::DestroyWindow();
 }
 
@@ -1050,7 +1070,7 @@ void CMainFrame::OnUpdateIndicatorTempo(CCmdUI *pCmdUI)
 		if (patch.m_Sync.In.Enable)	// if sync to external MIDI clock
 			s = _T("SYNC");	// indicate sync
 		else	// normal case
-			s.Format(_T("%.2f"), tempo);
+			s.Format(_T("%.2f"), patch.GetTempo());	// with tempo multiple applied
 		pCmdUI->SetText(s);
 		m_StatusCache.m_Tempo = tempo;
 		m_StatusCache.m_TempoMultiple = patch.m_TempoMultiple;
@@ -1278,15 +1298,16 @@ LRESULT CMainFrame::OnMidiInputData(WPARAM wParam, LPARAM lParam)
 						iTarget = PartMTDlg.GetCurSel();
 				} else {	// try ordinary patch/part pages
 					iTarget = GetCtrlMidiTarget(pFocusWnd, iPart);
-					if (iPart < 0)	// if patch target
-						PatchMTDlg.SetCurSel(iTarget);
-					else	// part target
-						PartMTDlg.SetCurSel(iTarget);
+					if (iTarget >= 0) {	// if valid MIDI target
+						if (iPart < 0)	// if patch target
+							PatchMTDlg.SetCurSel(iTarget);
+						else	// part target
+							PartMTDlg.SetCurSel(iTarget);
+					}
 				}
 			}
 			if (iTarget >= 0) {	// if valid MIDI target
-				CPatch	patch(gEngine.GetPatch());
-				CMidiTarget&	PrevTarg = patch.GetMidiTarget(iPart, iTarget);
+				CMidiTarget	PrevTarg(GetMidiTarget(iPart, iTarget));
 				CMidiTarget	targ(PrevTarg);
 				switch (MIDI_CMD(wParam)) {
 				case CONTROL:
@@ -1310,12 +1331,13 @@ LRESULT CMainFrame::OnMidiInputData(WPARAM wParam, LPARAM lParam)
 					targ.m_Inst.Port = iDevice;
 					targ.m_Inst.Chan = MIDI_CHAN(wParam);
 					if (targ != PrevTarg) {	// if target changed
-						PrevTarg = targ;	// update target
-						NotifyEdit(0, UCODE_MIDI_TARGETS);
-						if (iPart >= 0)	// if part target
-							SetPart(iPart, patch.m_Part[iPart]);
-						else	// patch target
-							SetBasePatch(patch);
+						int	ShareCode = CMidiTargetDlg::CheckSharers(targ);
+						if (ShareCode != CMidiTargetDlg::CSR_CANCEL) {
+							// if replace, CheckSharers already notified undo
+							if (ShareCode != CMidiTargetDlg::CSR_REPLACE)
+								NotifyEdit(0, UCODE_MIDI_TARGETS);
+							SetMidiTarget(iPart, iTarget, targ);
+						}
 					}
 				}
 			} else {	// MIDI target not found

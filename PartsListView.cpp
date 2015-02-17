@@ -11,6 +11,7 @@
         01      23apr14	add tooltip support
 		02		12jun14	in OnCreate, set font
 		03		15jul14	add OnCommandHelp
+		04		23dec14	in GetFunctionName, add range check
 
 		parts list view
  
@@ -111,6 +112,9 @@ void CPartsListView::SetSubitems(int PartIdx, const CPart& Part)
 CString CPartsListView::GetFunctionName(int FuncIdx)
 {
 	ASSERT(FuncIdx >= 0 && FuncIdx < FUNCTIONS);
+	// prevent crash in case later version specifies unknown function
+	if (FuncIdx >= FUNCTIONS)	// if function out of range
+		return(_T(""));
 	CString	s(m_FunctionName[FuncIdx]);
 	theApp.MakeStartCase(s);
 	return(s);

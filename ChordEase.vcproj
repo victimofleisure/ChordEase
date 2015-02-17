@@ -1315,6 +1315,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FixedArray.h"
+				>
+			</File>
+			<File
 				RelativePath="FocusEdit.cpp"
 				>
 				<FileConfiguration
@@ -2500,6 +2504,14 @@
 			</File>
 			<File
 				RelativePath=".\PianoSizeDef.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PianoSizeDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PianoSizeDlg.h"
 				>
 			</File>
 			<File

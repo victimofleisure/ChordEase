@@ -11,6 +11,7 @@
 		01		22apr14	add piano dialog
 		02		30apr14	add OnDropFiles
 		03		23jul14	add OnTransportGoTo
+		04		11nov14	add MIDI target accessors
 
 		ChordEase main frame
  
@@ -87,6 +88,9 @@ public:
 	bool	IsMidiLearn() const;
 	bool	IsMidiChase() const;
 	int		GetCtrlMidiTarget(CWnd *pWnd, int& PartIdx) const;
+	static	const CMidiTarget&	GetMidiTarget(int PartIdx, int TargetIdx);
+	void	SetMidiTarget(int PartIdx, int TargetIdx, const CMidiTarget& Target);
+	void	ResetMidiTarget(int PartIdx, int TargetIdx);
 
 // Operations
 public:
@@ -467,6 +471,11 @@ inline bool CMainFrame::IsMidiLearn() const
 inline bool CMainFrame::IsMidiChase() const
 {
 	return(m_MidiChaseEvents);
+}
+
+inline const CMidiTarget& CMainFrame::GetMidiTarget(int PartIdx, int TargetIdx)
+{
+	return(theApp.m_Engine.GetPatch().GetMidiTarget(PartIdx, TargetIdx));
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -8,6 +8,9 @@
 		revision history:
 		rev		date	comments
 		00		29may14	initial version
+		01		15dec14	in MillisToCount, use 64-bit round
+		02		17dec14	in Play, use SendMessage instead of PostMessage
+		03		23dec14	in Open, set slider page and line sizes
  
 		playback dialog for MIDI recordings
 
@@ -88,7 +91,7 @@ int CRecordPlayerDlg::CountToMillis(LONGLONG Count) const
 
 LONGLONG CRecordPlayerDlg::MillisToCount(int Millis) const
 {
-	return(round(double(Millis) / 1000 * m_FileHdr.PerfFreq.QuadPart));
+	return(round64(double(Millis) / 1000 * m_FileHdr.PerfFreq.QuadPart));
 }
 
 CString CRecordPlayerDlg::FormatTime(int Millis)
@@ -224,6 +227,8 @@ bool CRecordPlayerDlg::Open(LPCTSTR Path)
 	// update UI elements
 	m_Duration = CountToMillis(m_EventTime[nEvents - 1]);
 	m_PosSlider.SetRange(0, m_Duration);	// set slider range
+	m_PosSlider.SetPageSize(m_Duration / 10);	// set slider page and line sizes
+	m_PosSlider.SetLineSize(m_Duration / 100);
 	m_DurationText.SetWindowText(FormatTime(m_Duration));	// set duration text
 	m_TitleText.SetWindowText(theApp.GetFileTitle(Path));	// set file title
 	MakeTrackMap();	// init track data
@@ -278,7 +283,7 @@ void CRecordPlayerDlg::Play(bool Enable, bool NoUI)
 		return;	// nothing to do
 	m_Worker.Run(Enable);
 	if (!Enable)	// if stopping
-		theApp.GetMain()->PostMessage(WM_COMMAND, ID_MIDI_PANIC);	// reset all notes
+		theApp.GetMain()->SendMessage(WM_COMMAND, ID_MIDI_PANIC);	// reset all notes
 	if (!NoUI)	// if updating UI
 		m_PlayBtn.SetCheck(Enable);	// update play button
 }

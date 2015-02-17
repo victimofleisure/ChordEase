@@ -10,6 +10,7 @@
         00      23sep13	initial version
 		01		03may14	in OnParentNotify, event is low word of message
 		02		31may14	add OnItemChange
+		03		17nov14	in PreTranslateMessage, let tab edit first subitem
 
 		grid control
  
@@ -183,6 +184,16 @@ BOOL CGridCtrl::PreTranslateMessage(MSG* pMsg)
 				return(TRUE);
 			case VK_ESCAPE:
 				CancelEdit();
+				return(TRUE);
+			}
+		}
+	} else {	// not editing
+		if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_TAB
+		&& !(GetKeyState(VK_SHIFT) & GKS_DOWN)	// if unshifted tab key pressed
+		&& GetHeaderCtrl()->GetItemCount() > 1) {	// and at least one subitem
+			int	iRow = GetSelectionMark();
+			if (iRow >= 0) {	// if current row valid
+				EditSubitem(iRow, 1);	// edit row's first subitem
 				return(TRUE);
 			}
 		}

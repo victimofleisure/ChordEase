@@ -10,6 +10,7 @@
 		00		12sep13	initial version
  		01		09sep14	use default memberwise copy
 		02		07oct14	add input and output MIDI clock sync
+		03		11nov14	add GetMidiAssignments, GetSharers, etc.
  
 		patch container
 
@@ -23,6 +24,20 @@
 #include "MidiDeviceID.h"
 
 typedef CArrayEx<CMidiTarget, CMidiTarget&> CMidiTargetArray;
+
+class CMidiAssign : public CMidiTarget {
+public:
+	CMidiAssign();
+	CMidiAssign(const CMidiTarget& Target, int PartIdx, int TargetIdx);
+	int		m_PartIdx;		// part index, or -1 for patch
+	int		m_TargetIdx;	// MIDI target index
+	int		m_Sharers;		// number of targets sharing this controller
+	CString	m_DeviceName;	// device name
+	CString	m_PartName;		// part name
+	CString	m_TargetName;	// target name
+};
+
+typedef CArrayEx<CMidiAssign, CMidiAssign&> CMidiAssignArray;
 
 // new members must also be added to PatchDef.h, and to the appropriate dialog
 struct CBasePatch : public WCopyable {
@@ -70,8 +85,8 @@ public:
 	int		m_PPQ;				// pulses per quarter note
 	int		m_Transpose;		// global transposition, in steps
 	int		m_CurPart;			// index of current part, or -1 if none
-	CMidiTarget	m_MidiTarget[MIDI_TARGETS];	// array of MIDI targets
-	char	m_MidiShadow[MIDI_TARGETS];	// MIDI controller value for each target
+	CFixedArray<CMidiTarget, MIDI_TARGETS>	m_MidiTarget;	// array of MIDI targets
+	CFixedArray<char, MIDI_TARGETS>	m_MidiShadow;	// MIDI controller value for each target
 
 // Attributes
 	double	GetTempo() const;
@@ -105,7 +120,13 @@ public:
 	int		GetPartCount() const;
 	void	GetDeviceIDs(CMidiDeviceID& DevID) const;
 	void	GetDeviceRefs(int InDevs, int OutDevs, CIntArrayEx& InRefs, CIntArrayEx& OutRefs) const;
-	CMidiTarget&	GetMidiTarget(int PartIdx, int TargetIdx);
+	const CMidiTarget&	GetMidiTarget(int PartIdx, int TargetIdx) const;
+	void	SetMidiTarget(int PartIdx, int TargetIdx, const CMidiTarget& Target);
+	void	GetMidiTargets(CMidiTargetArray& Target) const;
+	void	SetMidiTargets(const CMidiTargetArray& Target);
+	void	GetMidiAssignments(CMidiAssignArray& Assign) const;
+	bool	HasSharers(const CMidiTarget& Target) const;
+	void	GetSharers(const CMidiTarget& Target, CMidiAssignArray& Sharer) const;
 
 // Operations
 	bool	operator==(const CPatch& Patch) const;
@@ -116,8 +137,6 @@ public:
 	void	CreatePortIDs();
 	bool	UpdatePorts(const CMidiDeviceID& OldDevID, const CMidiDeviceID& NewDevID);
 	bool	UpdatePorts(const CMidiDeviceID& NewDevID);
-	void	GetMidiTargets(CMidiTargetArray& Target) const;
-	void	SetMidiTargets(const CMidiTargetArray& Target);
 	void	ResetMidiTargets();
 	void	Serialize(CArchive& ar);
 
@@ -127,6 +146,10 @@ protected:
 	static	bool	UpdatePort(int& Port, const CIntArrayEx& DevMap, bool Enable = TRUE);
 };
 
+inline CMidiAssign::CMidiAssign()
+{
+}
+
 inline int CPatch::GetPartCount() const
 {
 	return(m_Part.GetSize());
@@ -135,13 +158,6 @@ inline int CPatch::GetPartCount() const
 inline bool CPatch::operator!=(const CPatch& Patch) const
 {
 	return(!operator==(Patch));
-}
-
-inline CMidiTarget& CPatch::GetMidiTarget(int PartIdx, int TargetIdx)
-{
-	if (PartIdx >= 0)
-		return(m_Part[PartIdx].m_MidiTarget[TargetIdx]);
-	return(m_MidiTarget[TargetIdx]);
 }
 
 typedef CArrayEx<CPatch, CPatch&> CPatchArray;

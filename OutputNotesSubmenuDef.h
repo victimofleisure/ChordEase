@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      18may14	initial version
+		01		15nov14	add custom piano size
 
 		output notes bar's submenu definitions
  
@@ -16,6 +17,6 @@
 //			menu name	item count			previous item
 SUBMENUDEF(	PORT,		FILTER_PORTS + 1,	FIRST)
 SUBMENUDEF(	CHANNEL,	MIDI_CHANNELS + 1,	PORT)
-SUBMENUDEF(	PIANO_SIZE,	PIANO_SIZES,		CHANNEL)
+SUBMENUDEF(	PIANO_SIZE,	PIANO_SIZES + 1,	CHANNEL)
 
 #undef SUBMENUDEF

@@ -10,6 +10,7 @@
         00      19nov13	initial version
         01      23apr14	define columns via macro
 		02		12jun14	refactor to use grid control instead of row view
+		03		11nov14	add CheckSharers, refactor OnTargetChange
 
 		MIDI target dialog
  
@@ -38,10 +39,16 @@ public:
 	CMidiTargetDlg(CWnd* pParent = NULL);
 
 // Constants
-	enum {
+	enum {	// column indices
 		#define MIDITARGETCOLDEF(name, align, width) COL_##name,
 		#include "MidiTargetColDef.h"
 		COLUMNS
+	};
+	enum {	// sharing codes returned by CheckSharers
+		CSR_NONE,		// no previous assignments
+		CSR_REPLACE,	// previous assignments were removed
+		CSR_SHARE,		// previous assignments were retained
+		CSR_CANCEL,		// user canceled
 	};
 
 // Attributes
@@ -55,9 +62,10 @@ public:
 	void	OnLearnChange();
 	void	UpdateShadowVal(int RowIdx);
 	void	EnableToolTips(BOOL bEnable = TRUE);
+	static	int		CheckSharers(const CMidiTarget& Target);
 
 // Overrideables
-	virtual	void	OnTargetChange(int RowIdx, int ColIdx);
+	virtual	void	OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode = 0);
 	virtual	int		GetShadowValue(int RowIdx);
 	virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 
@@ -88,6 +96,7 @@ protected:
 	afx_msg void OnUpdateMidiLearn(CCmdUI *pCmdUI);
 	afx_msg void OnMidiTargetReset();
 	//}}AFX_MSG
+	afx_msg LRESULT OnPostTargetChange(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 // Types
@@ -98,6 +107,9 @@ protected:
 		virtual	void	OnItemChange(LPCTSTR Text);
 		virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 		CMidiTargetDlg	*m_pParent;
+		enum {
+			UWM_TARGET_CHANGE = WM_USER + 1,
+		};
 	};
 
 // Constants

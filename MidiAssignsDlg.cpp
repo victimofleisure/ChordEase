@@ -10,6 +10,7 @@
 		00		21nov13	initial version
 		01		22apr14	in OnInitDialog, fix initial sort
 		02		29apr14	in SortCompare, don't assert on default case
+ 		03		11nov14	add shared controller column
  
 		MIDI assignments dialog
 
@@ -47,46 +48,16 @@ CMidiAssignsDlg::CMidiAssignsDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
 }
 
-inline CMidiAssignsDlg::CMidiAssign::CMidiAssign(const CMidiTarget Target, int PartIdx, int TargetIdx)
-	: CMidiTarget(Target)
+void CMidiAssignsDlg::UpdateView(bool SortRows)
 {
-	m_PartIdx = PartIdx;
-	m_TargetIdx = TargetIdx;
-	int	TargCapID;
-	if (m_PartIdx >= 0) {
-		TargCapID = CPart::m_MidiTargetNameID[m_TargetIdx];
-		m_PartName = gEngine.GetPart(m_PartIdx).m_Name;
-	} else {
-		TargCapID = CPatch::m_MidiTargetNameID[m_TargetIdx];
-		m_PartName = LDS(IDS_PATCH_BAR);
-	}
-	m_TargetName = LDS(TargCapID);
-}
-
-void CMidiAssignsDlg::UpdateView()
-{
-	CStringArray	DeviceName;	// array of MIDI input device names
-	CMidiIn::GetDeviceNames(DeviceName);
-	CPatch	patch(gEngine.GetPatch());
-	CMidiTargetArray	targ;
-	patch.GetMidiTargets(targ);
-	m_Assign.RemoveAll();
-	#define MIDI_TARGET_ITER(part, targ) \
-		CMidiAssign	assign(targ, part, iTarg); \
-		if (targ.m_Event) m_Assign.Add(assign);
-	#include "PatchMidiTargetIter.h"
+	gEngine.GetPatch().GetMidiAssignments(m_Assign);
 	int	rows = m_Assign.GetSize();
 	m_List.DeleteAllItems();
 	m_List.SetItemCount(rows);
-	for (int iRow = 0; iRow < rows; iRow++) {	// for each assignment row
-		CMidiAssign&	ass = m_Assign[iRow];
-		int	port = ass.m_Inst.Port;
-		if (port >= 0 && port < DeviceName.GetSize())	// if port in device range
-			ass.m_DeviceName = DeviceName[port];	// store device name
-		else
-			ass.m_DeviceName.LoadString(IDS_ENGINE_MIDI_DEVICE_NONE);
+	for (int iRow = 0; iRow < rows; iRow++)	// for each assignment row
 		m_List.InsertCallbackRow(iRow, iRow);
-	}
+	if (SortRows)
+		m_List.SortRows();
 }
 
 #define SORT_CMP(x) retc = m_List.SortCmp(m_Assign[p1].x, m_Assign[p2].x)
@@ -118,6 +89,9 @@ int	CMidiAssignsDlg::SortCompare(int p1, int p2)
 		break;
 	case COL_TARGET:
 		SORT_CMP(m_TargetName);
+		break;
+	case COL_SHARED:
+		SORT_CMP(m_Sharers);
 		break;
 	}
 	if (!retc)
@@ -170,7 +144,7 @@ BOOL CMidiAssignsDlg::OnInitDialog()
 	m_List.InitControl(0, CReportCtrl::SORT_ARROWS);
 	m_List.SetSortCallback(SortCompare, this);
 	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT);
-	UpdateView();
+	UpdateView(FALSE);	// don't sort rows; LoadHeaderState sorts them
 	// order matters: LoadHeaderState's initial row sort is pointless
 	// if rows haven't been created yet, so UpdateView must come first
 	m_List.LoadHeaderState(REG_SETTINGS, RK_LIST_HDR_STATE);
@@ -215,6 +189,12 @@ void CMidiAssignsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 		case COL_TARGET:
 			_tcsncpy(item.pszText, ass.m_TargetName, item.cchTextMax);
 			break;
+		case COL_SHARED:
+			{
+				int	nID = ass.m_Sharers > 1 ? IDS_COMMON_YES : IDS_COMMON_NO;
+				_tcsncpy(item.pszText, LDS(nID), item.cchTextMax);
+			}
+			break;
 		default:
 			NODEFAULTCASE;
 		}
@@ -242,23 +222,13 @@ void CMidiAssignsDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 void CMidiAssignsDlg::OnDeleteSelectedItems()
 {
 	if (m_List.GetSelectedCount()) {	// if selection exists
-		CPatch	patch(gEngine.GetPatch());
 		theApp.GetMain()->NotifyEdit(0, UCODE_MIDI_TARGETS);
 		POSITION	pos = m_List.GetFirstSelectedItemPosition();
 		while (pos != NULL) {	// for each selected item
 			int	iItem = m_List.GetNextSelectedItem(pos);
 			int	iSort = INT64TO32(m_List.GetItemData(iItem));
 			const CMidiAssign&	ass = m_Assign[iSort];
-			int	iPart = ass.m_PartIdx;
-			int	iTarget = ass.m_TargetIdx;
-			if (iPart >= 0) {	// if part target
-				CPart&	part = patch.m_Part[iPart];
-				part.m_MidiTarget[iTarget].Reset();
-				theApp.GetMain()->SetPart(iPart, part);
-			} else {	// base patch target
-				patch.m_MidiTarget[iTarget].Reset();
-				theApp.GetMain()->SetBasePatch(patch);
-			}
+			theApp.GetMain()->ResetMidiTarget(ass.m_PartIdx, ass.m_TargetIdx);
 		}
 		UpdateView();
 	}

@@ -11,6 +11,7 @@
 		01		15may14	replace bass chromatic with non-diatonic rules
  		02		09sep14	use default memberwise copy
 		03		13oct14	add thirds non-diatonic rule
+		04		11nov14	use fixed array for MIDI targets
 
 		part container
 
@@ -20,6 +21,7 @@
 #define	CPART_INCLUDED
 
 #include "ArrayEx.h"
+#include "FixedArray.h"
 #include "MidiTarget.h"
 
 // new members must also be added to PartDef.h, and to the appropriate dialog
@@ -125,8 +127,8 @@ public:
 	COMP	m_Comp;			// comp settings
 	BASS	m_Bass;			// bass settings
 	AUTO	m_Auto;			// auto settings
-	CMidiTarget	m_MidiTarget[MIDI_TARGETS];	// array of MIDI targets
-	char	m_MidiShadow[MIDI_TARGETS];	// MIDI controller value for each target
+	CFixedArray<CMidiTarget, MIDI_TARGETS>	m_MidiTarget;	// array of MIDI targets
+	CFixedArray<char, MIDI_TARGETS>	m_MidiShadow;	// MIDI controller value for each target
 };
 
 class CPart : public CBasePart {

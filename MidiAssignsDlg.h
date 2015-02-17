@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		21nov13	initial version
+		01		11nov14	add shared controller column
  
 		MIDI assignments dialog
 
@@ -63,19 +64,6 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
-// Types
-	class CMidiAssign : public CMidiTarget {
-	public:
-		CMidiAssign();
-		CMidiAssign(const CMidiTarget Target, int PartIdx, int TargetIdx);
-		int		m_PartIdx;		// part index, or -1 for patch
-		int		m_TargetIdx;	// MIDI target index
-		CString	m_DeviceName;	// device name
-		CString	m_PartName;		// part name
-		CString	m_TargetName;	// target name
-	};
-	typedef CArrayEx<CMidiAssign, CMidiAssign&> CMidiAssignArray;
-
 // Constants
 	enum {
 		#define LISTCOLDEF(name, align, width) COL_##name,
@@ -88,15 +76,11 @@ protected:
 	CMidiAssignArray	m_Assign;	// array of MIDI assignments
 
 // Helpers
-	void	UpdateView();
+	void	UpdateView(bool SortRows = TRUE);
 	void	DeleteSelectedItems();
 	int		SortCompare(int p1, int p2);
 	static	int	CALLBACK SortCompare(LPARAM p1, LPARAM p2, LPARAM This);
 };
-
-inline CMidiAssignsDlg::CMidiAssign::CMidiAssign()
-{
-}
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

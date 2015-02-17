@@ -9,6 +9,7 @@
 		rev		date	comments
         00      19nov13	initial version
 		01		12jun14	refactor to use grid control instead of row view
+		02		11nov14	refactor OnTargetChange
 
 		MIDI target dialog
  
@@ -58,19 +59,18 @@ void CPatchMidiTargetDlg::SetPatch(const CBasePatch& Patch)
 	m_List.Invalidate();
 }
 
-void CPatchMidiTargetDlg::OnTargetChange(int RowIdx, int ColIdx)
+void CPatchMidiTargetDlg::OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode)
 {
-	theApp.GetMain()->NotifyEdit(
-		m_ColInfo[ColIdx].TitleID, UCODE_BASE_PATCH, CUndoable::UE_COALESCE);
-	CBasePatch	patch;
-	gEngine.GetBasePatch(patch);
-	GetPatch(patch);
-	gEngine.SetBasePatch(patch);
+	// if replacing previous assignments, CheckSharers already notified undo
+	if (ShareCode != CSR_REPLACE) {
+		theApp.GetMain()->NotifyEdit(
+			m_ColInfo[ColIdx].TitleID, UCODE_BASE_PATCH, CUndoable::UE_COALESCE);
+	}
+	theApp.GetMain()->SetMidiTarget(-1, RowIdx, Target);
 }
 
 int CPatchMidiTargetDlg::GetShadowValue(int RowIdx)
 {
-	ASSERT(RowIdx >= 0 && RowIdx < CPatch::MIDI_TARGETS);
 	return(gEngine.GetPatch().m_MidiShadow[RowIdx]);
 }
 

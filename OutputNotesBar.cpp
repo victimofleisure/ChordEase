@@ -10,6 +10,7 @@
         00      18may14	initial version
 		01		09jul14	show device names in port popup menu
 		02		09sep14	in UpdateNotes, reference note map instead of copying
+		03		15nov14	add custom piano size
 
         output notes bar
  
@@ -24,6 +25,7 @@
 #include "ChordEaseDoc.h"
 #include "ChordEaseView.h"	// for MakePopup
 #include "MainFrm.h"
+#include "PianoSizeDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -112,16 +114,23 @@ void COutputNotesBar::OnShowBar(bool Show)
 		UpdateNotes();
 }
 
-void COutputNotesBar::SetPianoSize(int PianoSize)
+void COutputNotesBar::UpdatePianoSize()
 {
-	ASSERT(PianoSize >= 0 && PianoSize < PIANO_SIZES);
-	const PIANO_RANGE&	pr = m_PianoRange[PianoSize];
-	m_Piano.SetRange(pr.StartNote, pr.KeyCount);
-	m_PianoSize = PianoSize;
+	ASSERT(m_PianoSize >= 0 && m_PianoSize < PIANO_SIZES);
+	int	StartNote, KeyCount;
+	if (m_UseCustomSize) {
+		StartNote = m_CustomStartNote;
+		KeyCount = m_CustomKeyCount;
+	} else {
+		const PIANO_RANGE&	pr = m_PianoRange[m_PianoSize];
+		StartNote = pr.StartNote;
+		KeyCount = pr.KeyCount;
+	}
+	m_Piano.SetRange(StartNote, KeyCount);
 	if (m_Piano.m_hWnd) {	// if piano control exists
 		m_Piano.ReleaseKeys(CPianoCtrl::KS_ALL);	// release all piano keys
-		for (int iKey = 0; iKey < pr.KeyCount; iKey++) {	// for each piano key
-			if (m_NoteOns[iKey + pr.StartNote])	// if its note has non-zero count
+		for (int iKey = 0; iKey < KeyCount; iKey++) {	// for each piano key
+			if (m_NoteOns[iKey + StartNote])	// if its note has non-zero count
 				m_Piano.SetPressed(iKey, TRUE, TRUE);	// press key
 		}
 		UpdateKeyLabels();
@@ -199,7 +208,7 @@ int COutputNotesBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CMySizingControlBar::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	SetPianoSize(m_PianoSize);
+	UpdatePianoSize();
 	DWORD	dwStyle = WS_CHILD | WS_VISIBLE 
 		| CPianoCtrl::PS_HIGHLIGHT_PRESS | CPianoCtrl::PS_ROTATE_LABELS;
 	if (!m_Piano.Create(dwStyle, CRect(0, 0, 0, 0), this, 0))
@@ -260,12 +269,14 @@ void COutputNotesBar::OnContextMenu(CWnd* pWnd, CPoint point)
 	CChordEaseView::MakePopup(*pPopup, SMID_CHANNEL_START, item, m_Filter.Chan + 1);
 	// make piano size submenu
 	pPopup = mp->GetSubMenu(SM_PIANO_SIZE);
-	item.SetSize(PIANO_SIZES);
+	item.SetSize(PIANO_SIZES + 1);
 	for (iItem = 0; iItem < PIANO_SIZES; iItem++) {
 		s.Format(_T("%d"), m_PianoRange[iItem].KeyCount);
 		item[iItem] = s;
 	}
-	CChordEaseView::MakePopup(*pPopup, SMID_PIANO_SIZE_START, item, m_PianoSize);
+	item[PIANO_SIZES].LoadString(IDS_CUSTOM_MENU_ITEM);
+	int	iPianoSize = m_UseCustomSize ? PIANO_SIZES : m_PianoSize;
+	CChordEaseView::MakePopup(*pPopup, SMID_PIANO_SIZE_START, item, iPianoSize);
 	mp->TrackPopupMenu(0, point.x, point.y, this);	// finally, track popup
 }
 
@@ -313,7 +324,17 @@ void COutputNotesBar::OnFilterChannel(UINT nID)
 void COutputNotesBar::OnPianoSize(UINT nID)
 {
 	int	iSize = nID - SMID_PIANO_SIZE_START;
-	SetPianoSize(iSize);	// asserts size range
+	if (iSize < PIANO_SIZES) {
+		m_PianoSize = iSize;
+		m_UseCustomSize = FALSE;
+	} else {
+		CPianoSizeDlg	dlg(m_CustomStartNote, m_CustomKeyCount);
+		if (dlg.DoModal() != IDOK)
+			return;
+		dlg.GetSize(m_CustomStartNote, m_CustomKeyCount);
+		m_UseCustomSize = TRUE;
+	}
+	UpdatePianoSize();	// asserts size range
 }
 
 void COutputNotesBar::OnShowKeyLabels()

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      18may14	initial version
+		01		15nov14	add custom piano size
 
         output notes bar
  
@@ -110,10 +111,13 @@ protected:
 	bool	m_ShowKeyLabels;	// true if showing key labels
 	bool	m_RotateLabels;		// if true, rotate labels sideways
 	bool	m_ShowMetronome;	// true if showing metronome notes
+	bool	m_UseCustomSize;	// true if using custom piano size
+	int		m_CustomStartNote;	// custom piano size start note
+	int		m_CustomKeyCount;	// custom piano size key count
 
 // Helpers
 	void	UpdateKeyLabels();
-	void	SetPianoSize(int PianoSize);
+	void	UpdatePianoSize();
 	void	UpdateNotes();
 	void	ResetState();
 	void	LoadState();

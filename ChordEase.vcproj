@@ -56,6 +56,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS,_CRT_SECURE_NO_WARNINGS,_CRT_NON_CONFORMING_SWPRINTFS"
 				StringPooling="true"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
@@ -146,6 +147,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS,_CRT_SECURE_NO_WARNINGS,_CRT_NON_CONFORMING_SWPRINTFS"
 				StringPooling="true"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
@@ -169,6 +171,7 @@
 				AdditionalDependencies="imagehlp.lib version.lib shlwapi.lib winmm.lib comctl32.lib htmlhelp.lib"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
+				GenerateMapFile="true"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -234,6 +237,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS,_CRT_SECURE_NO_WARNINGS,_CRT_NON_CONFORMING_SWPRINTFS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
+				BufferSecurityCheck="false"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
 				BrowseInformation="1"
@@ -324,6 +328,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS,_CRT_SECURE_NO_WARNINGS,_CRT_NON_CONFORMING_SWPRINTFS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
+				BufferSecurityCheck="false"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
 				BrowseInformation="1"
@@ -414,6 +419,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS,_CRT_SECURE_NO_WARNINGS,_CRT_NON_CONFORMING_SWPRINTFS;PORTABLE_APP"
 				StringPooling="true"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
@@ -503,6 +509,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS,_CRT_SECURE_NO_WARNINGS,_CRT_NON_CONFORMING_SWPRINTFS;PORTABLE_APP"
 				StringPooling="true"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
@@ -772,6 +779,22 @@
 			</File>
 			<File
 				RelativePath="ChildDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ChordDictDlgColDef.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ChordDictionaryDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ChordDictionaryDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ChordDictUndoCodes.h"
 				>
 			</File>
 			<File
@@ -1599,6 +1622,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MainModelessDef.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MainPaneDef.h"
 				>
 			</File>
@@ -1792,6 +1819,10 @@
 			</File>
 			<File
 				RelativePath=".\MidiTargetColDef.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MidiTargetCtrlTypeDef.h"
 				>
 			</File>
 			<File
@@ -2595,6 +2626,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RingBuf.h"
+				>
+			</File>
+			<File
 				RelativePath="Round.h"
 				>
 			</File>
@@ -3344,6 +3379,10 @@
 			</File>
 			<File
 				RelativePath=".\WinAppCK.h"
+				>
+			</File>
+			<File
+				RelativePath=".\WinAppCKRegTypes.h"
 				>
 			</File>
 			<File

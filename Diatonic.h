@@ -8,7 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		23aug13	initial version
- 
+		01		03apr15	implement mode name accessor
+
 		diatonic framework
  
 */
@@ -50,7 +51,8 @@ public:
 	static	CNote	Quantize(CNote Note);
 	static	CNote	MapChromatic(CNote Note);
 	static	int		GetNoteDegree(CNote Note);
-	static	int		GetNaturalScale(int Degree);
+	static	CNote	GetNaturalScale(int Degree);
+	static	void	GetNaturalScale(CScale& Scale);
 	static	LPCTSTR	ScaleName(int Scale);
 	static	CString	PrettyScaleName(int Scale);
 	static	int		FindScale(LPCTSTR Name);
@@ -125,10 +127,15 @@ inline int CDiatonic::GetNoteDegree(CNote Note)
 	return(m_NoteToDegree[Note]);
 }
 
-inline int CDiatonic::GetNaturalScale(int Degree)
+inline CNote CDiatonic::GetNaturalScale(int Degree)
 {
 	ASSERT(IsValidDegree(Degree));
 	return(m_NaturalScale.Note[Degree]);
+}
+
+inline void CDiatonic::GetNaturalScale(CScale& Scale)
+{
+	Scale.CopyInts(m_NaturalScale.Note, DEGREES);
 }
 
 inline LPCTSTR CDiatonic::ScaleName(int Scale)
@@ -141,6 +148,12 @@ inline int CDiatonic::ScaleTonality(int Scale)
 {
 	ASSERT(IsValidScale(Scale));
 	return(m_ScaleTonality[Scale]);
+}
+
+inline LPCTSTR CDiatonic::ModeName(int Mode)
+{
+	ASSERT(IsValidMode(Mode));
+	return(m_ModeName[Mode]);
 }
 
 inline bool CDiatonic::ParseNoteName(LPCTSTR Name, CNote& Note)

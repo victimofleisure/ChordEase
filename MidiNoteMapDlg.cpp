@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		29apr14	initial version
+		01		23mar15	allow header drag/drop
  
 		MIDI note mappings dialog
 
@@ -145,7 +146,7 @@ BOOL CMidiNoteMapDlg::OnInitDialog()
 	m_List.SetColumns(COLUMNS, m_ColInfo);
 	m_List.InitControl(0, CReportCtrl::SORT_ARROWS);
 	m_List.SetSortCallback(SortCompare, this);
-	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);
 	UpdateView();
 	// order matters: LoadHeaderState's initial row sort is pointless
 	// if rows haven't been created yet, so UpdateView must come first

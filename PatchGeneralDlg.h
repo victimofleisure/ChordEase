@@ -9,6 +9,8 @@
 		rev		date	comments
 		00		14sep13	initial version
 		01		07oct14	add OnUpdatePPQ
+		02		08mar15	add tag length and repeat
+		03		21mar15	add tap tempo
 
         patch general dialog
  
@@ -42,6 +44,7 @@ public:
 	static	UINT	GetTemplateID();
 	virtual	void	GetPatch(CBasePatch& Patch) const;
 	void	SetPatch(const CBasePatch& Patch);
+	double	GetTempo() const;
 
 // Operations
 	static	void	InitNoteCombo(CComboBox& Combo);
@@ -58,6 +61,8 @@ protected:
 // Dialog Data
 	//{{AFX_DATA(CPatchGeneralDlg)
 	enum { IDD = IDD_PATCH_GENERAL };
+	CSpinIntEdit	m_TagRepeat;
+	CSpinIntEdit	m_TagLength;
 	CComboBox	m_Key;
 	CComboBox	m_PPQ;
 	CSpinIntEdit	m_Transpose;
@@ -70,6 +75,7 @@ protected:
 	//{{AFX_MSG(CPatchGeneralDlg)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangeKey();
+	afx_msg void OnTapTempo();
 	//}}AFX_MSG
 	afx_msg void OnTranspose(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnUpdatePPQ(CCmdUI* pCmdUI);
@@ -86,6 +92,11 @@ protected:
 inline UINT CPatchGeneralDlg::GetTemplateID()
 {
 	return(IDD);
+}
+
+inline double CPatchGeneralDlg::GetTempo() const
+{
+	return(m_Tempo.GetVal());
 }
 
 //{{AFX_INSERT_LOCATION}}

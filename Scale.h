@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		23aug13	initial version
+		01		18mar15	move find into base class
+		02		04apr15	add interval names
  
 		scale container
  
@@ -26,21 +28,26 @@ class CScale : public CScaleBase {
 public:
 // Construction
 	CScale();
+	CScale(const CNote& Note);
 	CScale(const CScale& Scale);
+	CScale(const CNote *pScale, int nCount);
+	CScale(const int *pScale, int nCount);
 	CScale& operator=(const CScale& Scale);
 
 // Attributes
 	int		GetTonality() const;
 
 // Operations
+	void	CopyInts(const int *pScale, int nCount);
 	bool	operator==(const CScale& Scale) const;
 	bool	operator!=(const CScale& Scale) const;
+	bool	operator<(const CScale& Scale) const;
 	void	Print(CNote Key = C, int Tonality = CNote::MAJOR) const;
 	void	PrintMidi(CNote Key = C, int Tonality = CNote::MAJOR) const;
 	CString	NoteNames(CNote Key = C, int Tonality = CNote::MAJOR) const;
 	CString	NoteMidiNames(CNote Key = C, int Tonality = CNote::MAJOR) const;
+	CString	IntervalNames(CNote Key = C, int Tonality = CNote::MAJOR) const;
 	void	Normalize();
-	int		Find(CNote Note) const;
 	int		FindNormal(CNote Note) const;
 	int		FindNearest(CNote Note) const;
 	int		FindNearest(CNote Note, int& Deviation) const;
@@ -61,8 +68,21 @@ inline CScale::CScale()
 {
 }
 
+inline CScale::CScale(const CNote& Note) : CScaleBase(Note)
+{
+}
+
 inline CScale::CScale(const CScale& Scale) : CScaleBase(Scale)
 {
+}
+
+inline CScale::CScale(const CNote *pScale, int nCount) : CScaleBase(pScale, nCount)
+{
+}
+
+inline CScale::CScale(const int *pScale, int nCount)
+{
+	CopyInts(pScale, nCount);
 }
 
 inline CScale& CScale::operator=(const CScale& Scale)

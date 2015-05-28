@@ -9,6 +9,7 @@
 		rev		date	comments
         00      13may14	initial version
 		01		28aug14	add SetChord and ability to edit existing chord
+		02		04apr15	in OnInitDialog, rename chord type accessor
 
         insert chord dialog
  
@@ -172,7 +173,7 @@ BOOL CInsertChordDlg::OnInitDialog()
 	int	nTypes = gEngine.GetSong().GetChordTypeCount();
 	ASSERT(nTypes > 0);	// engine supposedly guarantees at least one chord type
 	for (int iType = 0; iType < nTypes; iType++)	// for each chord type
-		m_Type.AddString(gEngine.GetSong().GetChordInfo(iType).m_Name);
+		m_Type.AddString(gEngine.GetSong().GetChordType(iType).m_Name);
 	m_Type.SetCurSel(min(m_Chord.m_Type, nTypes - 1));
 	// init measures combo
 	CStringArray	item;

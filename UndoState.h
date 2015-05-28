@@ -16,6 +16,7 @@
 		06		28may10	add IsInsignificant
 		07		01may14	widen CtrlID and Code to 32-bit
  		08		09sep14	use default memberwise copy
+		09		24mar15	upgrade old-school struct definitions
 
         undo state container
  
@@ -63,15 +64,15 @@ public:
 			BYTE	bh;
 		} c;
 	} ELEM;
-	typedef struct tagPAIR {
+	struct PAIR {
 		ELEM	x;
 		ELEM	y;
-	} PAIR;
-	typedef union tagVALUE {
+	};
+	union VALUE {
 		PAIR	p;
 		double	d;
 		__int64	i64;
-	} VALUE;
+	};
 
 // Member data
 	VALUE	m_Val;

@@ -15,6 +15,7 @@
 		05		28aug14	add OnEditChordProps
 		06		18sep14	add transpose and length commands
 		07		20sep14	add ApplyMeter; update chord durations on meter change
+		08		08mar15	move measure/beat conversions into engine
 
 		ChordEase view
  
@@ -99,8 +100,6 @@ public:
 	void	BeginPopupEdit(int ChordIdx);
 	void	EndPopupEdit(bool Cancel = FALSE);
 	void	CancelDrag();
-	static	int		BeatToMeasure(int BeatIdx);
-	static	int		MeasureToBeat(int MeasureIdx);
 	static	int		DurationToPreset(int Duration);
 	static	int		PresetToDuration(int PresetIdx);
 	static	bool	MakePopup(CMenu& Menu, int StartID, CStringArray& Item, int SelIdx);

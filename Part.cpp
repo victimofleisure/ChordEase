@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		12sep13	initial version
  		01		09sep14	use default memberwise copy
+		02		16mar15	consolidate MIDI target's fixed info
  
 		part container
 
@@ -19,14 +20,10 @@
 #include "Part.h"
 #include "Note.h"
 
-const LPCTSTR CBasePart::m_MidiTargetName[MIDI_TARGETS] = {	
-	#define PARTMIDITARGETDEF(name, page) _T(#name),
-	#include "PartMidiTargetDef.h"	// generate table of MIDI target names	
-};
-
-const int CBasePart::m_MidiTargetNameID[MIDI_TARGETS] = {	
-	#define PARTMIDITARGETDEF(name, page) IDS_PART_MT_##name,
-	#include "PartMidiTargetDef.h"	// generate table of MIDI target name IDs
+const CMidiTarget::FIXED_INFO CBasePart::m_MidiTargetInfo[MIDI_TARGETS] = {	
+	#define PARTMIDITARGETDEF(name, page, ctrltype) \
+		{_T(#name), IDS_PART_MT_##name, IDC_PART_##name, CMidiTarget::##ctrltype},
+	#include "PartMidiTargetDef.h"	// generate table of MIDI target info
 };
 
 CPart::CPart()
@@ -50,7 +47,7 @@ void CPart::Load(LPCTSTR Section)
 	#define PARTDEF(name, init) \
 		theApp.RdReg(Section, _T(#name), m_##name);
 	#include "PartDef.h"	// generate code to load members
-	CMidiTarget::Load(Section, m_MidiTarget, MIDI_TARGETS, m_MidiTargetName);
+	CMidiTarget::Load(Section, m_MidiTarget, MIDI_TARGETS, m_MidiTargetInfo);
 }
 
 void CPart::Save(LPCTSTR Section) const
@@ -58,7 +55,7 @@ void CPart::Save(LPCTSTR Section) const
 	#define PARTDEF(name, init) \
 		theApp.WrReg(Section, _T(#name), m_##name);
 	#include "PartDef.h"	// generate code to save members
-	CMidiTarget::Save(Section, m_MidiTarget, MIDI_TARGETS, m_MidiTargetName);
+	CMidiTarget::Save(Section, m_MidiTarget, MIDI_TARGETS, m_MidiTargetInfo);
 }
 
 void CPart::Serialize(CArchive &ar)

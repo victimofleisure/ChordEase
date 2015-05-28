@@ -13,6 +13,13 @@
 		03		01jul14	in ReadSong, add handling for lead sheets
 		04		07oct14	add input and output MIDI clock sync
 		05		13oct14	add thirds non-diatonic rule
+		06		05mar15	for arpeggios, only reset notes that were played
+		07		08mar15	add support for tags
+		08		13mar15	standardize trigger detection for bass approach
+		09		20mar15	add arpeggio adapt
+		10		21mar15	add tap tempo
+        11      04apr15	add chord dictionary set and write methods
+		12		08apr15	in GetCompChord, allow drop for four or more
 
 		engine
  
@@ -120,7 +127,8 @@ bool CEngine::CMySection::LastPass() const
 	return(m_Repeat && m_Passes >= m_Repeat - 1);
 }
 
-CEngine::CEngine()
+CEngine::CEngine() :
+	m_TapTempoHistory(TAP_TEMPO_HISTORY_SIZE)
 {
 	CDiatonic::MakeAccidentalsTable();
 	m_MidiInProc = MidiInProc;
@@ -143,6 +151,7 @@ CEngine::CEngine()
 	m_PatchBackup.Tempo = 0;
 	m_PatchBackup.Transpose = INT_MAX;
 	ZeroMemory(&m_PatchTrigger, sizeof(m_PatchTrigger));
+	m_TapTempoPrevTime = 0;
 }
 
 CEngine::~CEngine()
@@ -171,7 +180,7 @@ bool CEngine::Create()
 {
 //	_tprintf(_T("CEngine::Create thread=%d\n"), GetCurrentThreadId());
 //	CDiatonic::TestAll();	// debug only
-	CDiatonic::GetScaleTones(C, MAJOR, IONIAN, m_CMajor);
+	CDiatonic::GetNaturalScale(m_CMajor);
 	if (TIMER_FAILED(m_TimerPeriod.Create(1))) {
 		ReportError(IDS_ENGERR_SET_TIMER_RESOLUTION);
 		return(FALSE);
@@ -299,14 +308,39 @@ bool CEngine::UpdateTempo()
 	return(TRUE);
 }
 
+bool CEngine::TapTempo()
+{
+	if (m_Patch.m_Sync.In.Enable)	// if sync to external MIDI clock
+		return(FALSE);	// tap tempo not supported
+	double	tNow = CBenchmark::Time();	// get current time
+	double	tDelta = tNow - m_TapTempoPrevTime;	// compute delta time
+	m_TapTempoPrevTime = tNow;	// update previous time
+	m_TapTempoHistory.PushOver(tDelta);	// add delta time to history
+	double	tDeltaSum = 0;
+	CRingBuf<double>::CIter	iter(m_TapTempoHistory);
+	while (iter.GetNext(tDelta))	// for each delta time, from oldest to newest
+		tDeltaSum += tDelta;	// add delta time to sum
+	const double	tDeltaMax = 60 / double(TAP_TEMPO_MIN_BPM);
+	if (tDelta > tDeltaMax) {	// if newest delta time exceeds reset threshold
+		m_TapTempoHistory.Flush();	// delete history and start over
+		return(FALSE);
+	}
+	double	tDeltaAvg = tDeltaSum / m_TapTempoHistory.GetCount();	// compute average delta time
+	double	tempo = 60 / tDeltaAvg;	// convert average delta time to tempo in BPM
+	m_Patch.m_Tempo = tempo / pow(2, m_Patch.m_TempoMultiple);	// correct for tempo multiple
+	UpdateTempo();	// apply new tempo
+	Notify(NC_TAP_TEMPO);
+	return(TRUE);
+}
+
 void CEngine::UpdateSection()
 {
 	if (m_Song.GetSectionCount()) {
-		int	iSection = m_Song.FindSection(m_Tick / m_TicksPerBeat);
+		int	iSection = m_Song.FindSection(GetBeat());
 		if (iSection < 0)	// if section not found
 			iSection = 0;	// default to first section
 		m_Section.m_SectionIdx = iSection;
-		m_Section.Set(m_Song.GetSection(iSection), m_TicksPerBeat);
+		SetSection(m_Song.GetSection(iSection));
 	}
 }
 
@@ -410,6 +444,24 @@ void CEngine::NextSection()
 	m_Section.m_Repeat = -1;
 }
 
+bool CEngine::StartTag()
+{
+	if (IsTagging()) {	// if already tagging, tags can't be nested
+		NextSection();	// exit current tag
+		return(FALSE);
+	}
+	int	TagLength = m_Patch.m_TagLength;	// cache value to avoid instability
+	if (TagLength <= 0)	// if invalid tag length
+		return(FALSE);
+	int	StartMeasure = GetMeasure() - (TagLength - 1);
+	if (StartMeasure < 0)	// if tag would start before start of song
+		return(FALSE);	// avoid invalid section
+	CSong::CSection	sec(MeasureToBeat(StartMeasure), MeasureToBeat(TagLength),
+		m_Patch.m_TagRepeat, CSong::CSection::F_DYNAMIC);
+	SetSection(sec);
+	return(TRUE);
+}
+
 void CEngine::NextChord()
 {
 	SkipChords(1);
@@ -472,6 +524,26 @@ void CEngine::SetTick(int Tick)
 		if (MidiBeat >= 0 && MidiBeat < 0x4000)	// if within range of song position message
 			OutputSystem(m_Patch.m_Sync.Out.Port, SONG_POSITION, MidiBeat & 0x7f, MidiBeat >> 7);
 	}
+}
+
+int CEngine::GetMeasure() const
+{
+	return(BeatToMeasure(GetBeat()));
+}
+
+void CEngine::SetMeasure(int Measure)
+{
+	SetBeat(MeasureToBeat(Measure));
+}
+
+int CEngine::BeatToMeasure(int Beat) const
+{
+	return(Beat / m_Song.GetMeter().m_Numerator);
+}
+
+int CEngine::MeasureToBeat(int Measure) const
+{
+	return(Measure * m_Song.GetMeter().m_Numerator);
 }
 
 void CEngine::OnSongEdit()
@@ -594,7 +666,7 @@ inline int CEngine::NormParamToMidiVal(double Val)
 	return(NormParamToInt(Val * MIDI_NOTE_MAX, 0, MIDI_NOTE_MAX));
 }
 
-inline bool CEngine::UpdateTrigger(bool Input, bool& State)
+inline bool CEngine::UpdateTrigger(bool& State, bool Input)
 {
 	if (Input == State)
 		return(FALSE);
@@ -602,10 +674,15 @@ inline bool CEngine::UpdateTrigger(bool Input, bool& State)
 	return(Input);	// true if positive transition
 }
 
-#define UMT TargetChanged = UpdateMidiTarget
+#define UMT(target, val) (TargetChanged = UpdateMidiTarget(target, val))
 
 inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int Val)
 {
+	enum {
+		LEAD_IN_ENUMS = 5,		// 0 to 4 measures
+		TAG_LENGTH_MAX = 4,		// 0 to 4 measures
+		TAG_REPEAT_MAX = 4,		// 1 to 4 repetitions or 0 for indefinite repeat
+	};
 	int	parts = GetPartCount();
 	for (int iPart = 0; iPart < parts; iPart++) {	// for each part
 		CPart&	part = m_Patch.m_Part[iPart];
@@ -701,13 +778,11 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 					UMT(part.m_Comp.Variation, NormParamToEnum(pos, CPart::COMP::VARIATION_SCHEMES));
 					break;
 				case CPart::MIDI_TARGET_COMP_ARP_PERIOD:
-					UMT(part.m_Comp.Arp.Period, pos);
-					if (TargetChanged)
+					if (UMT(part.m_Comp.Arp.Period, pos) != 0)
 						m_PartState[iPart].OnTimeChange(part, m_Patch.m_PPQ);
 					break;
 				case CPart::MIDI_TARGET_COMP_ARP_PERIOD_QUANT:
-					UMT(part.m_Comp.Arp.Period, m_Quant[NormParamToEnum(pos, QUANTS)]);
-					if (TargetChanged)
+					if (UMT(part.m_Comp.Arp.Period, m_Quant[NormParamToEnum(pos, QUANTS)]) != 0)
 						m_PartState[iPart].OnTimeChange(part, m_Patch.m_PPQ);
 					break;
 				case CPart::MIDI_TARGET_COMP_ARP_ORDER:
@@ -716,22 +791,19 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				case CPart::MIDI_TARGET_COMP_ARP_REPEAT:
 					UMT(part.m_Comp.Arp.Repeat, pos > 0);
 					break;
+				case CPart::MIDI_TARGET_COMP_ARP_ADAPT:
+					UMT(part.m_Comp.Arp.Adapt, pos > 0);
+					break;
 				case CPart::MIDI_TARGET_BASS_SLASH_CHORDS:
 					UMT(part.m_Bass.SlashChords, pos > 0);
 					break;
 				case CPart::MIDI_TARGET_BASS_APPROACH_LENGTH:
-					UMT(part.m_Bass.ApproachLength, pos);
-					if (TargetChanged)
+					if (UMT(part.m_Bass.ApproachLength, pos) != 0)
 						m_PartState[iPart].OnTimeChange(part, m_Patch.m_PPQ);
 					break;
 				case CPart::MIDI_TARGET_BASS_APPROACH_TRIGGER:
-					if (pos > 0) {	// if positive transition
-						if (!m_PartState[iPart].m_BassApproachTrigger) {	// if not already triggered
-							m_PartState[iPart].m_BassApproachTrigger = TRUE;	// set triggered state
-							SetBassApproachTarget(iPart);	// compute approach target time and chord
-						}
-					} else	// zero position
-						m_PartState[iPart].m_BassApproachTrigger = FALSE;	// reset triggered state
+					if (UpdateTrigger(m_PartState[iPart].m_BassApproachTrigger, pos > 0))
+						SetBassApproachTarget(iPart);	// compute approach target time and chord
 					break;
 				case CPart::MIDI_TARGET_BASS_TARGET_ALIGNMENT:
 					UMT(part.m_Bass.TargetAlignment, NormParamToEnum(pos, CPart::BASS::TARGET_ALIGN_RANGE) 
@@ -762,22 +834,29 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 			bool	TargetChanged = FALSE;
 			switch (iTarg) {
 			case CPatch::MIDI_TARGET_TEMPO:
-				UMT(m_Patch.m_Tempo, pos * (CPatch::MAX_TEMPO - 1) + 1);
-				if (TargetChanged)
+				if (UMT(m_Patch.m_Tempo, pos * (CPatch::MAX_TEMPO - 1) + 1) != 0)
 					UpdateTempo();
 				break;
 			case CPatch::MIDI_TARGET_TEMPO_MULTIPLE:
-				UMT(m_Patch.m_TempoMultiple, pos * 2 - 1);
-				if (TargetChanged)
+				if (UMT(m_Patch.m_TempoMultiple, pos * 2 - 1) != 0)
 					UpdateTempo();
 				break;
+			case CPatch::MIDI_TARGET_TAP_TEMPO:
+				if (UpdateTrigger(m_PatchTrigger.TapTempo, pos > 0))
+					TapTempo();
+				break;
 			case CPatch::MIDI_TARGET_TRANSPOSE:
-				UMT(m_Patch.m_Transpose, round(pos * (OCTAVE - 1)));
-				if (TargetChanged)
+				if (UMT(m_Patch.m_Transpose, round(pos * (OCTAVE - 1))) != 0)
 					MakeHarmony();
 				break;
 			case CPatch::MIDI_TARGET_LEAD_IN:
-				UMT(m_Patch.m_LeadIn, NormParamToEnum(pos, 5));
+				UMT(m_Patch.m_LeadIn, NormParamToEnum(pos, LEAD_IN_ENUMS));
+				break;
+			case CPatch::MIDI_TARGET_TAG_LENGTH:
+				UMT(m_Patch.m_TagLength, round(pos * TAG_LENGTH_MAX));
+				break;
+			case CPatch::MIDI_TARGET_TAG_REPEAT:
+				UMT(m_Patch.m_TagRepeat, round(pos * TAG_REPEAT_MAX));
 				break;
 			case CPatch::MIDI_TARGET_METRO_ENABLE:
 				UMT(m_Patch.m_Metronome.Enable, pos > 0);
@@ -793,26 +872,30 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				Notify(pos > 0 ? NC_MIDI_PAUSE : NC_MIDI_RESUME);
 				break;
 			case CPatch::MIDI_TARGET_REWIND:
-				if (UpdateTrigger(pos > 0, m_PatchTrigger.Rewind))
+				if (UpdateTrigger(m_PatchTrigger.Rewind, pos > 0))
 					SetBeat(0);
 				break;
 			case CPatch::MIDI_TARGET_REPEAT:
 				Notify(pos > 0 ? NC_MIDI_REPEAT_ON : NC_MIDI_REPEAT_OFF);
 				break;
 			case CPatch::MIDI_TARGET_NEXT_SECTION:
-				if (UpdateTrigger(pos > 0, m_PatchTrigger.NextSection))
+				if (UpdateTrigger(m_PatchTrigger.NextSection, pos > 0))
 					NextSection();
 				break;
 			case CPatch::MIDI_TARGET_NEXT_CHORD:
-				if (UpdateTrigger(pos > 0, m_PatchTrigger.NextChord))
+				if (UpdateTrigger(m_PatchTrigger.NextChord, pos > 0))
 					NextChord();
 				break;
 			case CPatch::MIDI_TARGET_PREV_CHORD:
-				if (UpdateTrigger(pos > 0, m_PatchTrigger.PrevChord))
+				if (UpdateTrigger(m_PatchTrigger.PrevChord, pos > 0))
 					PrevChord();
 				break;
 			case CPatch::MIDI_TARGET_SONG_POSITION:
 				SetBeat(NormParamToEnum(pos, m_Song.GetBeatCount()));
+				break;
+			case CPatch::MIDI_TARGET_START_TAG:
+				if (UpdateTrigger(m_PatchTrigger.StartTag, pos > 0))
+					StartTag();
 				break;
 			default:
 				NODEFAULTCASE;	// missing target handler
@@ -827,6 +910,28 @@ bool CEngine::ReadChordDictionary(LPCTSTR Path)
 {
 	STOP_ENGINE(*this);	// for thread safety
 	return(m_Song.ReadChordDictionary(Path));
+}
+
+bool CEngine::ReadChordDictionary(LPCTSTR Path, CSong::CChordDictionary& Dictionary)
+{
+	return(m_Song.ReadChordDictionary(Path, Dictionary));
+}
+
+bool CEngine::WriteChordDictionary(LPCTSTR Path)
+{
+	return(m_Song.WriteChordDictionary(Path));
+}
+
+bool CEngine::WriteChordDictionary(LPCTSTR Path, const CSong::CChordDictionary& Dictionary)
+{
+	return(m_Song.WriteChordDictionary(Path, Dictionary));
+}
+
+bool CEngine::SetChordDictionary(const CSong::CChordDictionary& Dictionary)
+{
+	STOP_ENGINE(*this);	// for thread safety
+	m_Song.SetChordDictionary(Dictionary);
+	return(ReloadSong());
 }
 
 void CEngine::OnTimeChange()
@@ -950,6 +1055,7 @@ bool CEngine::ReadSong(LPCTSTR Path)
 	OnTimeChange();
 	if (!Run(WasRunning))	// possibly restart engine
 		return(FALSE);
+	m_SongPath = Path;
 	return(TRUE);
 }
 
@@ -957,8 +1063,23 @@ bool CEngine::ResetSong()
 {
 	STOP_ENGINE(*this);	// for thread safety
 	m_Song.Reset();
+	m_SongPath.Empty();
 	OnNewSong();
 	ZeroMemory(&m_Section, sizeof(m_Section));
+	return(TRUE);
+}
+
+bool CEngine::ReloadSong()
+{
+	if (m_SongPath.IsEmpty())
+		return(FALSE);
+	STOP_ENGINE(*this);	// for thread safety
+	int	PrevTick = m_Tick;	// save current position
+	bool	WasPlaying = m_IsPlaying;	// save playing state
+	if (!ReadSong(m_SongPath))	// apply new dictionary to song
+		return(FALSE);
+	m_Tick = PrevTick;	// restore current position
+	m_IsPlaying = WasPlaying;	// restore playing state
 	return(TRUE);
 }
 
@@ -1047,12 +1168,12 @@ inline void CEngine::MapChord(CNote InNote, int InVel, int PartIdx, const CScale
 
 inline void CEngine::MapArpChord(CNote InNote, int InVel, int PartIdx, const CScale& OutChord)
 {
+	if (OutChord.IsEmpty())	// if empty chord
+		return;	// avoid accessing first note
 	const CPart&	part = m_Patch.m_Part[PartIdx];
 	OutputNote(part.m_Out.Inst, OutChord[0], InVel);
 	CNoteMap	map(InNote, InVel, PartIdx, OutChord);
 	map.m_ArpIdx = 1;	// first note was already output above
-	map.m_ArpTimer = 0;
-	map.m_ArpLoops = 0;
 	WCritSec::Lock	lk(m_NoteMapCritSec);	// serialize map access
 	if (m_NoteMap.GetSize() < MAX_MAPPED_NOTES) {
 		m_NoteMap.Add(map);
@@ -1093,27 +1214,29 @@ void CEngine::FixHeldNotes()
 				{
 					CScale	NewComp;
 					GetCompChord(harm, map.m_InNote, part.m_Comp.Voicing, 0, NewComp);
-					NewComp.Difference(map.m_OutNote);
-					CPartState&	ps = m_PartState[map.m_PartIdx];
+					NewComp.Difference(map.m_OutNote);	// remove common tones
 					int	notes = map.m_OutNote.GetSize();
+					int	nPlayed;
+					if (map.m_ArpIdx && !map.m_ArpLoops)	// if in arpeggio's first pass
+						nPlayed = map.m_ArpIdx;	// only output corrections for played notes
+					else	// not arpeggiating, or arp isn't in first pass
+						nPlayed = notes;	// output all corrected notes
 					for (int iNote = 0; iNote < notes; iNote++) {	// for each output note
 						CNote	note(map.m_OutNote[iNote]);
 						int	iDegree = harm.m_ChordScale.Find(note.Normal());
-						if (iDegree < 0) {	// if not in chord scale
+						if (iDegree < 0) {	// if not in current chord scale
+							if (NewComp.IsEmpty())	// if no new notes
+								break;
 							int	iNearest = NewComp.FindLeastInterval(note);
-							if (iNearest >= 0) {	// if replacement found
-								CNote	NearestNote(NewComp[iNearest]);
-								NearestNote.ShiftToNearestOctave(note);
-								// if not arpeggiating, or first arp pass is complete,
-								// or on first arp pass and this note has been output
-								if (!ps.m_ArpPeriod || map.m_ArpLoops || iNote < map.m_ArpIdx) {
-									OutputNote(part.m_Out.Inst, note, 0);	// reset current note
-									OutputNote(part.m_Out.Inst, NearestNote, map.m_InVel);	// output corrected note
-								}
-//								_tprintf(_T("corrected %s: %s -> %s\n"), CNote(map.m_InNote).MidiName(), note.MidiName(), NearestNote.MidiName());
-								map.m_OutNote[iNote] = NearestNote;
-								NewComp.RemoveAt(iNearest);
+							CNote	NearestNote(NewComp[iNearest]);
+							NearestNote.ShiftToNearestOctave(note);
+							if (iNote < nPlayed) {	// if note has been played
+								OutputNote(part.m_Out.Inst, note, 0);	// reset current note
+								OutputNote(part.m_Out.Inst, NearestNote, map.m_InVel);	// output corrected note
 							}
+//							_tprintf(_T("corrected %s: %s -> %s\n"), CNote(map.m_InNote).MidiName(), note.MidiName(), NearestNote.MidiName());
+							map.m_OutNote[iNote] = NearestNote;
+							NewComp.RemoveAt(iNearest);
 						}
 					}
 				}
@@ -1153,15 +1276,15 @@ void CEngine::GetHarmony(const CSong::CChord& Chord, CHarmony& Harm) const
 		Harm.m_Bass = CNote(Chord.m_Bass + m_Patch.m_Transpose).Normal();
 	else	// not slash chord
 		Harm.m_Bass = -1;	// bass note unspecified
-	const CSong::CChordInfo&	info = m_Song.GetChordInfo(Chord.m_Type);
-//	_tprintf(_T("%d %s%s\n"), Chord.Duration, root.Name(), info.m_Name);
-	CDiatonic::GetScaleTones(root, info.m_Scale, info.m_Mode, Harm.m_ChordScale);
-	CNote	RootKey(CDiatonic::GetRootKey(root, info.m_Scale, info.m_Mode));
-//	_tprintf(_T("%s %s, mode %d\n"), RootKey.Name(RootKey, CDiatonic::ScaleTonality(info.m_Scale)), CDiatonic::PrettyScaleName(info.m_Scale), info.m_Mode + 1);
+	const CSong::CChordType&	type = m_Song.GetChordType(Chord.m_Type);
+//	_tprintf(_T("%d %s%s\n"), Chord.Duration, root.Name(), type.m_Name);
+	CDiatonic::GetScaleTones(root, type.m_Scale, type.m_Mode, Harm.m_ChordScale);
+	CNote	RootKey(CDiatonic::GetRootKey(root, type.m_Scale, type.m_Mode));
+//	_tprintf(_T("%s %s, mode %d\n"), RootKey.Name(RootKey, CDiatonic::ScaleTonality(type.m_Scale)), CDiatonic::PrettyScaleName(type.m_Scale), type.m_Mode + 1);
 	Harm.m_Key = RootKey;
-	Harm.m_Scale = info.m_Scale;
-	CDiatonic::GetAccidentals(RootKey, info.m_Scale, Harm.m_Accidentals);
-//	Harm.m_ChordScale.Print(RootKey, CDiatonic::ScaleTonality(info.m_Scale));
+	Harm.m_Scale = type.m_Scale;
+	CDiatonic::GetAccidentals(RootKey, type.m_Scale, Harm.m_Accidentals);
+//	Harm.m_ChordScale.Print(RootKey, CDiatonic::ScaleTonality(type.m_Scale));
 }
 
 CNote CEngine::GetLeadNote(CNote Note, int PartIdx) const
@@ -1284,8 +1407,8 @@ void CEngine::SetBassApproachTarget(int PartIdx)
 void CEngine::GetCompChord(const CHarmony& Harmony, CNote WindowNote, int Voicing, bool Alt, CScale& Chord)
 {
 	CScale	res;	// result chord
-	const CSong::CChordInfo&	info = m_Song.GetChordInfo(Harmony.m_Type);
-	const CScale& ct = info.m_Comp[Alt];	// chord tones
+	const CSong::CChordType&	type = m_Song.GetChordType(Harmony.m_Type);
+	const CScale& ct = type.m_Comp[Alt];	// chord tones
 	int	tones = ct.GetSize();
 	res.SetSize(tones);
 	for (int iTone = 0; iTone < tones; iTone++) {
@@ -1294,7 +1417,7 @@ void CEngine::GetCompChord(const CHarmony& Harmony, CNote WindowNote, int Voicin
 		note.ShiftToWindow(WindowNote);
 		res[iTone] = note;
 	}
-	if (Voicing && tones == 4) {	// if not close voicing and tetrachord
+	if (Voicing && tones >= 4) {	// if not close voicing and tetrachord or more
 		res.Sort();	// notes must be in ascending order for drop voicings
 		int	top = tones;
 		switch (Voicing) {
@@ -1485,9 +1608,11 @@ inline void CEngine::OnNoteOff(CMidiInst Inst, CNote Note)
 	// reverse iterate for stability
 	int	maps = m_NoteMap.GetSize();
 	for (int iMap = maps - 1; iMap >= 0; iMap--) {	// for each mapping
-		const CNoteMap&	map = m_NoteMap[iMap];
+		CNoteMap&	map = m_NoteMap[iMap];
 		const CPart&	part = m_Patch.m_Part[map.m_PartIdx];
 		if (Inst == part.m_In.Inst && map.m_InNote == Note) {	// if input note found
+			if (map.m_ArpIdx && !map.m_ArpLoops)	// if in arpeggio's first pass
+				map.m_OutNote.SetSize(map.m_ArpIdx);	// only reset notes that were played
 			OutputChord(part.m_Out.Inst, map.m_OutNote, 0);	// reset output notes
 //			_tprintf(_T("removed %s (%s) [%d]\n"), map.m_InNote.MidiName(), map.m_OutNote.NoteMidiNames(), part.m_Out.Inst.Chan);
 			m_NoteMap.RemoveAt(iMap);	// remove mapping
@@ -1677,8 +1802,8 @@ inline int CEngine::GetChordIndex(int Tick) const
 int CEngine::WrapBeat(int Beat) const
 {
 	// assume beat outside current section; only call from GetChordIndex
-	// if song contains at least two sections and current section is valid
-	if (m_Song.GetSectionCount() > 1 && m_Section.m_Length) {
+	// if song contains at least two sections or we're tagging, and current section is valid
+	if ((m_Song.GetSectionCount() > 1 || IsTagging()) && m_Section.m_Length) {
 		const CMySection&	sec = m_Section;	// alias current section for brevity
 		// if before section and not first pass, or after section and not last pass
 		bool	BeforeSec = Beat < sec.m_Start;
@@ -1760,8 +1885,12 @@ inline void CEngine::TimerWork()
 			const CPart&	part = m_Patch.m_Part[iPart];
 			CPartState&	ps = m_PartState[iPart];
 			int	iChord = GetChordIndex(m_Tick + ps.m_Anticipation);
-			if (iChord >= 0)
+			bool	IsHarmonyChange;
+			if (iChord >= 0) {
+				IsHarmonyChange = iChord != ps.m_HarmIdx;
 				ps.m_HarmIdx = iChord;
+			} else
+				IsHarmonyChange = FALSE;
 			if (IsChordChange) {	// if chord changed
 				if (ps.m_AutoPrevNote >= 0) {	// if auto-play note is on
 					OnNoteOff(part.m_In.Inst, ps.m_AutoPrevNote);
@@ -1788,10 +1917,36 @@ inline void CEngine::TimerWork()
 								CScale&	chord = map.m_OutNote;
 								int	notes = chord.GetSize();
 								if (map.m_ArpIdx < notes) {	// if more notes to play
+									if (IsHarmonyChange && part.m_Comp.Arp.Adapt && map.m_ArpIdx && !map.m_ArpLoops) {
+										CScale	NewComp;
+										GetCompChord(m_Harmony[ps.m_HarmIdx], map.m_InNote, part.m_Comp.Voicing, 0, NewComp);
+										CScale	diff(NewComp);
+										diff.Difference(map.m_OutNote);	// remove common tones
+										for (int iNote = map.m_ArpIdx; iNote < notes; iNote++) {	// for unplayed output notes
+											CNote	note(map.m_OutNote[iNote]);
+											if (NewComp.FindNormal(note) < 0) {	// if not in new chord
+												if (diff.IsEmpty())	// if no new notes
+													break;
+												int	iNearest = diff.FindLeastInterval(note);
+												CNote	NearestNote(diff[iNearest]);
+												NearestNote.ShiftToNearestOctave(note);
+//												_tprintf(_T("adapted %s: %s -> %s\n"), CNote(map.m_InNote).MidiName(), note.MidiName(), NearestNote.MidiName());
+												map.m_OutNote[iNote] = NearestNote;
+												diff.RemoveAt(iNearest);
+											}
+										}
+									}
 									if (map.m_ArpTimer >= ArpPeriod) {
 										int	note = chord[map.m_ArpIdx];
 										if (map.m_ArpLoops)	// if not first pass
-											OutputNote(part.m_Out.Inst, note, 0);
+											OutputNote(part.m_Out.Inst, note, 0);	// reset current note
+										else {	// first pass
+											if (!map.m_ArpIdx) {	// if block chord
+												if (part.m_Comp.Arp.Repeat)	// if repeating
+													map.m_ArpLoops = 1;	// block chord counts as first pass
+												continue;	// start arpeggiating if repeating, else not
+											}
+										}
 										OutputNote(part.m_Out.Inst, note, map.m_InVel);
 										map.m_ArpTimer = 0;
 										map.m_ArpIdx++;
@@ -1824,6 +1979,11 @@ inline void CEngine::TimerWork()
 				m_Section.m_Passes++;
 				// if section not repeating indefinitely and last pass through section
 				if (m_Section.m_Repeat && m_Section.m_Passes >= m_Section.m_Repeat) {
+					if (IsTagging()) {	// if tag in progress
+						UpdateSection();	// restore current section
+						Notify(NC_TAG_EXIT);
+						continue;
+					}
 					int	iSection = m_Section.m_SectionIdx;
 					iSection++;	// proceed to next section
 					if (iSection >= m_Song.GetSectionCount()) {	// if last section
@@ -1835,7 +1995,7 @@ inline void CEngine::TimerWork()
 						}
 					}
 					m_Section.m_SectionIdx = iSection;
-					m_Section.Set(m_Song.GetSection(iSection), m_TicksPerBeat);	// set section
+					SetSection(m_Song.GetSection(iSection));	// set section
 				}
 				m_Tick = m_Section.m_StartTick;	// jump to start of section
 			}

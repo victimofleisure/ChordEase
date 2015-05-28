@@ -9,6 +9,7 @@
 		rev		date	comments
         00      26nov13	initial version
 		01		26sep14	fix stale data when thread count unchanged
+		02		07may15	in OnGetdispinfo, change time formats to 64-bit unsigned
 
 		list threads owned by current process
  
@@ -211,16 +212,16 @@ void CThreadsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 	if (item.mask & LVIF_TEXT) {
 		switch (item.iSubItem) {
 		case COL_THREAD_ID:
-			_stprintf(item.pszText, _T("%d"), info.m_ThreadID);
+			_stprintf(item.pszText, _T("%u"), info.m_ThreadID);
 			break;
 		case COL_PRIORITY:
 			_stprintf(item.pszText, _T("%d"), info.m_BasePriority);
 			break;
 		case COL_KERNEL_TIME:
-			_stprintf(item.pszText, _T("%d"), info.m_KernelTime.QuadPart / 10000);
+			_stprintf(item.pszText, _T("%I64u"), info.m_KernelTime.QuadPart / 10000);
 			break;
 		case COL_USER_TIME:
-			_stprintf(item.pszText, _T("%d"), info.m_UserTime.QuadPart / 10000);
+			_stprintf(item.pszText, _T("%I64u"), info.m_UserTime.QuadPart / 10000);
 			break;
 		default:
 			NODEFAULTCASE;

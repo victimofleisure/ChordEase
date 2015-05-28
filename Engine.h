@@ -12,6 +12,11 @@
 		02		09sep14	in nested classes, use default memberwise copy
 		03		25sep14	raise timer thread priority
 		04		07oct14	add input and output MIDI clock sync
+		05		05mar15	in CNoteMap ctors, initialize arpeggio state
+		06		08mar15	add support for tags
+		07		21mar15	add tap tempo
+        08      04apr15	add chord dictionary set and write methods
+		09		28may15	in CNoteMap ctors, use initialization list
  
 		engine
  
@@ -27,6 +32,7 @@
 #include "Benchmark.h"
 #include "Statistics.h"
 #include "Patch.h"
+#include "RingBuf.h"
 
 #define SHOW_ENGINE_STATS 0
 
@@ -66,6 +72,7 @@ public:
 		CNoteMap();
 		CNoteMap(CNote InNote, int InVel, int PartIdx, CNote OutNote);
 		CNoteMap(CNote InNote, int InVel, int PartIdx, const CScale& OutNote);
+		void	ResetArp();
 		CNote	m_InNote;		// input note
 		int		m_InVel;		// input velocity
 		int		m_PartIdx;		// part index
@@ -107,6 +114,8 @@ public:
 	void	SetTick(int Tick);
 	int		GetBeat() const;
 	void	SetBeat(int Beat);
+	int		GetMeasure() const;
+	void	SetMeasure(int Measure);
 	int		GetTicksPerBeat() const;
 	int		GetTicksPerMeasure() const;
 	int		GetTickCount() const;
@@ -116,6 +125,8 @@ public:
 	CString	TickToString(int Tick) const;
 	CString TickSpanToString(int TickSpan) const;
 	bool	StringToTick(LPCTSTR Str, int& Tick, bool IsSpan = FALSE) const;
+	int		BeatToMeasure(int Beat) const;
+	int		MeasureToBeat(int Measure) const;
 	const CSong::CSection&	GetCurSection() const;
 	int		GetSectionIndex() const;
 	bool	SectionLastPass() const;
@@ -131,12 +142,18 @@ public:
 	void	GetSongProperties(CSong::CProperties& Props) const;
 	bool	SetSongProperties(const CSong::CProperties& Props);
 	void	SetBassApproachTarget(int PartIdx);
+	bool	IsTagging() const;
+	bool	SetChordDictionary(const CSong::CChordDictionary& Dictionary);
 
 // Operations
 	bool	ReadChordDictionary(LPCTSTR Path);
+	bool	ReadChordDictionary(LPCTSTR Path, CSong::CChordDictionary& Dictionary);
+	bool	WriteChordDictionary(LPCTSTR Path);
+	bool	WriteChordDictionary(LPCTSTR Path, const CSong::CChordDictionary& Dictionary);
 	bool	ReadSong(LPCTSTR Path);
 	bool	WriteSong(LPCTSTR Path);
 	bool	ResetSong();
+	bool	ReloadSong();
 	virtual	bool	Run(bool Enable);
 	bool	Play(bool Enable);
 	void	Pause(bool Enable);
@@ -148,6 +165,8 @@ public:
 	void	Panic();
 	bool	OnDeviceChange();
 	void	InputMidi(int Port, MIDI_MSG Msg);
+	bool	StartTag();
+	bool	TapTempo();
 	static	bool	ApplyNonDiatonicRule(int Rule, CNote& Note);
 
 protected:
@@ -217,6 +236,8 @@ protected:
 		bool	NextSection;
 		bool	NextChord;
 		bool	PrevChord;
+		bool	StartTag;
+		bool	TapTempo;
 	};
 
 // Constants
@@ -233,10 +254,13 @@ protected:
 	static const double	m_Quant[QUANTS];	// quantization values
 	enum {
 		TIMER_PRIORITY = THREAD_PRIORITY_HIGHEST,
+		TAP_TEMPO_HISTORY_SIZE = 4,	// tap tempo history size, in samples
+		TAP_TEMPO_MIN_BPM = 30,	// minimum tap tempo, in beats per minute
 	};
 
 // Member data
 	CMySong	m_Song;				// song container
+	CString	m_SongPath;			// path of current song
 	CBoundNoteMapArray	m_NoteMap;	// note map array
 	WCritSec	m_NoteMapCritSec;	// note map critical section
 	CWorkerThread	m_TimerThread;	// timer thread
@@ -264,6 +288,8 @@ protected:
 	PATCH_BACKUP	m_PatchBackup;	// backup of patch members overridden by song
 	CMySection	m_Section;		// section state
 	PATCH_TRIGGER	m_PatchTrigger;	// patch one-shot trigger states
+	double	m_TapTempoPrevTime;	// tap tempo previous timestamp
+	CRingBuf<double>	m_TapTempoHistory;	// tap tempo time sample ring buffer
 #if SHOW_ENGINE_STATS
 	CBenchmark	m_TimerBench;	// timer benchmark
 	CStatistics	m_TimerStats;	// timer benchmark statistics
@@ -284,6 +310,7 @@ protected:
 	void	MapChord(CNote InNote, int InVel, int PartIdx, const CScale& OutChord);
 	void	MapArpChord(CNote InNote, int InVel, int PartIdx, const CScale& OutChord);
 	bool	UpdateTempo();
+	void	SetSection(const CSong::CSection& Section);
 	void	UpdateSection();
 	void	UpdatePatch(const AUTO_INST& Inst, const AUTO_INST *PrevInst = NULL);
 	void	UpdatePatch(const CBasePatch& Patch, const CBasePatch *PrevPatch = NULL);
@@ -308,7 +335,7 @@ protected:
 	static	int		NormParamToEnum(double Val, int Enums);
 	static	int		NormParamToInt(double Val, int Min, int Max);
 	static	int		NormParamToMidiVal(double Val);
-	static	bool	UpdateTrigger(bool Input, bool& State);
+	static	bool	UpdateTrigger(bool& State, bool Input);
 	void	UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int Val);
 	int		GetChordIndex(int Tick) const;
 	int		WrapBeat(int Beat) const;
@@ -356,20 +383,26 @@ inline CEngine::CNoteMap::CNoteMap()
 }
 
 inline CEngine::CNoteMap::CNoteMap(CNote InNote, int InVel, int PartIdx, CNote OutNote)
+	: m_InNote(InNote), m_OutNote(OutNote)
 {
-	m_InNote = InNote;
 	m_InVel = InVel;
 	m_PartIdx = PartIdx;
-	m_OutNote.SetSize(1);
-	m_OutNote[0] = OutNote;
+	ResetArp();
 }
 
-inline CEngine::CNoteMap::CNoteMap(CNote InNote, int InVel, int PartIdx, const CScale& OutNote)
+inline CEngine::CNoteMap::CNoteMap(CNote InNote, int InVel, int PartIdx, const CScale& OutNote) 
+	: m_InNote(InNote), m_OutNote(OutNote)
 {
-	m_InNote = InNote;
 	m_InVel = InVel;
 	m_PartIdx = PartIdx;
-	m_OutNote = OutNote;
+	ResetArp();
+}
+
+inline void CEngine::CNoteMap::ResetArp()
+{
+	m_ArpIdx = 0;
+	m_ArpTimer = 0;
+	m_ArpLoops = 0;
 }
 
 inline bool CEngine::IsCreated() const
@@ -566,6 +599,16 @@ inline void CEngine::GetSongState(CSongState& State) const
 inline void CEngine::GetSongProperties(CSong::CProperties& Props) const
 {
 	m_Song.GetProperties(Props);
+}
+
+inline void CEngine::SetSection(const CSong::CSection& Section)
+{
+	m_Section.Set(Section, m_TicksPerBeat);
+}
+
+inline bool CEngine::IsTagging() const
+{
+	return((m_Section.m_Flags & CSong::CSection::F_DYNAMIC) != 0);
 }
 
 #define STOP_ENGINE(Engine)							\

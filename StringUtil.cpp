@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      24sep14	initial version
+		01		07apr15	in Find methods, make string arg const
 
         CString utility functions
  
@@ -22,7 +23,7 @@
 #define memmove_s(dest, numberOfElements, src, count) memmove(dest, src, count)
 #endif
 
-int CStringUtil::FindNoCase(CString& str, LPCTSTR pSub, int nStart)
+int CStringUtil::FindNoCase(const CString& str, LPCTSTR pSub, int nStart)
 {
 	int nLen = str.GetLength();
 	int nSubLen = lstrlen(pSub);
@@ -38,7 +39,7 @@ int CStringUtil::FindNoCase(CString& str, LPCTSTR pSub, int nStart)
 	return(-1);
 }
 
-int CStringUtil::ReverseFind(CString& str, LPCTSTR pSub, int nStart)
+int CStringUtil::ReverseFind(const CString& str, LPCTSTR pSub, int nStart)
 {
 	int nLen = str.GetLength();
 	int nSubLen = lstrlen(pSub);
@@ -54,7 +55,7 @@ int CStringUtil::ReverseFind(CString& str, LPCTSTR pSub, int nStart)
 	return(-1);
 }
 
-int CStringUtil::ReverseFindNoCase(CString& str, LPCTSTR pSub, int nStart)
+int CStringUtil::ReverseFindNoCase(const CString& str, LPCTSTR pSub, int nStart)
 {
 	int nLen = str.GetLength();
 	int nSubLen = lstrlen(pSub);

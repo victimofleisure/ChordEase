@@ -12,6 +12,8 @@
  		02		09sep14	use default memberwise copy
 		03		13oct14	add thirds non-diatonic rule
 		04		11nov14	use fixed array for MIDI targets
+		05		16mar15	consolidate MIDI target's fixed info
+		06		20mar15	add arpeggio adapt
 
 		part container
 
@@ -29,7 +31,7 @@ class CBasePart : public WCopyable {
 public:
 // Constants
 	enum {
-		#define PARTMIDITARGETDEF(name, page) MIDI_TARGET_##name,
+		#define PARTMIDITARGETDEF(name, page, ctrltype) MIDI_TARGET_##name,
 		#include "PartMidiTargetDef.h"
 		MIDI_TARGETS,
 	};
@@ -38,8 +40,7 @@ public:
 		#include "PartFunctionDef.h"
 		FUNCTIONS,
 	};
-	static const LPCTSTR	m_MidiTargetName[MIDI_TARGETS];
-	static const int	m_MidiTargetNameID[MIDI_TARGETS];
+	static const CMidiTarget::FIXED_INFO	m_MidiTargetInfo[MIDI_TARGETS];
 
 // Public data
 	struct LEAD {
@@ -71,6 +72,7 @@ public:
 			double	Period;		// time between arpeggio notes, in whole notes
 			int		Order;		// arpeggio order; see enum above
 			bool	Repeat;		// true if arpeggio repeats; false for one-shot
+			bool	Adapt;		// true if arpeggio adapts to chord changes
 		};
 		int		Voicing;		// voicing index
 		int		Variation;		// variation scheme; see enum above

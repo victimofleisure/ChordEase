@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		15mar15 fix selection applying MIDI target change to wrong part
+		02		03apr15	use exact find string for combo box
 
 		parts list control
  
@@ -51,7 +53,7 @@ CWnd *CPartsListCtrl::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& re
 		if (pCombo != NULL) {
 			for (int iFunc = 0; iFunc < CPartsListView::FUNCTIONS; iFunc++)
 				pCombo->AddString(CPartsListView::GetFunctionName(iFunc));
-			pCombo->SetCurSel(pCombo->FindString(0, Text));
+			pCombo->SetCurSel(pCombo->FindStringExact(-1, Text));
 			pCombo->ShowDropDown();
 		}
 		return(pCombo);
@@ -63,8 +65,8 @@ void CPartsListCtrl::OnItemChange(LPCTSTR Text)
 {
 	ASSERT(m_EditCol == CPartsListView::COL_FUNCTION);
 	CPopupCombo	*pCombo = STATIC_DOWNCAST(CPopupCombo, m_EditCtrl);
-	int	iFunc = pCombo->FindString(0, Text);
-	if (iFunc >= 0) {	// if text found in combo
+	int	iFunc = pCombo->GetCurSel();
+	if (iFunc >= 0) {	// if valid selection
 		int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
 		ASSERT(iPart >= 0);
 		CPart	part(gEngine.GetPart(iPart));
@@ -106,8 +108,21 @@ int CPartsListCtrl::GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text)
 
 BEGIN_MESSAGE_MAP(CPartsListCtrl, CGridCtrl)
 	//{{AFX_MSG_MAP(CPartsListCtrl)
+	ON_WM_LBUTTONDOWN()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CPartsListCtrl message handlers
+
+void CPartsListCtrl::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+	// If a popup edit is in progress within the parts bar's MIDI target page,
+	// defer selection to avoid applying the target change to the wrong part.
+	CMidiTargetDlg&	PartsMTDlg = theApp.GetMain()->GetPartsBar().GetMidiTargetDlg();
+	if (PartsMTDlg.IsEditing()) {	// if parts MIDI target edit in progress
+		PartsMTDlg.EndEdit();	// end edit, applying MIDI target change
+		PostMessage(WM_LBUTTONDOWN, nFlags, POINTTOPOINTS(point));	// defer selection
+	} else	// normal case
+		CGridCtrl::OnLButtonDown(nFlags, point);
+}

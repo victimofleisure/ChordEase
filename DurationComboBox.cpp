@@ -9,6 +9,8 @@
 		rev		date	comments
         00      17oct13	initial version
         01      10jun14	let parent handle notifications too
+		02		22mar15	in UpdateValFromString, only set value once
+		03		22mar15	in OnKillfocus, only set value if text was modified
 
         note duration combo box
  
@@ -146,13 +148,13 @@ void CDurationComboBox::Notify()
 void CDurationComboBox::UpdateValFromString(CString Str)
 {
 	double	val;
-	if (StringToDuration(Str, val)) {
+	if (StringToDuration(Str, val)) {	// if valid string
 		bool	modified = val != m_Duration;
-		SetVal(val);
-		if (modified)
-			Notify();
-	}
-	SetVal(m_Duration);
+		SetVal(val);	// unconditionally update control and m_Duration
+		if (modified)	// if duration changed
+			Notify();	// send change notification after updating
+	} else	// invalid string
+		SetVal(m_Duration);	// restore previous value
 }
 
 BEGIN_MESSAGE_MAP(CDurationComboBox, CComboBox)
@@ -188,9 +190,13 @@ void CDurationComboBox::PreSubclassWindow()
 
 BOOL CDurationComboBox::OnKillfocus() 
 {
-	CString	s;
-	GetWindowText(s);
-	UpdateValFromString(s);
+	// only set value if text was modified, to avoid spurious change notifications
+	HWND	hEdit = ::GetWindow(m_hWnd, GW_CHILD);	// get combo's edit control
+	if (hEdit && ::SendMessage(hEdit, EM_GETMODIFY, 0, 0)) {	// if text was modified
+		CString	s;
+		GetWindowText(s);
+		UpdateValFromString(s);
+	}
 	return(FALSE);	// let parent handle notification too
 }
 

@@ -9,6 +9,7 @@
 		rev		date	comments
         00      18may14	initial version
 		01		15nov14	add custom piano size
+		02		29apr15	override OnShowChanged
 
         output notes bar
  
@@ -42,7 +43,6 @@ public:
 // Operations
 public:
 	void	AddEvent(WPARAM wParam, LPARAM lParam);
-	void	OnShowBar(bool Show);
 	void	RemoveAllNotes();
 
 // Overrides
@@ -114,6 +114,9 @@ protected:
 	bool	m_UseCustomSize;	// true if using custom piano size
 	int		m_CustomStartNote;	// custom piano size start note
 	int		m_CustomKeyCount;	// custom piano size key count
+
+// Overrides
+	virtual	void	OnShowChanged(BOOL bShow);
 
 // Helpers
 	void	UpdateKeyLabels();

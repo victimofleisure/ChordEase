@@ -10,6 +10,9 @@
 		00		20sep13	initial version
 		01		12aug14	add ListHasFocus
 		02		09sep14	in ListHasFocus, add exception for patch undo test
+		03		16mar15	add const overload of MIDI target dialog accessor
+		04		23mar15	add MIDI chase support
+		05		27mar15	compute list pane default width
 
         parts bar
  
@@ -75,6 +78,7 @@ public:
 	void	SetPartName(int PartIdx, LPCTSTR Name);
 	int		GetParentPane(HWND hWnd) const;
 	CPartMidiTargetDlg&	GetMidiTargetDlg();
+	const CPartMidiTargetDlg&	GetMidiTargetDlg() const;
 	static	bool	IsValidPartIdx(int PartIdx);
 	static	bool	IsValidInsertPos(int PartIdx);
 
@@ -98,6 +102,7 @@ public:
 	void	OnListItemSelect(int PartIdx);
 	void	OnListItemCheck(int PartIdx, bool Checked);
 	bool	OnListDrop(int PartIdx);
+	void	ChaseMidiTarget(int PartIdx, int PageIdx, int TargetIdx);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -119,6 +124,13 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 // Types
+
+// Constants
+	enum {	// list pane's default width is sum of list's default column widths
+		LIST_PANE_DEFAULT_WIDTH = 0
+		#define LISTCOLDEF(name, align, width) + width
+		#include "PartsListColDef.h"	// generate code to sum column widths
+	};
 
 // Member data
 	CSplitterWnd	m_Split;		// splitter window
@@ -235,6 +247,11 @@ inline CString CPartsBar::GetPartName(int PartIdx) const
 }
 
 inline CPartMidiTargetDlg& CPartsBar::GetMidiTargetDlg()
+{
+	return(m_PageView->GetMidiTargetDlg());
+}
+
+inline const CPartMidiTargetDlg& CPartsBar::GetMidiTargetDlg() const
 {
 	return(m_PageView->GetMidiTargetDlg());
 }

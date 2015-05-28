@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
 		01		22apr14	initial version
+		02		05apr15	derive from non-template base class
+		03		13may15	add reference and pointer operators
 
 		modeless dialog pointer
  
@@ -15,82 +17,122 @@
 
 #pragma once
 
-template<class T>
-class CModelessDlgPtr : public WObject {
+class CModelessDlgPtrBase : public WObject {
 public:
 // Construction
-	CModelessDlgPtr();
-	~CModelessDlgPtr();
-	BOOL	Create(UINT nIDTemplate, CWnd* pParentWnd = NULL);
+	CModelessDlgPtrBase();
+	~CModelessDlgPtrBase();
 	void	Destroy();
 
 // Attributes
 	bool	IsEmpty() const;
 
 // Operations
-	void	Reset();
-	T*		operator->() const;
-	bool	operator==(const CDialog *pDlg) const;
-	bool	operator!=(const CDialog *pDlg) const;
+	void	Empty();
+	CDialog*	operator->() const;
+	operator CDialog&() const;
+	operator CDialog*() const;
+	bool	operator==(const CDialog* pDlg) const;
+	bool	operator!=(const CDialog* pDlg) const;
 
 protected:
-	T*		m_pDlg;		// pointer to modeless dialog
+// Member data
+	CDialog*	m_pDlg;		// pointer to modeless dialog
 };
 
-template<class T>
-inline CModelessDlgPtr<T>::CModelessDlgPtr()
+inline CModelessDlgPtrBase::CModelessDlgPtrBase()
 {
 	m_pDlg = NULL;
 }
 
-template<class T>
-inline CModelessDlgPtr<T>::~CModelessDlgPtr()
+inline CModelessDlgPtrBase::~CModelessDlgPtrBase()
 {
 	Destroy();
 }
 
-template<class T>
-inline BOOL CModelessDlgPtr<T>::Create(UINT nIDTemplate, CWnd* pParentWnd)
-{
-	ASSERT(IsEmpty());
-	m_pDlg = new T;	// create dialog instance
-	return(m_pDlg->Create(nIDTemplate, pParentWnd));
-}
-
-template<class T>
-inline void CModelessDlgPtr<T>::Destroy()
+inline void CModelessDlgPtrBase::Destroy()
 {
 	if (!IsEmpty())
 		m_pDlg->DestroyWindow();	// assume dialog is self-deleting
 }
 
-template<class T>
-inline bool	CModelessDlgPtr<T>::IsEmpty() const
+inline bool	CModelessDlgPtrBase::IsEmpty() const
 {
 	return(m_pDlg == NULL);
 }
 
-template<class T>
-inline void CModelessDlgPtr<T>::Reset()
+inline void CModelessDlgPtrBase::Empty()
 {
 	m_pDlg = NULL;
+}
+
+inline CDialog* CModelessDlgPtrBase::operator->() const
+{
+	ASSERT(!IsEmpty());
+	return(m_pDlg);
+}
+
+inline CModelessDlgPtrBase::operator CDialog&() const
+{
+	return(*operator->());
+}
+
+inline CModelessDlgPtrBase::operator CDialog*() const
+{
+	return(operator->());
+}
+
+inline bool CModelessDlgPtrBase::operator==(const CDialog* pDlg) const
+{
+	return(pDlg == m_pDlg);
+}
+
+inline bool CModelessDlgPtrBase::operator!=(const CDialog* pDlg) const
+{
+	return(!operator==(pDlg));
+}
+
+template<class T>
+class CModelessDlgPtr : public CModelessDlgPtrBase {
+public:
+// Construction
+	BOOL	Create(UINT nIDTemplate, CWnd* pParentWnd = NULL);
+
+// Operations
+	T*		operator->() const;
+	operator T&() const;
+	operator T*() const;
+};
+
+template<class T>
+inline BOOL CModelessDlgPtr<T>::Create(UINT nIDTemplate, CWnd* pParentWnd)
+{
+	ASSERT(IsEmpty());
+	T*	pDlg = new T;	// create dialog instance
+	if (!pDlg->Create(nIDTemplate, pParentWnd)) {	// create dialog window
+		delete pDlg;	// clean up instance
+		return(FALSE);
+	}
+	m_pDlg = pDlg;
+	return(TRUE);
 }
 
 template<class T>
 inline T* CModelessDlgPtr<T>::operator->() const
 {
 	ASSERT(!IsEmpty());
-	return(m_pDlg);
+	// can't use MFC static downcast because it don't support templates
+	return(static_cast<T*>(m_pDlg));	// downcast to derived dialog
 }
 
 template<class T>
-inline bool CModelessDlgPtr<T>::operator==(const CDialog *pDlg) const
+inline CModelessDlgPtr<T>::operator T&() const
 {
-	return(pDlg == m_pDlg);
+	return(*operator->());
 }
 
 template<class T>
-inline bool CModelessDlgPtr<T>::operator!=(const CDialog *pDlg) const
+inline CModelessDlgPtr<T>::operator T*() const
 {
-	return(!operator==(pDlg));
+	return(operator->());
 }

@@ -11,6 +11,9 @@
  		01		09sep14	use default memberwise copy
 		02		07oct14	in ReferencePort and UpdatePort, add Enable argument
 		03		11nov14	add GetMidiAssignments, GetSharers, etc.
+		04		16mar15	consolidate MIDI target's fixed info
+		05		23mar15	add MIDI shadow accessor
+		06		06apr15	in GetMidiAssignments, remove engine references
  
 		patch container
 
@@ -33,14 +36,10 @@
 #define RK_MIDI_IN_PORT_ID	_T("MidiInPortID")
 #define RK_MIDI_OUT_PORT_ID	_T("MidiOutPortID")
 
-const LPCTSTR CBasePatch::m_MidiTargetName[MIDI_TARGETS] = {	
-	#define PATCHMIDITARGETDEF(name, page, tag) _T(#name),
-	#include "PatchMidiTargetDef.h"	// generate table of MIDI target names
-};
-
-const int CBasePatch::m_MidiTargetNameID[MIDI_TARGETS] = {	
-	#define PATCHMIDITARGETDEF(name, page, tag) IDS_PATCH_MT_##name,
-	#include "PatchMidiTargetDef.h"	// generate table of MIDI target name IDs
+const CMidiTarget::FIXED_INFO CBasePatch::m_MidiTargetInfo[MIDI_TARGETS] = {	
+	#define PATCHMIDITARGETDEF(name, page, tag, ctrltype) \
+		{_T(#name), IDS_PATCH_MT_##name, IDC_PATCH##tag##name, CMidiTarget::##ctrltype},
+	#include "PatchMidiTargetDef.h"	// generate table of MIDI target info
 };
 
 CPatch::CPatch()
@@ -94,7 +93,7 @@ bool CPatch::Read(LPCTSTR Path)
 		#define PATCHDEF(name, init) \
 			theApp.RdReg(_T(#name), m_##name);
 		#include "PatchDef.h"	// generate code to read members
-		CMidiTarget::Load(NULL, m_MidiTarget, MIDI_TARGETS, m_MidiTargetName);
+		CMidiTarget::Load(NULL, m_MidiTarget, MIDI_TARGETS, m_MidiTargetInfo);
 		int	parts = 0;
 		theApp.RdReg(RK_PART_COUNT, parts);	// read part count
 		m_Part.SetSize(parts);
@@ -124,7 +123,7 @@ bool CPatch::Write(LPCTSTR Path) const
 		#define PATCHDEF(name, init) \
 			theApp.WrReg(_T(#name), m_##name);
 		#include "PatchDef.h"	// generate code to write members
-		CMidiTarget::Save(NULL, m_MidiTarget, MIDI_TARGETS, m_MidiTargetName);
+		CMidiTarget::Save(NULL, m_MidiTarget, MIDI_TARGETS, m_MidiTargetInfo);
 		int	parts = m_Part.GetSize();
 		theApp.WrReg(RK_PART_COUNT, parts);	// write part count
 		CString	section;
@@ -277,6 +276,14 @@ void CPatch::ResetMidiTargets()
 	#include "PatchMidiTargetIter.h"
 }
 
+int CPatch::GetMidiShadow(int PartIdx, int TargetIdx) const
+{
+	if (PartIdx >= 0)	// if part target
+		return(m_Part[PartIdx].m_MidiShadow[TargetIdx]);
+	else	// base patch target
+		return(m_MidiShadow[TargetIdx]);
+}
+
 inline CMidiAssign::CMidiAssign(const CMidiTarget& Target, int PartIdx, int TargetIdx)
 	: CMidiTarget(Target)
 {
@@ -312,13 +319,12 @@ void CPatch::GetMidiAssignments(CMidiAssignArray& Assign) const
 		CMidiAssign&	ass = Assign[iAss];
 		CMidiTarget::ASSIGNEE	id = ass.GetAssignee();
 		CtrlrMap.Lookup(id, ass.m_Sharers);	// get sharer count from map
-		ass.m_DeviceName = gEngine.GetSafeInputDeviceName(ass.m_Inst.Port);
 		int	TargCapID;
 		if (ass.m_PartIdx >= 0) {	// if part target
-			TargCapID = CPart::m_MidiTargetNameID[ass.m_TargetIdx];
-			ass.m_PartName = gEngine.GetPart(ass.m_PartIdx).m_Name;
+			TargCapID = CPart::m_MidiTargetInfo[ass.m_TargetIdx].NameID;
+			ass.m_PartName = m_Part[ass.m_PartIdx].m_Name;
 		} else {	// patch target
-			TargCapID = CPatch::m_MidiTargetNameID[ass.m_TargetIdx];
+			TargCapID = m_MidiTargetInfo[ass.m_TargetIdx].NameID;
 			ass.m_PartName = _T("Patch");
 		}
 		ass.m_TargetName = LDS(TargCapID);

@@ -9,7 +9,8 @@
 		rev		date	comments
 		00		14sep13	initial version
 		01		07oct14	add OnUpdatePPQ
-
+		02		08mar15	add tag length and repeat
+		03		21mar15	add tap tempo
 
         patch general dialog
  
@@ -46,7 +47,9 @@ CPatchGeneralDlg::CPatchGeneralDlg(CWnd* pParent /*=NULL*/)
 	m_Tempo(CPatch::MIN_TEMPO, CPatch::MAX_TEMPO),
 	m_TempoMultiple(-1, 1),
 	m_LeadIn(0, INT_MAX),
-	m_Transpose(-NOTE_MAX, NOTE_MAX)
+	m_Transpose(-NOTE_MAX, NOTE_MAX),
+	m_TagLength(1, INT_MAX),
+	m_TagRepeat(0, INT_MAX)
 {
 	//{{AFX_DATA_INIT(CPatchGeneralDlg)
 	//}}AFX_DATA_INIT
@@ -60,6 +63,8 @@ void CPatchGeneralDlg::GetPatch(CBasePatch& Patch) const
 	int	PPQSel = m_PPQ.GetCurSel();
 	Patch.m_PPQ = m_PPQVal[CLAMP(PPQSel, 0, _countof(m_PPQVal) - 1)];
 	Patch.m_Transpose = m_Transpose.GetIntVal();
+	Patch.m_TagLength = m_TagLength.GetIntVal();
+	Patch.m_TagRepeat = m_TagRepeat.GetIntVal();
 }
 
 void CPatchGeneralDlg::SetPatch(const CBasePatch& Patch)
@@ -69,6 +74,8 @@ void CPatchGeneralDlg::SetPatch(const CBasePatch& Patch)
 	m_LeadIn.SetVal(Patch.m_LeadIn);
 	m_PPQ.SetCurSel(FindPPQ(Patch.m_PPQ));
 	m_Transpose.SetVal(Patch.m_Transpose);
+	m_TagLength.SetVal(Patch.m_TagLength);
+	m_TagRepeat.SetVal(Patch.m_TagRepeat);
 	UpdateKeyCombo();
 }
 
@@ -96,6 +103,8 @@ void CPatchGeneralDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CPatchPageDlg::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CPatchGeneralDlg)
+	DDX_Control(pDX, IDC_PATCH_GEN_TAG_REPEAT, m_TagRepeat);
+	DDX_Control(pDX, IDC_PATCH_GEN_TAG_LENGTH, m_TagLength);
 	DDX_Control(pDX, IDC_PATCH_GEN_KEY, m_Key);
 	DDX_Control(pDX, IDC_PATCH_GEN_PPQ, m_PPQ);
 	DDX_Control(pDX, IDC_PATCH_GEN_TRANSPOSE, m_Transpose);
@@ -114,6 +123,8 @@ BEGIN_MESSAGE_MAP(CPatchGeneralDlg, CPatchPageDlg)
 	ON_UPDATE_COMMAND_UI(IDC_PATCH_GEN_PPQ, OnUpdatePPQ)
 	ON_UPDATE_COMMAND_UI(IDC_PATCH_GEN_TEMPO, OnUpdatePPQ)
 	ON_UPDATE_COMMAND_UI(IDC_PATCH_GEN_TEMPO_MULTIPLE, OnUpdatePPQ)
+	ON_BN_CLICKED(IDC_PATCH_GEN_TAP_TEMPO, OnTapTempo)
+	ON_UPDATE_COMMAND_UI(IDC_PATCH_GEN_TAP_TEMPO, OnUpdatePPQ)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NEN_CHANGED, IDC_PATCH_GEN_TRANSPOSE, OnTranspose)
 END_MESSAGE_MAP()
@@ -158,4 +169,11 @@ void CPatchGeneralDlg::OnUpdatePPQ(CCmdUI* pCmdUI)
 {
 	// if sync to external MIDI clock, PPQ is restricted so disable its control
 	pCmdUI->Enable(!theApp.m_Engine.GetPatch().m_Sync.In.Enable);
+}
+
+void CPatchGeneralDlg::OnTapTempo() 
+{
+	// button must have an update handler, else it's disabled; same as PPQ
+	if (gEngine.TapTempo())	// if tempo changed
+		theApp.GetMain()->NotifyEdit(0, UCODE_TAP_TEMPO, CUndoable::UE_COALESCE);
 }

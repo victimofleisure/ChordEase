@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		15mar14	initial version
+		01		01apr15	in ExportMidiFile, optionally fix duplicate notes
+		02		18may15	in GetMidiTracks, fix unintentional caps in comments
  
 		MIDI recording
  
@@ -89,13 +91,13 @@ bool CMidiRecord::Write(LPCTSTR Path, const CPatch& Patch)
 	return(Write(Path, hdr, PartInfo));	// write file
 }
 
-bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPatch& Patch, short PPQ) const
+bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPatch& Patch, short PPQ, bool FixDupNotes) const
 {
 	CPartInfoArray	PartInfo;
 	GetPartInfo(Patch, PartInfo);
 	LARGE_INTEGER	PerfFreq;
 	QueryPerformanceFrequency(&PerfFreq);
-	return(ExportMidiFile(Path, PartInfo, Patch.GetTempo(), PPQ, PerfFreq));
+	return(ExportMidiFile(Path, PartInfo, Patch.GetTempo(), PPQ, PerfFreq, FixDupNotes));
 }
 
 #endif // EXCLUDE_PATCH_DEPENDENCIES
@@ -191,13 +193,13 @@ void CMidiRecord::GetMidiTracks(const CPartInfoArray& PartInfo, CMidiTrackArray&
 		CMidiInst	inst(RecEvt.Port, MIDI_CHAN(RecEvt.Msg));
 		int	nTracks = Track.GetSize();
 		int	iTrack;
-		for (iTrack = 0; iTrack < nTracks; iTrack++) {	// for each Track
-			if (inst == Track[iTrack].m_Inst)	// if Track found
+		for (iTrack = 0; iTrack < nTracks; iTrack++) {	// for each track
+			if (inst == Track[iTrack].m_Inst)	// if track found
 				break;
 		}
 		if (iTrack < nTracks)	// if track found
 			Track[iTrack].m_Events++;	// increment event count
-		else {	// Track not found
+		else {	// track not found
 			MIDI_TRACK	mt;
 			mt.m_Events = 1;
 			mt.m_FirstEvent = iEvent;
@@ -210,12 +212,12 @@ void CMidiRecord::GetMidiTracks(const CPartInfoArray& PartInfo, CMidiTrackArray&
 					break;
 				}
 			}
-			Track.Add(mt);	// create new Track
+			Track.Add(mt);	// create new track
 		}
 	}
 }
 
-bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, double Tempo, short PPQ, LARGE_INTEGER PerfFreq) const
+bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, double Tempo, short PPQ, LARGE_INTEGER PerfFreq, bool FixDupNotes) const
 {
 	int	nEvents = m_Event.GetSize();
 	if (!nEvents)
@@ -228,6 +230,9 @@ bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, d
 	short	wTracks = static_cast<short>(nTracks);	// cast to 16-bit
 	double	PPQPerSec = Tempo / 60 * PPQ;
 	LONGLONG	PerfOrigin = m_Event[0].Time.QuadPart;
+	CArrayEx<NOTE_STATE, NOTE_STATE&>	NoteState;
+	if (FixDupNotes)	// if fixing duplicate notes
+		NoteState.SetSize(MIDI_NOTES);	// allocate note state array
 	TRY {
 		CMidiFile	fp(Path, CFile::modeCreate | CFile::modeWrite);
 		fp.WriteHeader(wTracks, PPQ, Tempo);	// write MIDI file header
@@ -237,10 +242,34 @@ bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, d
 			TrackEvent.SetSize(mt.m_Events);	// allocate track event array
 			int	PrevPulses = 0;
 			int	iTrackEvent = 0;
+			if (FixDupNotes)	// if fixing duplicate notes, reset note states
+				ZeroMemory(NoteState.GetData(), MIDI_NOTES * sizeof(NOTE_STATE));
 			for (int iEvent = 0; iEvent < nEvents; iEvent++) {	// for each record event
 				const EVENT&	RecEvt = m_Event[iEvent];
 				CMidiInst	inst(RecEvt.Port, MIDI_CHAN(RecEvt.Msg));
 				if (inst == mt.m_Inst) {	// if record event matches track instrument
+					int	nRepeats = 0;
+					if (FixDupNotes) {	// if fixing duplicate notes
+						int	iCmd = MIDI_CMD(RecEvt.Msg);	// get MIDI command
+						if (iCmd == NOTE_ON || iCmd == NOTE_OFF) {	// if note command
+							int	iNote = MIDI_P1(RecEvt.Msg);	// get note index
+							NOTE_STATE&	note = NoteState[iNote];
+							if (iCmd == NOTE_ON && MIDI_P2(RecEvt.Msg) > 0) {	// if note on
+								note.Instances++;	// increment note's instance count
+							} else {	// note off
+								if (note.Instances > 0) {	// if note has instances
+									note.Instances--;	// decrement note's instance count
+									if (note.Instances) {	// if note still has instances
+										note.PendingOffs++;	// bump pending note off count
+										continue;	// defer outputting note off; next event
+									}
+									// note has no remaining instances
+									nRepeats = note.PendingOffs;	// output pending note offs
+									note.PendingOffs = 0;	// reset pending note off count
+								}
+							}
+						}
+					}
 					double	fCounts = double(RecEvt.Time.QuadPart - PerfOrigin);
 					double	fPulses = fCounts / PerfFreq.QuadPart * PPQPerSec;
 					// compute pulse delta by subtracting integer previous pulse count
@@ -255,8 +284,15 @@ bool CMidiRecord::ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, d
 					TrkEvt.Msg = RecEvt.Msg;
 					iTrackEvent++;
 					PrevPulses += DeltaPulses;	// update previous pulse count
+					for (int iRepeat = 0; iRepeat < nRepeats; iRepeat++) {
+						MIDI_EVENT&	TrkEvt = TrackEvent[iTrackEvent];
+						TrkEvt.DeltaT = 0;	// no time between repetitions
+						TrkEvt.Msg = RecEvt.Msg;
+						iTrackEvent++;
+					}
 				}
 			}
+			TrackEvent.SetSize(iTrackEvent);	// in case events were skipped
 			fp.WriteTrack(TrackEvent, mt.m_Name);	// write MIDI file track
 		}
 	}

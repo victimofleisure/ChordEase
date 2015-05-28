@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      08nov13	initial version
+		01		29apr15	override OnShowChanged
 
         device bar
  
@@ -40,6 +41,14 @@ CDeviceBar::CDeviceBar()
 
 CDeviceBar::~CDeviceBar()
 {
+}
+
+void CDeviceBar::OnShowChanged(BOOL bShow)
+{
+	if (theApp.GetMain()->IsCreated()) {	// saves time during startup
+		if (bShow)	// if showing
+			UpdateView();
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////

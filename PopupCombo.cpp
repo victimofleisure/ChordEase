@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		23sep13	initial version
 		01		31may14	in Create, add vertical scroll to default style
+		02		16mar15	send end edit message instead of posting it
 
 		popup combo box control
 
@@ -34,6 +35,7 @@ IMPLEMENT_DYNAMIC(CPopupCombo, CComboBox);
 
 CPopupCombo::CPopupCombo()
 {
+	m_EndingEdit = FALSE;
 }
 
 CPopupCombo::~CPopupCombo()
@@ -65,6 +67,7 @@ CPopupCombo *CPopupCombo::Factory(DWORD dwStyle, const RECT& rect, CWnd* pParent
 
 void CPopupCombo::EndEdit()
 {
+	m_EndingEdit = TRUE;	// avoid reentrance if we lose focus
 	CString	text;
 	GetWindowText(text);
 	LPCTSTR	pText = text;
@@ -91,7 +94,8 @@ END_MESSAGE_MAP()
 void CPopupCombo::OnKillFocus(CWnd* pNewWnd) 
 {
 	CComboBox::OnKillFocus(pNewWnd);
-	PostMessage(UWM_END_EDIT);
+	if (!m_EndingEdit)	// if not ending edit already
+		SendMessage(UWM_END_EDIT);
 }
 
 BOOL CPopupCombo::PreTranslateMessage(MSG* pMsg) 
@@ -99,11 +103,9 @@ BOOL CPopupCombo::PreTranslateMessage(MSG* pMsg)
 	if (pMsg->message == WM_KEYDOWN) {
 		switch (pMsg->wParam) {
 		case VK_RETURN:
-			PostMessage(UWM_END_EDIT);
-			break;
 		case VK_ESCAPE:
-			PostMessage(UWM_END_EDIT, TRUE);	// cancel edit
-			break;
+			SendMessage(UWM_END_EDIT, pMsg->wParam == VK_ESCAPE);	// cancel if escape
+			return TRUE;	// no further processing; our instance is deleted
 		}
 	}
 	return CComboBox::PreTranslateMessage(pMsg);

@@ -11,7 +11,11 @@
  		01		09sep14	use default memberwise copy
 		02		07oct14	add input and output MIDI clock sync
 		03		11nov14	add GetMidiAssignments, GetSharers, etc.
- 
+		04		08mar15	add tag length and repeat
+		05		16mar15	consolidate MIDI target's fixed info
+		06		23mar15	add MIDI shadow accessor
+		07		06apr15	in CMidiAssign, remove device name
+		
 		patch container
 
 */
@@ -32,7 +36,6 @@ public:
 	int		m_PartIdx;		// part index, or -1 for patch
 	int		m_TargetIdx;	// MIDI target index
 	int		m_Sharers;		// number of targets sharing this controller
-	CString	m_DeviceName;	// device name
 	CString	m_PartName;		// part name
 	CString	m_TargetName;	// target name
 };
@@ -44,12 +47,11 @@ struct CBasePatch : public WCopyable {
 public:
 // Constants
 	enum {
-		#define PATCHMIDITARGETDEF(name, page, tag) MIDI_TARGET_##name,
+		#define PATCHMIDITARGETDEF(name, page, tag, ctrltype) MIDI_TARGET_##name,
 		#include "PatchMidiTargetDef.h"
 		MIDI_TARGETS,
 	};
-	static const LPCTSTR	m_MidiTargetName[MIDI_TARGETS];
-	static const int	m_MidiTargetNameID[MIDI_TARGETS];
+	static const CMidiTarget::FIXED_INFO	m_MidiTargetInfo[MIDI_TARGETS];
 
 // Public data
 	struct AUTO_INST {
@@ -85,6 +87,8 @@ public:
 	int		m_PPQ;				// pulses per quarter note
 	int		m_Transpose;		// global transposition, in steps
 	int		m_CurPart;			// index of current part, or -1 if none
+	int		m_TagLength;		// length of tag, in measures
+	int		m_TagRepeat;		// tag repeat count, or zero for indefinite
 	CFixedArray<CMidiTarget, MIDI_TARGETS>	m_MidiTarget;	// array of MIDI targets
 	CFixedArray<char, MIDI_TARGETS>	m_MidiShadow;	// MIDI controller value for each target
 
@@ -124,6 +128,7 @@ public:
 	void	SetMidiTarget(int PartIdx, int TargetIdx, const CMidiTarget& Target);
 	void	GetMidiTargets(CMidiTargetArray& Target) const;
 	void	SetMidiTargets(const CMidiTargetArray& Target);
+	int		GetMidiShadow(int PartIdx, int TargetIdx) const;
 	void	GetMidiAssignments(CMidiAssignArray& Assign) const;
 	bool	HasSharers(const CMidiTarget& Target) const;
 	void	GetSharers(const CMidiTarget& Target, CMidiAssignArray& Sharer) const;

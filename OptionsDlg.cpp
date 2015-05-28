@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      13oct13	initial version
+        01      01apr15	in OnInitDialog, reclaim hidden Apply button's mnemonic
 
         options dialog
  
@@ -43,7 +44,7 @@ COptionsDlg::COptionsDlg(UINT nIDCaption, COptionsInfo& Options, CWnd* pParentWn
 	#include "OptionsPages.h"		// construct property pages
 	m_oi(Options)	// init reference to options data
 {
-	m_psh.dwFlags |= PSH_NOAPPLYNOW;
+	m_psh.dwFlags |= PSH_NOAPPLYNOW;	// hide Apply button; mnemonic is disabled in OnInitDialog
 	for (int iPage = 0; iPage < OPTIONS_PAGES; iPage++) {
 		CObject	*pObj = reinterpret_cast<CObject *>(LPBYTE(this) + m_PageOffset[iPage]);
 		AddPage(STATIC_DOWNCAST(CPropertyPage, pObj));	// add property pages
@@ -93,6 +94,11 @@ BOOL COptionsDlg::OnInitDialog()
 	BOOL bResult = CPropertySheet::OnInitDialog();
 	CreateResetAllButton();	// create reset all button
 	SetActivePage(m_CurPage);	// set current page
+	// though our Apply button is hidden in ctor, its mnemonic (Alt+A in English)
+	// still prevents our pages from using that mnemonic for their child controls
+	CWnd	*pApplyBtn = GetDlgItem(ID_APPLY_NOW);
+	ASSERT(pApplyBtn != NULL);
+	pApplyBtn->SetWindowText(_T(""));	// reclaim hidden Apply button's mnemonic
 	return bResult;
 }
 

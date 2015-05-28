@@ -11,6 +11,9 @@
 		01		13feb14	add SetSelected
 		02		15jun14	add tool tip support
 		03		15jul14	fix OnToolHitTest return type
+		04		23mar15	add RedrawSubItem
+		05		24mar15	add column order methods
+		06		04apr15	add GetInsertPos
 
 		extended selection list control
  
@@ -118,9 +121,19 @@ void CListCtrlExSel::Deselect()
 		SetItemState(GetNextSelectedItem(pos), 0, StateMask);
 }
 
+int CListCtrlExSel::GetInsertPos() const
+{
+	int	iItem = GetSelection();
+	if (iItem >= 0)
+		return(iItem);
+	return(GetItemCount());
+}
+
 void CListCtrlExSel::GetColumnWidths(CIntArrayEx& Width)
 {
-	int	cols = GetHeaderCtrl()->GetItemCount();
+	int	cols = GetColumnCount();
+	if (cols < 0)	// if error
+		return;
 	Width.SetSize(cols);
 	for (int iCol = 0; iCol < cols; iCol++)
 		Width[iCol] = GetColumnWidth(iCol);
@@ -128,7 +141,7 @@ void CListCtrlExSel::GetColumnWidths(CIntArrayEx& Width)
 
 void CListCtrlExSel::SetColumnWidths(const CIntArrayEx& Width)
 {
-	int	cols = GetHeaderCtrl()->GetItemCount();
+	int	cols = min(GetColumnCount(), Width.GetSize());
 	for (int iCol = 0; iCol < cols; iCol++)
 		SetColumnWidth(iCol, Width[iCol]);
 }
@@ -143,16 +156,81 @@ bool CListCtrlExSel::SaveColumnWidths(LPCTSTR Section, LPCTSTR Key)
 
 bool CListCtrlExSel::LoadColumnWidths(LPCTSTR Section, LPCTSTR Key)
 {
-	int	cols = GetHeaderCtrl()->GetItemCount();
-	CIntArrayEx	width;
-	width.SetSize(cols);
-	DWORD	ExpectedSize = cols * sizeof(int);
-	DWORD	size = ExpectedSize;
-	if (!CPersist::GetBinary(Section, Key, width.GetData(), &size))
+	int	cols = GetColumnCount();
+	if (cols < 0)	// if error
 		return(FALSE);
-	if (size != ExpectedSize)
+	CIntArrayEx	width;
+	if (!LoadArray(Section, Key, width, cols))
 		return(FALSE);
 	SetColumnWidths(width);
+	return(TRUE);
+}
+
+void CListCtrlExSel::ResetColumnWidths(const COL_INFO *ColInfo, int Columns)
+{
+	ASSERT(Columns == GetColumnCount());
+	CIntArrayEx	width;
+	width.SetSize(Columns);
+	for (int iCol = 0; iCol < Columns; iCol++)
+		width[iCol] = ColInfo[iCol].Width;
+	SetColumnWidths(width);
+}
+
+bool CListCtrlExSel::GetColumnOrder(CIntArrayEx& Order)
+{
+	int	cols = GetColumnCount();
+	if (cols < 0)	// if error
+		return(FALSE);
+	Order.SetSize(cols);
+	return(GetColumnOrderArray(Order.GetData(), cols) != 0);
+}
+
+bool CListCtrlExSel::SetColumnOrder(const CIntArrayEx& Order)
+{
+	int	cols = min(GetColumnCount(), Order.GetSize());
+	return(SetColumnOrderArray(cols, const_cast<int *>(Order.GetData())) != 0);
+}
+
+bool CListCtrlExSel::SaveColumnOrder(LPCTSTR Section, LPCTSTR Key)
+{
+	CIntArrayEx	width;
+	GetColumnOrder(width);
+	DWORD	size = width.GetSize() * sizeof(int);
+	return(CPersist::WriteBinary(Section, Key, width.GetData(), size) != 0);
+}
+
+bool CListCtrlExSel::LoadColumnOrder(LPCTSTR Section, LPCTSTR Key)
+{
+	int	cols = GetColumnCount();
+	if (cols < 0)	// if error
+		return(FALSE);
+	CIntArrayEx	order;
+	if (!LoadArray(Section, Key, order, cols))
+		return(FALSE);
+	return(SetColumnOrder(order));
+}
+
+bool CListCtrlExSel::ResetColumnOrder()
+{
+	int	cols = GetColumnCount();
+	if (cols < 0)	// if error
+		return(FALSE);
+	CIntArrayEx	order;
+	order.SetSize(cols);
+	for (int iCol = 0; iCol < cols; iCol++)
+		order[iCol] = iCol;
+	return(SetColumnOrder(order));
+}
+
+bool CListCtrlExSel::LoadArray(LPCTSTR Section, LPCTSTR Key, CIntArrayEx& Array, int Elems)
+{
+	Array.SetSize(Elems);
+	DWORD	ExpectedSize = Elems * sizeof(int);
+	DWORD	size = ExpectedSize;
+	if (!CPersist::GetBinary(Section, Key, Array.GetData(), &size))
+		return(FALSE);
+	if (size != ExpectedSize)	// if unexpected size
+		return(FALSE);
 	return(TRUE);
 }
 
@@ -195,6 +273,13 @@ void CListCtrlExSel::EnableToolTips(BOOL bEnable)
 int CListCtrlExSel::GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text)
 {
 	return(0);
+}
+
+void CListCtrlExSel::RedrawSubItem(int iItem, int iSubItem)
+{
+	CRect	rItem;
+	GetSubItemRect(iItem, iSubItem, LVIR_BOUNDS, rItem);
+	InvalidateRect(rItem);
 }
 
 /////////////////////////////////////////////////////////////////////////////

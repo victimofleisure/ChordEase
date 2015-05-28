@@ -11,6 +11,7 @@
 		01		09jul14	show device names in port popup menu
 		02		09sep14	in UpdateNotes, reference note map instead of copying
 		03		15nov14	add custom piano size
+		04		29apr15	override OnShowChanged
 
         output notes bar
  
@@ -108,10 +109,13 @@ void COutputNotesBar::UpdateNotes()
 	}
 }
 
-void COutputNotesBar::OnShowBar(bool Show)
+void COutputNotesBar::OnShowChanged(BOOL bShow)
 {
-	if (Show)	// if showing bar
-		UpdateNotes();
+	if (theApp.GetMain()->IsCreated()) {	// saves time during startup
+		theApp.GetMain()->UpdateHookMidiOutput();
+		if (bShow)	// if bar was shown
+			UpdateNotes();
+	}
 }
 
 void COutputNotesBar::UpdatePianoSize()

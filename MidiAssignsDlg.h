@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		21nov13	initial version
 		01		11nov14	add shared controller column
+		02		23mar15	add value column
  
 		MIDI assignments dialog
 
@@ -35,6 +36,9 @@ class CMidiAssignsDlg : public CPersistDlg
 // Construction
 public:
 	CMidiAssignsDlg(CWnd* pParent = NULL);   // standard constructor
+
+// Operations
+	void	OnMidiTargetChange(int PartIdx, int TargetIdx);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -79,6 +83,7 @@ protected:
 	void	UpdateView(bool SortRows = TRUE);
 	void	DeleteSelectedItems();
 	int		SortCompare(int p1, int p2);
+	int		GetMidiShadow(const CMidiAssign& Assign) const;
 	static	int	CALLBACK SortCompare(LPARAM p1, LPARAM p2, LPARAM This);
 };
 

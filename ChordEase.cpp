@@ -15,6 +15,8 @@
 		05		05aug14	add DlgCtrlHelp
 		06		29sep14	add ThreadBoost DLL
 		07		22dec14	add CloseHtmlHelp
+		08		21mar15	in HandleDlgKeyMsg, add Enter and Backspace keys
+		09		01apr15	in OnEndRecording, add fix duplicate notes
 
 		ChordEase application
  
@@ -135,7 +137,7 @@ void CChordEaseApp::CAppEngine::OnEndRecording()
 		pMain->SetRecordFilePath(path);
 	} else	// assume user was prompted for filename
 		path = pMain->GetRecordFilePath();	// get path from main frame
-	m_Record.ExportMidiFile(path, m_Patch, opts.m_Record.MidiFilePPQ);
+	m_Record.ExportMidiFile(path, m_Patch, opts.m_Record.MidiFilePPQ, opts.m_Record.FixDupNotes != 0);
 	path.RenameExtension(MIDI_RECORD_EXT);
 	m_Record.Write(path, m_Patch);
 }
@@ -346,8 +348,11 @@ bool CChordEaseApp::HandleDlgKeyMsg(MSG* pMsg)
 				bool	IsAlpha = VKey >= 'A' && VKey <= 'Z';
 				CEdit	*pEdit = CFocusEdit::GetEdit();
 				if (pEdit != NULL) {	// if an edit control has focus
-					if (((IsAlpha || VKey == VK_SPACE)				// if ((alpha or space)
+					if ((IsAlpha									// if (alpha key
 					&& strchr(EditBoxCtrlKeys, VKey) == NULL		// and unused by edit
+					&& (GetKeyState(VK_CONTROL) & GKS_DOWN))		// and Ctrl is down)
+					|| ((VKey == VK_SPACE							// or (space key,
+					|| VKey == VK_RETURN || VKey == VK_BACK)		// Enter or Backspace
 					&& (GetKeyState(VK_CONTROL) & GKS_DOWN))		// and Ctrl is down)
 					|| (VKey == VK_SPACE							// or (space key
 					&& (GetKeyState(VK_SHIFT) & GKS_DOWN))			// and Shift is down)

@@ -10,8 +10,10 @@
         00      19nov13	initial version
 		01		12jun14	refactor to use grid control instead of row view
 		02		11nov14	refactor OnTargetChange
+		03		16mar15	move functionality into base class
+		04		24mar15	pass registry key to ctor
 
-		MIDI target dialog
+		patch MIDI target dialog
  
 */
 
@@ -34,16 +36,12 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CPatchMidiTargetDlg, CMidiTargetDlg);
 
-const int CPatchMidiTargetDlg::m_TargetCtrlID[] = {
-	#define PATCHMIDITARGETDEF(name, page, tag) IDC_PATCH##tag##name,
-	#include "PatchMidiTargetDef.h"
-};
-
 CPatchMidiTargetDlg::CPatchMidiTargetDlg(CWnd* pParent /*=NULL*/)
-	: CMidiTargetDlg(pParent)
+	: CMidiTargetDlg(_T("Patch"), pParent)
 {
 	//{{AFX_DATA_INIT(CPatchMidiTargetDlg)
 	//}}AFX_DATA_INIT
+	SetTargets(CPatch::m_MidiTargetInfo, CPatch::MIDI_TARGETS);
 }
 
 void CPatchMidiTargetDlg::GetPatch(CBasePatch& Patch) const
@@ -61,36 +59,12 @@ void CPatchMidiTargetDlg::SetPatch(const CBasePatch& Patch)
 
 void CPatchMidiTargetDlg::OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode)
 {
-	// if replacing previous assignments, CheckSharers already notified undo
-	if (ShareCode != CSR_REPLACE) {
-		theApp.GetMain()->NotifyEdit(
-			m_ColInfo[ColIdx].TitleID, UCODE_BASE_PATCH, CUndoable::UE_COALESCE);
-	}
-	theApp.GetMain()->SetMidiTarget(-1, RowIdx, Target);
+	UpdateTarget(Target, -1, RowIdx, ColIdx, ShareCode);	// part index of -1 for patch
 }
 
 int CPatchMidiTargetDlg::GetShadowValue(int RowIdx)
 {
 	return(gEngine.GetPatch().m_MidiShadow[RowIdx]);
-}
-
-int CPatchMidiTargetDlg::GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text)
-{
-	if (pHTI->iSubItem == COL_NAME && pHTI->iItem >= 0) {	// if name column and valid row
-		int	nID = GetTargetCtrlID(pHTI->iItem);	// get row's control ID
-		if (nID)	// if valid ID
-			return(nID);
-	}
-	return(CMidiTargetDlg::GetToolTipText(pHTI, Text));
-}
-
-int CPatchMidiTargetDlg::FindTargetByCtrlID(int CtrlID)
-{
-	for (int iTarg = 0; iTarg < CPatch::MIDI_TARGETS; iTarg++) {	// for each target
-		if (m_TargetCtrlID[iTarg] == CtrlID)	// if control ID found
-			return(iTarg);
-	}
-	return(-1);
 }
 
 void CPatchMidiTargetDlg::DoDataExchange(CDataExchange* pDX)
@@ -110,13 +84,3 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CPatchMidiTargetDlg message handlers
-
-BOOL CPatchMidiTargetDlg::OnInitDialog() 
-{
-	CMidiTargetDlg::OnInitDialog();
-
-	SetTargets(CPatch::m_MidiTargetNameID, CPatch::MIDI_TARGETS);
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
-}

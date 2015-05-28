@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		23mar15	add MIDI target page accessor
 
 		part page view
  
@@ -33,6 +34,11 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNCREATE(CPartPageView, CView)
 
 #define RK_PART_PAGE _T("PartPage")
+
+const int CPartPageView::m_MidiTargetPage[CPart::MIDI_TARGETS] = {
+	#define PARTMIDITARGETDEF(name, page, ctrltype) CPartPageView::PAGE_##page,
+	#include "PartMidiTargetDef.h"	// map part MIDI targets to part pages
+};
 
 CPartPageView::CPartPageView()
 {

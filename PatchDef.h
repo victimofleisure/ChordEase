@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		14sep13	initial version
 		01		07oct14	add sync page
+		02		08mar15	add tag length and repeat
  
 		patch definitions
 
@@ -35,5 +36,7 @@ PATCHDEF(	LeadIn,						1)
 PATCHDEF(	PPQ,						24)
 PATCHDEF(	Transpose,					0)
 PATCHDEF(	CurPart,					-1)
+PATCHDEF(	TagLength,					2)
+PATCHDEF(	TagRepeat,					3)
 
 #undef PATCHDEF

@@ -11,6 +11,8 @@
 		01		25may14	override target name tool tip
 		02		12jun14	refactor to use grid control instead of row view
 		03		11nov14	refactor OnTargetChange
+		04		16mar15	move functionality into base class
+		05		24mar15	pass registry key to ctor
 
 		part MIDI target dialog
  
@@ -35,16 +37,12 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CPartMidiTargetDlg, CMidiTargetDlg);
 
-const int CPartMidiTargetDlg::m_TargetCtrlID[] = {
-	#define PARTMIDITARGETDEF(name, page) IDC_PART_##name,
-	#include "PartMidiTargetDef.h"
-};
-
 CPartMidiTargetDlg::CPartMidiTargetDlg(CWnd* pParent /*=NULL*/)
-	: CMidiTargetDlg(pParent)
+	: CMidiTargetDlg(_T("Part"), pParent)
 {
 	//{{AFX_DATA_INIT(CPartMidiTargetDlg)
 	//}}AFX_DATA_INIT
+	SetTargets(CPart::m_MidiTargetInfo, CPart::MIDI_TARGETS);
 }
 
 void CPartMidiTargetDlg::GetPart(CPart& Part) const
@@ -63,14 +61,8 @@ void CPartMidiTargetDlg::SetPart(const CPart& Part)
 void CPartMidiTargetDlg::OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode)
 {
 	int	iPart = theApp.GetMain()->GetPartsBar().GetCurPart();
-	if (CPartsBar::IsValidPartIdx(iPart)) {	// if current part is valid
-		// if replacing previous assignments, CheckSharers already notified undo
-		if (ShareCode != CSR_REPLACE) {
-			theApp.GetMain()->NotifyEdit(
-				m_ColInfo[ColIdx].TitleID, UCODE_PART, CUndoable::UE_COALESCE);
-		}
-		theApp.GetMain()->SetMidiTarget(iPart, RowIdx, Target);
-	}
+	if (CPartsBar::IsValidPartIdx(iPart))	// if current part is valid
+		UpdateTarget(Target, iPart, RowIdx, ColIdx, ShareCode);
 }
 
 int CPartMidiTargetDlg::GetShadowValue(int RowIdx)
@@ -79,25 +71,6 @@ int CPartMidiTargetDlg::GetShadowValue(int RowIdx)
 	if (CPartsBar::IsValidPartIdx(iPart))	// if current part is valid
 		return(gEngine.GetPart(iPart).m_MidiShadow[RowIdx]);
 	return(0);
-}
-
-int CPartMidiTargetDlg::GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text)
-{
-	if (pHTI->iSubItem == COL_NAME && pHTI->iItem >= 0) {	// if name column and valid row
-		int	nID = GetTargetCtrlID(pHTI->iItem);	// get row's control ID
-		if (nID)	// if valid ID
-			return(nID);
-	}
-	return(CMidiTargetDlg::GetToolTipText(pHTI, Text));
-}
-
-int CPartMidiTargetDlg::FindTargetByCtrlID(int CtrlID)
-{
-	for (int iTarg = 0; iTarg < CPart::MIDI_TARGETS; iTarg++) {	// for each target
-		if (m_TargetCtrlID[iTarg] == CtrlID)	// if control ID found
-			return(iTarg);
-	}
-	return(-1);
 }
 
 void CPartMidiTargetDlg::DoDataExchange(CDataExchange* pDX)
@@ -117,13 +90,3 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CPartMidiTargetDlg message handlers
-
-BOOL CPartMidiTargetDlg::OnInitDialog() 
-{
-	CMidiTargetDlg::OnInitDialog();
-
-	SetTargets(CPart::m_MidiTargetNameID, CPart::MIDI_TARGETS);
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
-}

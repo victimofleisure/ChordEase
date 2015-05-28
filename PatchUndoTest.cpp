@@ -10,6 +10,8 @@
         00      08oct13	initial version
         01      07may14	move generic functionality to base class
 		02		09sep14	move enable flag to Globals.h
+		03		15mar15	remove 16-bit assert in rename case
+		04		06apr15	in DoPageEdit, skip disabled controls
 
 		automated undo test for patch editing
  
@@ -181,7 +183,7 @@ bool CPatchUndoTest::DoPageEdit(CWnd *pParent, CString& PageName, CString& CtrlC
 	ASSERT(Ctrl.GetSize());
 	int	iCtrl = Random(Ctrl.GetSize());
 	CWnd	*pWnd = CWnd::FromHandle(Ctrl[iCtrl]);
-	if (pWnd == NULL)
+	if (pWnd == NULL || !pWnd->IsWindowEnabled())	// skip disabled controls
 		return(FALSE);
 	UINT	nID = pWnd->GetDlgCtrlID();
 	CtrlCaption = pTabDlg->GetControlCaption(nID);
@@ -295,7 +297,6 @@ int CPatchUndoTest::ApplyEdit(int UndoCode)
 			CString	suffix;
 			suffix.Format(CString(SuffixTag) + _T("%d"), m_EditsDone);
 			name += suffix;	// append suffix to part name
-			ASSERT(iPart >= 0 && iPart <= USHRT_MAX);	// 64K limit
 			m_Main->GetUndoMgr().NotifyEdit(iPart, UCODE_RENAME);
 			m_Main->GetPartsBar().SetPartName(iPart, name);
 			PRINTF(_T("%s %d '%s'\n"), UndoTitle, iPart, name);

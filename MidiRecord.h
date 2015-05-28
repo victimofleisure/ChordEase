@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		15mar14	initial version
+		01		31mar15	make part info copyable
+		02		01apr15	in ExportMidiFile, optionally fix duplicate notes
  
 		MIDI recording
  
@@ -33,7 +35,7 @@ public:
 		DWORD	Port;			// MIDI output device index
 	};
 	typedef CArrayEx<EVENT, EVENT&> CEventArray;
-	class CPartInfo : public WObject {
+	class CPartInfo : public WCopyable {
 	public:
 		CMidiInst	m_Inst;		// MIDI instrument
 		CString		m_Name;		// part name
@@ -78,11 +80,17 @@ public:
 	bool	Write(LPCTSTR Path, const CPatch& Patch);
 	bool	Write(LPCTSTR Path, const FILE_HEADER& Header, const CPartInfoArray& PartInfo);
 	bool	Read(LPCTSTR Path, FILE_HEADER& Header, CPartInfoArray& PartInfo);
-	bool	ExportMidiFile(LPCTSTR Path, const CPatch& Patch, short PPQ) const;
-	bool	ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, double Tempo, short PPQ, LARGE_INTEGER PerfFreq) const;
+	bool	ExportMidiFile(LPCTSTR Path, const CPatch& Patch, short PPQ, bool FixDupNotes) const;
+	bool	ExportMidiFile(LPCTSTR Path, const CPartInfoArray& PartInfo, double Tempo, short PPQ, LARGE_INTEGER PerfFreq, bool FixDupNotes) const;
 	static	CString GetTimeStr(int Millis);
 
 protected:
+// Types
+	struct NOTE_STATE {	// state of each MIDI note, for fixing duplicate notes
+		int		Instances;		// number of instances of this note in existence
+		int		PendingOffs;	// number of deferred note off commands pending
+	};
+
 // Data members
 	CEventArray	m_Event;		// record buffer; array of events
 	long	m_EventCount;		// interlocked event count

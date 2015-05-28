@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		14sep13	initial version
 		01		15may14	replace bass chromatic with non-diatonic rules
+		02		20mar15	add arpeggio adapt
 
 		part definitions
 
@@ -45,6 +46,7 @@ PARTDEF(	Comp.Variation,				CPart::COMP::VAR_ALT_A_B)
 PARTDEF(	Comp.Arp.Period,			0)
 PARTDEF(	Comp.Arp.Order,				CPart::COMP::ARP_DEFAULT)
 PARTDEF(	Comp.Arp.Repeat,			FALSE)
+PARTDEF(	Comp.Arp.Adapt,				FALSE)
 PARTDEF(	Comp.ChordResetsAlt,		TRUE)
 PARTDEF(	Bass.LowestNote,			24 + E)	// E1
 PARTDEF(	Bass.SlashChords,			TRUE)

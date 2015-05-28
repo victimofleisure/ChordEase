@@ -16,6 +16,7 @@
 		06		21may13	add GetSpecialFolderPath
 		07		10jul13	add GetLastErrorString
 		08		19nov13	in EnableChildWindows, add Deep argument
+		09		07may15	SHGetSpecialFolderPath return value is BOOL, not HRESULT
 
         enhanced application
  
@@ -98,7 +99,7 @@ void CWinAppCK::GetCurrentDirectory(CString& Path)
 bool CWinAppCK::GetSpecialFolderPath(int FolderID, CString& Path)
 {
 	LPTSTR	p = Path.GetBuffer(MAX_PATH);
-	bool	retc = SUCCEEDED(SHGetSpecialFolderPath(NULL, p, FolderID, 0));
+	bool	retc = SHGetSpecialFolderPath(NULL, p, FolderID, 0) != 0;
 	Path.ReleaseBuffer();
 	return(retc);
 }

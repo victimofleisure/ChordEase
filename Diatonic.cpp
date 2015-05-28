@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		23aug13	initial version
+		01		07may15	in DumpAccidentalsTable, fix unused file pointer arg
+		02		12may15	refactor MakeAccidentalsTable to specify flattest key
  
 		diatonic framework
 
@@ -53,7 +55,7 @@ int CDiatonic::ScanNoteName(LPCTSTR Name, CNote& Note)
 		iNote += DEGREES;	// wrap around
 	if (iNote < 0 || iNote >= DEGREES)	// if index out of range
 		return(0);	// fail
-	CNote	note(m_Scale[MAJOR].Note[iNote]);	// convert index to note
+	CNote	note(m_NaturalScale.Note[iNote]);	// convert index to note
 	int	iCh = 1;
 	while (Name[iCh] == '#' || Name[iCh] == 'b') {
 		if (Name[iCh] == '#')	// if sharp
@@ -140,16 +142,27 @@ CNote CDiatonic::AlterNote(CNote Note, const CScale& Accidentals)
 
 void CDiatonic::MakeAccidentalsTable()
 {
+	enum {	// flattest keys
+		// to reduce the fifteen possible keys to only twelve, we must specify
+		// the key at which the cycle of fifths switches from sharps to flats
+		FK_Cb,	// sharpest key is E
+		FK_Gb,	// sharpest key is B
+		FK_Db,	// sharpest key is F#
+		FK_Ab,	// sharpest key is C#
+	};
+	int	FlattestKey = FK_Gb;
+	int	FirstKey = FlattestKey - Gb - 1;
+	int	LastKey = FirstKey + KEYS - 1;
 	for (int iScale = 0; iScale < SCALES; iScale++) {	// for each scale
-		int	StartPos = Gb - C;	// distance to middle, in cycle steps
-		for (int iKey = 0; iKey < KEYS; iKey++) {	// for each key
-			int	key = CNote((iKey - StartPos) * 7).Normal();	// cycle of fifths
-			HEPTATONIC&	KeyAcc = m_AccidentalTbl[iScale][iKey];
+		for (int iKey = FirstKey; iKey <= LastKey; iKey++) {	// for each key
+			int	key = CNote(iKey * 7).Normal();
+			HEPTATONIC&	KeyAcc = m_AccidentalTbl[iScale][key];
 			for (int iDegree = 0; iDegree < DEGREES; iDegree++) {	// for each degree
-				int	degree = CNote::Mod((key - StartPos) * 3 + iDegree, DEGREES);
-				CNote	altered(m_Scale[iScale].Note[degree] + iKey);
-				CNote	natural(m_Scale[MAJOR].Note[iDegree]);
-				KeyAcc.Note[iDegree] = altered.Normal().LeastInterval(natural);
+				int	degree = CNote::Mod(iKey * 3 + iDegree, DEGREES);
+				CNote	altered(m_Scale[iScale].Note[degree] + key);
+				CNote	natural(m_NaturalScale.Note[iDegree]);
+				int	acc = altered.Normal().LeastInterval(natural);
+				KeyAcc.Note[iDegree] = acc;
 			}
 		}
 		if (m_Scale[iScale].Note[D3] == Eb)	// if third degree is minor
@@ -169,10 +182,10 @@ bool CDiatonic::DumpAccidentalsTable(LPCTSTR Path)
 		_ftprintf(fp, _T("\t{\t// %s\n\t\t//"), PrettyScaleName(iScale));
 		// write natural note names in column header comment
 		for (int iDegree = 0; iDegree < DEGREES; iDegree++)	// for each degree
-			_ftprintf(fp, _T("\t%s"), CNote(m_Scale[MAJOR].Note[iDegree]).Name());
+			_ftprintf(fp, _T("\t%s"), CNote(m_NaturalScale.Note[iDegree]).Name());
 		fputc('\n', fp);
 		for (int iKey = 0; iKey < KEYS; iKey++) {	// for each key
-			_ftprintf(fp, _T("\t\t{ "));
+			_fputts(_T("\t\t{ "), fp);
 			for (int iDegree = 0; iDegree < DEGREES; iDegree++) {	// for each degree
 				_ftprintf(fp, _T("%3d"), m_AccidentalTbl[iScale][iKey].Note[iDegree]);
 				if (iDegree < DEGREES - 1)	// if not last item
@@ -181,7 +194,7 @@ bool CDiatonic::DumpAccidentalsTable(LPCTSTR Path)
 			// write key name in end of row comment
 			_ftprintf(fp, _T("\t},\t// %s\n"), CNote(iKey).Name());
 		}
-		_ftprintf(fp, _T("\t},\n"), fp);
+		_fputts(_T("\t},\n"), fp);
 	}
 	fclose(fp);
 	return(TRUE);
@@ -228,7 +241,7 @@ void CDiatonic::AlterTest(FILE *fp)
 			CNote	key(iKey * 7);	// cycle of fifths
 			_ftprintf(fp, _T("%-3s: "), key.Name(key, tonality));
 			for (int iDegree = 0; iDegree < DEGREES; iDegree++) {	// for each degree
-				CNote	note(m_Scale[MAJOR].Note[iDegree] + OCTAVE);
+				CNote	note(m_NaturalScale.Note[iDegree] + OCTAVE);
 				note = AlterNote(note, key.Normal(), iScale);
 				_ftprintf(fp, _T(" %-3s"), note.Name(key, tonality));
 			}

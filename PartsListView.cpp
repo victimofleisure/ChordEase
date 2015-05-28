@@ -12,6 +12,9 @@
 		02		12jun14	in OnCreate, set font
 		03		15jul14	add OnCommandHelp
 		04		23dec14	in GetFunctionName, add range check
+		05		15mar15	remove 16-bit asserts for undo args
+		06		15mar15	in OnListItemchanged, select when item is focused
+		07		15mar15	in OnListClick, add select part undo notification
 
 		parts list view
  
@@ -201,8 +204,11 @@ int CPartsListView::OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT messa
 
 void CPartsListView::OnListClick(NMHDR* pNMHDR, LRESULT* pResult) 
 {
-	if (!m_List.GetSelectedCount())
+	if (!m_List.GetSelectedCount()) {	// if no selection
+		theApp.GetMain()->GetUndoMgr().NotifyEdit(0, UCODE_SELECT_PART, 
+			CUndoable::UE_COALESCE | CUndoable::UE_INSIGNIFICANT);
 		theApp.GetMain()->GetPartsBar().Deselect();
+	}
 }
 
 void CPartsListView::OnListItemchanged(NMHDR* pNMHDR, LRESULT* pResult) 
@@ -210,7 +216,7 @@ void CPartsListView::OnListItemchanged(NMHDR* pNMHDR, LRESULT* pResult)
 	LPNM_LISTVIEW	plv = (LPNM_LISTVIEW)pNMHDR;
 	if (plv->uChanged & LVIF_STATE) {
 //		printf("iItem=%d OldState=%x NewState=%x\n", plv->iItem, plv->uOldState, plv->uNewState);
-		if ((plv->uNewState & LVIS_SELECTED)	// if item was selected
+		if ((plv->uNewState & LVIS_FOCUSED)	// if item was focused
 		&& m_NotifyChanges) {	// and change notifications are desired
 			CUndoManager&	UndoMgr = theApp.GetMain()->GetUndoMgr();
 			if (UndoMgr.IsIdle()) {	// avoid spurious notifications
@@ -225,8 +231,6 @@ void CPartsListView::OnListItemchanged(NMHDR* pNMHDR, LRESULT* pResult)
 		&& m_NotifyChanges) {	// and change notifications are desired
 			CUndoManager&	UndoMgr = theApp.GetMain()->GetUndoMgr();
 			if (UndoMgr.IsIdle()) {	// avoid spurious notifications
-				// passing iItem via CtrlID limits undo to 64K parts
-				ASSERT(plv->iItem >= 0 && plv->iItem <= USHRT_MAX);
 				UndoMgr.NotifyEdit(plv->iItem, 
 					UCODE_ENABLE_PART, CUndoable::UE_COALESCE);
 			}
@@ -242,8 +246,6 @@ void CPartsListView::OnListEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 	NMLVDISPINFO	*pdi = (NMLVDISPINFO *)pNMHDR;
 	const LVITEM&	item = pdi->item;
 	if (item.pszText != NULL) {
-		// passing iItem via CtrlID limits undo to 64K parts
-		ASSERT(item.iItem >= 0 && item.iItem <= USHRT_MAX);
 		theApp.GetMain()->GetUndoMgr().NotifyEdit(item.iItem, UCODE_RENAME);
 		theApp.GetMain()->GetPartsBar().SetPartName(item.iItem, item.pszText);
 	}

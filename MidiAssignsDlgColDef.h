@@ -9,7 +9,8 @@
 		rev		date	comments
 		00		21nov13	initial version
 		01		11nov14	add shared controller column
- 
+		02		23mar15	add value column
+
 		MIDI assignments dialog column definitions
 
 */
@@ -24,5 +25,6 @@ LISTCOLDEF(	PART,		LVCFMT_LEFT,	50)
 LISTCOLDEF(	PART_NAME,	LVCFMT_LEFT,	80)
 LISTCOLDEF(	TARGET,		LVCFMT_LEFT,	150)
 LISTCOLDEF(	SHARED,		LVCFMT_LEFT,	60)
+LISTCOLDEF(	VALUE,		LVCFMT_LEFT,	60)
 
 #undef LISTCOLDEF

@@ -9,6 +9,7 @@
 		rev		date	comments
         00      23sep13	initial version
 		01		31may14	add OnItemChange
+		02		12may15	remove unused update pos message
 
 		grid control
  
@@ -46,9 +47,6 @@ public:
 	void	CancelEdit();
 
 // Constants
-	enum {
-		UWM_UPDATE_POS = WM_USER + 300,
-	};
 
 // Overrides
 	// ClassWizard generated virtual function overrides

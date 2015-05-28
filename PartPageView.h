@@ -8,6 +8,8 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		16mar15	add const overload of MIDI target dialog accessor
+		02		23mar15	add MIDI target page accessor
 
 		part page view
  
@@ -59,6 +61,8 @@ public:
 	const CDialog	*GetPage(int PageIdx) const;
 	CString	GetControlCaption(UINT CtrlID) const;
 	CPartMidiTargetDlg&	GetMidiTargetDlg();
+	const CPartMidiTargetDlg&	GetMidiTargetDlg() const;
+	static	int		GetMidiTargetPage(int TargetIdx);
 
 // Operations
 public:
@@ -93,6 +97,9 @@ protected:
 	//}}AFX_MSG
 	afx_msg LRESULT	OnTabbedDlgSelect(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
+
+// Constants
+	static const int	m_MidiTargetPage[CPart::MIDI_TARGETS];
 
 // Member data
 	CTabbedDlg	m_TabDlg;	// tabbed dialog
@@ -138,6 +145,17 @@ inline void CPartPageView::UpdateCmdUI(BOOL bDisableIfNoHandler)
 inline CPartMidiTargetDlg& CPartPageView::GetMidiTargetDlg()
 {
 	return(m_MidiTargetDlg);
+}
+
+inline const CPartMidiTargetDlg& CPartPageView::GetMidiTargetDlg() const
+{
+	return(m_MidiTargetDlg);
+}
+
+inline int CPartPageView::GetMidiTargetPage(int TargetIdx)
+{
+	ASSERT(TargetIdx >= 0 && TargetIdx < CPart::MIDI_TARGETS);
+	return(m_MidiTargetPage[TargetIdx]);
 }
 
 /////////////////////////////////////////////////////////////////////////////

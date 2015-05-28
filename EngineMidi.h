@@ -9,6 +9,8 @@
 		rev		date	comments
 		00		23aug13	initial version
 		01		07oct14	add OutputSystem and transport change notification
+		02		10mar15	add tag exit notification
+		03		21mar15	add tap tempo notification
  
 		engine MIDI support
  
@@ -41,6 +43,8 @@ public:
 		NC_MIDI_REPEAT_ON,
 		NC_MIDI_REPEAT_OFF,
 		NC_TRANSPORT_CHANGE,
+		NC_TAG_EXIT,
+		NC_TAP_TEMPO,
 		NOTIFICATION_CODES
 	};
 

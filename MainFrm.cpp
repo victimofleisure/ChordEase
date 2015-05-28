@@ -23,6 +23,17 @@
 		13		11nov14	in OnMidiInputData, add CheckSharers
 		14		22dec14	in DestroyWindow, add CloseHtmlHelp
 		15		11jan15	in OnUpdateIndicatorTempo, apply tempo multiple
+		16		08mar15	add start tag command
+		17		15mar15	in SaveUndoState part case, add part index range check
+		18		16mar15	add method to generate MIDI targets table
+		19		16mar15	in GetCtrlMidiTarget, find methods no longer static
+		20		21mar15	add tap tempo undo
+		21		22mar15	MIDI chase regardless of whether target changed
+		22		23mar15	relay target changes to MIDI assignments dialog
+		23		05apr15	add chord dictionary editing
+		24		25apr15	in OnModelessDestroy, fix piano unhook
+		25		29apr15	remove OnHideSizingBar
+		26		13may15	add chord dictionary undo manager
 
 		ChordEase main frame
  
@@ -82,6 +93,11 @@ const int CMainFrame::m_PaneInfo[PANES] = {
 	#include "MainPaneDef.h"
 };
 
+const int CMainFrame::m_ModelessDlgOfs[MODELESS_DLGS] = {
+	#define MAINMODELESSDEF(name) offsetof(CMainFrame, m_##name##Dlg),
+	#include "MainModelessDef.h"
+};
+
 #define UCODE_DEF(name) IDS_UC_##name, 
 const int CMainFrame::m_UndoTitleID[UNDO_CODES] = {
 	#include "UndoCodeData.h"
@@ -91,6 +107,8 @@ const int CMainFrame::m_UndoTitleID[UNDO_CODES] = {
 #define RK_SONG_REPEAT		_T("SongRepeat")
 #define RK_AUTO_REWIND		_T("AutoRewind")
 
+#define WRITE_MIDI_TARGETS_TABLE	0	// non-zero to write HTML table
+
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame construction/destruction
 
@@ -99,10 +117,13 @@ CMainFrame::CMainFrame() :
 	m_MidiOutputBar(TRUE)
 {
 	m_WasShown = FALSE;
+	m_IsCreated = FALSE;
 	m_View = NULL;
 	m_OptionsPage = 0;
 	m_MidiLearn = FALSE;
 	m_MidiChaseEvents = FALSE;
+	m_ChordDictModFlag = FALSE;
+	m_MidiAssignsDlg = NULL;
 }
 
 CMainFrame::~CMainFrame()
@@ -174,6 +195,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		}
 		LoadBarState(REG_SETTINGS);
 	}
+#if WRITE_MIDI_TARGETS_TABLE	// after creating part's page view
+	WriteMidiTargetsTable(_T("MidiTargets.html"));	// write HTML table of MIDI targets
+#endif
 	DragAcceptFiles();
 	m_Options.Load();
 	ApplyOptions(m_Options, TRUE);	// force update
@@ -303,6 +327,25 @@ void CMainFrame::SaveToolDialogState()
 		theApp.WriteProfileInt(REG_SETTINGS, _T(#Name)_T("DlgShow"), \
 			!m_##Name##Dlg.IsEmpty());
 	#include "MainToolDlgDef.h"	// generate code to save dialog states
+}
+
+inline CModelessDlgPtrBase *CMainFrame::GetModelessDlgPtr(int iDlg) const
+{
+	ASSERT(iDlg >= 0 && iDlg < MODELESS_DLGS); 
+	return(reinterpret_cast<CModelessDlgPtrBase *>(LPBYTE(this) + m_ModelessDlgOfs[iDlg]));
+}
+
+int	CMainFrame::FindModelessDlg(const CDialog *pSrcDlg, CModelessDlgPtrBase*& pDlgPtr) const
+{
+	for (int iDlg = 0; iDlg < MODELESS_DLGS; iDlg++) {	// for each modeless dialog
+		CModelessDlgPtrBase	*pDP = GetModelessDlgPtr(iDlg);
+		if (*pDP == pSrcDlg) {	// if pointer points to source dialog
+			pDlgPtr = pDP;
+			return(iDlg);
+		}
+	}
+	pDlgPtr = NULL;
+	return(-1);	// source dialog not found
 }
 
 bool CMainFrame::CreateEngine()
@@ -489,10 +532,10 @@ int CMainFrame::GetCtrlMidiTarget(CWnd *pWnd, int& PartIdx) const
 	UINT	nID = pWnd->GetDlgCtrlID();
 	int	iTarget;
 	if (m_PatchBar.IsChild(pWnd)) {
-		iTarget = CPatchMidiTargetDlg::FindTargetByCtrlID(nID);
+		iTarget = m_PatchBar.GetMidiTargetDlg().FindTargetByCtrlID(nID);
 		PartIdx = -1;
 	} else {
-		iTarget = CPartMidiTargetDlg::FindTargetByCtrlID(nID);
+		iTarget = m_PartsBar.GetMidiTargetDlg().FindTargetByCtrlID(nID);
 		PartIdx = m_PartsBar.GetCurPart();
 	}
 	return(iTarget);
@@ -512,6 +555,49 @@ void CMainFrame::ResetMidiTarget(int PartIdx, int TargetIdx)
 {
 	CMidiTarget	targ;
 	SetMidiTarget(PartIdx, TargetIdx, targ);
+}
+
+#if WRITE_MIDI_TARGETS_TABLE
+#ifdef _DEBUG
+void CMainFrame::WriteMidiTargetsTable(LPCTSTR Path)
+{
+	CStdioFile	fp(Path, CFile::modeCreate | CFile::modeWrite);
+	struct TARGET_GROUP {
+		LPCTSTR	Name;	// group name
+		const CMidiTargetDlg	*pMTDlg;	// pointer to MIDI target dialog
+	};
+	const TARGET_GROUP	TargetGroup[] = {
+		{_T("Patch"),	&m_PatchBar.GetMidiTargetDlg()},
+		{_T("Part"),	&m_PartsBar.GetMidiTargetDlg()},
+	};
+	fp.WriteString(_T("<table border=1 cellpadding=2 cellspacing=0>\n"));
+	for (int iGrp = 0; iGrp < _countof(TargetGroup); iGrp++) {	// for each group
+		const TARGET_GROUP&	tg = TargetGroup[iGrp];
+		CString	s;
+		s.Format(_T("<tr><th colspan=3>%s Targets</th></tr>\n")
+			_T("<tr><th>Name</th><th>Type</th><th>Description</th></tr>\n"), tg.Name);
+		const CMidiTargetDlg	*pMTDlg = tg.pMTDlg;
+		int	nTargets = pMTDlg->GetTargetCount();
+		for (int iTarg = 0; iTarg < nTargets; iTarg++) {	// for each target
+			s += _T("<tr><td>") + pMTDlg->GetTargetName(iTarg) + _T("</td><td>") 
+				+ pMTDlg->GetTargetControlTypeName(iTarg) + _T("</td><td>")
+				+ pMTDlg->GetTargetHint(iTarg) + _T("</td></tr>\n");
+		}
+		fp.WriteString(s);
+	}
+	fp.WriteString(_T("</table>\n"));
+}
+#else
+#error MakeMidiTargetsTable doesn't belong in Release
+#endif	// _DEBUG
+#endif // WRITE_MIDI_TARGETS_TABLE
+
+void CMainFrame::SetTempo(double Tempo)
+{
+	CBasePatch	patch;
+	gEngine.GetBasePatch(patch);
+	patch.m_Tempo = Tempo;
+	SetBasePatch(patch);
 }
 
 void CMainFrame::ApplyOptions(const COptionsInfo& PrevOpts, bool ForceUpdate)
@@ -630,6 +716,8 @@ void CMainFrame::SaveUndoState(CUndoState& State)
 			CRefPtr<CPartUndoInfo>	uip;
 			uip.CreateObj();
 			int	iPart = GetPartsBar().GetCurPart();
+			if (!CPartsBar::IsValidPartIdx(iPart))	// if part index out of range
+				AfxThrowNotSupportedException();	// avoid crash
 			uip->m_Part = gEngine.GetPart(iPart);
 			State.SetObj(uip);
 			UVPartIdx(State) = iPart;
@@ -691,6 +779,9 @@ void CMainFrame::SaveUndoState(CUndoState& State)
 			gEngine.GetPatch().GetMidiTargets(uip->m_MidiTarget);
 			State.SetObj(uip);
 		}
+		break;
+	case UCODE_TAP_TEMPO:
+		State.m_Val.d = m_PatchBar.GetTempo();	// engine tempo already changed
 		break;
 	default:
 		NODEFAULTCASE;
@@ -788,6 +879,9 @@ void CMainFrame::RestoreUndoState(const CUndoState& State)
 			SetBasePatchAndParts(patch);
 		}
 		break;
+	case UCODE_TAP_TEMPO:
+		SetTempo(State.m_Val.d);
+		break;
 	default:
 		NODEFAULTCASE;
 	}
@@ -883,6 +977,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_TRANSPORT_RECORD, OnTransportRecord)
 	ON_COMMAND(ID_TRANSPORT_REPEAT, OnTransportRepeat)
 	ON_COMMAND(ID_TRANSPORT_REWIND, OnTransportRewind)
+	ON_COMMAND(ID_TRANSPORT_START_TAG, OnTransportStartTag)
+	ON_COMMAND(ID_TRANSPORT_TAP_TEMPO, OnTransportTapTempo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateEditCut)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditDelete)
@@ -907,11 +1003,15 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_RECORD, OnUpdateTransportRecord)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_REPEAT, OnUpdateTransportRepeat)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_REWIND, OnUpdateTransportRewind)
+	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_START_TAG, OnUpdateTransportStartTag)
+	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_TAP_TEMPO, OnUpdateTransportTapTempo)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_CHORD_DICTIONARY, OnUpdateViewChordDictionary)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_OUTPUT_NOTES, OnUpdateViewOutputNotes)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PARTS, OnUpdateViewParts)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PATCH, OnUpdateViewPatch)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PIANO, OnUpdateViewPiano)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_THREADS, OnUpdateViewThreads)
+	ON_COMMAND(ID_VIEW_CHORD_DICTIONARY, OnViewChordDictionary)
 	ON_COMMAND(ID_VIEW_OUTPUT_NOTES, OnViewOutputNotes)
 	ON_COMMAND(ID_VIEW_PARTS, OnViewParts)
 	ON_COMMAND(ID_VIEW_PATCH, OnViewPatch)
@@ -926,7 +1026,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_RECORD, OnUpdateIndicatorRecord)
 	ON_MESSAGE(WM_SETMESSAGESTRING, OnSetMessageString)
 	ON_MESSAGE(UWM_HANDLEDLGKEY, OnHandleDlgKey)
-	ON_MESSAGE(UWM_HIDESIZINGBAR, OnHideSizingBar)
 	ON_MESSAGE(UWM_DELAYEDCREATE, OnDelayedCreate)
 	ON_MESSAGE(UWM_ENGINEERROR, OnEngineError)
 	ON_MESSAGE(UWM_ENGINENOTIFY, OnEngineNotify)
@@ -936,6 +1035,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_MESSAGE(UWM_DEVICENODECHANGE, OnDeviceNodeChange)
 	ON_MESSAGE(UWM_MODELESSDESTROY, OnModelessDestroy)
 	ON_MESSAGE(UWM_COLORSTATUSBARPANE, OnColorStatusBarPane)
+	ON_MESSAGE(UWM_CHORDDICTCHANGE, OnChordDictChange)
 	ON_WM_DEVICECHANGE()
 	ON_COMMAND_RANGE(ID_PATCH_MRU_FILE1, ID_PATCH_MRU_FILE4, OnPatchMru)
 	ON_UPDATE_COMMAND_UI(ID_PATCH_MRU_FILE1, OnUpdatePatchMru)
@@ -982,6 +1082,17 @@ void CMainFrame::OnClose()
 	if (!m_PatchDoc.GetTitle().IsEmpty()) {	// if patch was read from file
 		if (!m_PatchDoc.CanCloseFrame(this))	// if save check fails
 			return;	// cancel close
+	}
+	if (m_ChordDictModFlag) {
+		CString	s;
+		AfxFormatString1(s, IDS_SAVE_CHANGES, CHORD_DICTIONARY_FILE_NAME);
+		int	retc = AfxMessageBox(s, MB_YESNOCANCEL);
+		if (retc == IDCANCEL)
+			return;
+		if (retc == IDYES) {
+			CString	ChordDictPath(theApp.MakeDataFolderPath(CHORD_DICTIONARY_FILE_NAME));
+			gEngine.WriteChordDictionary(ChordDictPath);
+		}
 	}
 	CFrameWnd::OnClose();
 }
@@ -1112,6 +1223,17 @@ LRESULT	CMainFrame::OnColorStatusBarPane(WPARAM wParam, LPARAM lParam)
 	return (LRESULT)BkColor;
 }
 
+LRESULT CMainFrame::OnChordDictChange(WPARAM wParam, LPARAM lParam)
+{
+	ASSERT(!m_ChordDictDlg.IsEmpty());
+	m_ChordDictModFlag = TRUE;
+	if (!gEngine.SetChordDictionary(m_ChordDictDlg->GetDictionary())) {
+		m_View->UpdateChart();	// reloading song failed so update chart
+		m_View->GetDocument()->m_UndoMgr.DiscardAllEdits();	// avoids bad stuff
+	}
+	return 0;
+}
+
 LRESULT CMainFrame::OnSetMessageString(WPARAM wParam, LPARAM lParam)
 {
 	switch (wParam) {
@@ -1128,36 +1250,21 @@ LRESULT	CMainFrame::OnHandleDlgKey(WPARAM wParam, LPARAM lParam)
 
 LRESULT	CMainFrame::OnModelessDestroy(WPARAM wParam, LPARAM lParam)
 {
-	CDialog	*pDlg = reinterpret_cast<CDialog *>(wParam);
-	if (m_ThreadsDlg == pDlg)	// if threads dialog
-		m_ThreadsDlg.Reset();	// reset dialog pointer
-	else if (m_PianoDlg == pDlg) {	// else if piano dialog
-		m_PianoDlg.Reset();	// reset dialog pointer
+	CDialog	*pSrcDlg = reinterpret_cast<CDialog *>(wParam);
+	CModelessDlgPtrBase	*pDlgPtr;
+	int	iDlg = FindModelessDlg(pSrcDlg, pDlgPtr);
+	ASSERT(iDlg >= 0);	// modeless dialog must be found, else logic error
+	if (iDlg >= 0)	// if modeless dialog found
+		pDlgPtr->Empty();	// reset pointer
+	// order matters; update hooking AFTER resetting dialog pointer
+	if (iDlg == MODELESS_Piano)	// if modeless dialog is piano dialog
 		UpdateHookMidiInput();	// update hooking MIDI input state
-	}
-	return(0);
-}
-
-LRESULT	CMainFrame::OnHideSizingBar(WPARAM wParam, LPARAM lParam)
-{
-	CMySizingControlBar	*pBar= reinterpret_cast<CMySizingControlBar*>(wParam);
-	if (!pBar->IsWindowVisible()) {	// if bar is really hidden
-		if (pBar == &m_MidiInputBar) {	// if bar is MIDI input
-			UpdateHookMidiInput();
-			m_MidiInputBar.OnShowBar(FALSE);
-		} else if (pBar == &m_MidiOutputBar) {	// if bar is MIDI output
-			UpdateHookMidiOutput();
-			m_MidiOutputBar.OnShowBar(FALSE);
-		} else if (pBar == &m_OutputNotesBar) {	// if bar is output notes
-			UpdateHookMidiOutput();
-			m_OutputNotesBar.OnShowBar(FALSE);
-		}
-	}
 	return(0);
 }
 
 LRESULT	CMainFrame::OnDelayedCreate(WPARAM wParam, LPARAM lParam)
 {
+	m_IsCreated = TRUE;	// set done flag first in case we throw an exception
 	theApp.BoostThreads();	// boost priority of MIDI input callbacks (if needed)
 	gEngine.Run(TRUE);	// start engine after document loads song
 	LoadToolDialogState();	// order matters; do before updating hook states
@@ -1210,20 +1317,15 @@ LRESULT	CMainFrame::OnEngineNotify(WPARAM wParam, LPARAM lParam)
 	case CEngine::NC_TRANSPORT_CHANGE:
 		m_ToolBar.OnUpdateCmdUI(this, FALSE);	// update toolbar buttons
 		break;
+	case CEngine::NC_TAP_TEMPO:
+		m_PatchBar.SetPatch(gEngine.GetPatch());
+		break;
 	}
 	return(0);
 }
 
 LRESULT	CMainFrame::OnMidiTargetChange(WPARAM wParam, LPARAM lParam)
 {
-	static const int PartMidiTargetPage[CPart::MIDI_TARGETS] = {
-		#define PARTMIDITARGETDEF(name, page) CPartPageView::PAGE_##page,
-		#include "PartMidiTargetDef.h"	// map part MIDI targets to part pages
-	};
-	static const int PatchMidiTargetPage[CPatch::MIDI_TARGETS] = {
-		#define PATCHMIDITARGETDEF(name, page, tag) CPatchBar::PAGE_##page,
-		#include "PatchMidiTargetDef.h"	// map patch MIDI targets to patch pages
-	};
 	int	iPart = static_cast<int>(wParam);
 	int	iTarget = LOWORD(lParam);
 	int	bChanged = HIWORD(lParam);
@@ -1236,35 +1338,30 @@ LRESULT	CMainFrame::OnMidiTargetChange(WPARAM wParam, LPARAM lParam)
 		if (m_PatchBar.GetMidiTargetDlg().IsWindowVisible())
 			m_PatchBar.GetMidiTargetDlg().UpdateShadowVal(iTarget);
 	}
-	if (bChanged) {	// if target parameter changed
-		if (iPart >= 0) {	// if part target
-			int	iPage = PartMidiTargetPage[iTarget];
-			CPart	part(gEngine.GetPart(iPart));
+	if (m_MidiAssignsDlg != NULL)	// if MIDI assignments dialog exists
+		m_MidiAssignsDlg->OnMidiTargetChange(iPart, iTarget);	// relay message
+	if (iPart >= 0) {	// if part target
+		int	iPage = CPartPageView::GetMidiTargetPage(iTarget);
+		if (m_MidiChaseEvents && !m_MidiLearn) {	// if chasing MIDI events
+			NotifyEdit(0, UCODE_MIDI_CHASE,	UE_COALESCE | UE_INSIGNIFICANT);
+			m_PartsBar.ChaseMidiTarget(iPart, iPage, iTarget);	// chase to target
+		}
+		if (bChanged) {	// if target parameter changed
+			const CPart&	part = gEngine.GetPart(iPart);
 			if (iPage >= 0) {	// if valid part page
-				if (m_MidiChaseEvents && !m_MidiLearn) {	// if chasing MIDI events
-					NotifyEdit(0, UCODE_MIDI_CHASE,	// save part/page indices
-						CUndoable::UE_COALESCE | CUndoable::UE_INSIGNIFICANT);
-					if (!m_PartsBar.IsWindowVisible())	// if parts bar hidden
-						ShowControlBar(&m_PartsBar, TRUE, 0);	// show parts bar
-					if (iPart != m_PartsBar.GetCurPart())
-						m_PartsBar.SetCurPart(iPart);	// chase to target's part
-					m_PartsBar.SetCurPage(iPage);	// chase to target's page
-				}
 				if (iPart == m_PartsBar.GetCurPart())	// if target part is showing
 					m_PartsBar.GetPageView()->UpdatePage(iPage, part);	// update page
 			} else	// assume parts list
 				m_PartsBar.GetListView()->SetSubitems(iPart, part);	// update parts list
-		} else {	// patch target
-			int	iPage = PatchMidiTargetPage[iTarget];
-			CBasePatch	patch;
-			gEngine.GetBasePatch(patch);
-			if (m_MidiChaseEvents && !m_MidiLearn) {	// if chasing MIDI events
-				NotifyEdit(0, UCODE_MIDI_CHASE, // save part/page indices
-					CUndoable::UE_COALESCE | CUndoable::UE_INSIGNIFICANT);
-				if (!m_PatchBar.IsWindowVisible())	// if patch bar hidden
-					ShowControlBar(&m_PatchBar, TRUE, 0);	// show patch bar
-				m_PatchBar.SetCurPage(iPage);	// chase to target's page
-			}
+		}
+	} else {	// patch target
+		int	iPage = CPatchBar::GetMidiTargetPage(iTarget);
+		if (m_MidiChaseEvents && !m_MidiLearn) {	// if chasing MIDI events
+			NotifyEdit(0, UCODE_MIDI_CHASE, UE_COALESCE | UE_INSIGNIFICANT);
+			m_PatchBar.ChaseMidiTarget(iPage, iTarget);	// chase to target
+		}
+		if (bChanged) {	// if target parameter changed
+			const CPatch&	patch = gEngine.GetPatch();
 			m_PatchBar.UpdatePage(iPage, patch);	// update page
 			if (iTarget == CPatch::MIDI_TARGET_TRANSPOSE)	// if target is transpose
 				m_View->UpdateChart();	// update chart view
@@ -1661,10 +1758,21 @@ void CMainFrame::OnTransportNextSection()
 
 void CMainFrame::OnUpdateTransportNextSection(CCmdUI* pCmdUI) 
 {
-	bool	HasSections = gEngine.GetSong().GetSectionCount() > 1;
+	bool	HasSections = gEngine.GetSong().GetSectionCount() > 1 || gEngine.IsTagging();
 	pCmdUI->Enable(gEngine.IsPlaying() && HasSections);
 	pCmdUI->SetCheck(gEngine.SectionLastPass() && HasSections 
 		&& gEngine.GetCurSection().Explicit());
+}
+
+void CMainFrame::OnTransportStartTag() 
+{
+	gEngine.StartTag();
+}
+
+void CMainFrame::OnUpdateTransportStartTag(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(gEngine.IsPlaying() && !gEngine.GetSong().IsEmpty());
+	pCmdUI->SetCheck(gEngine.IsTagging());
 }
 
 void CMainFrame::OnTransportNextChord() 
@@ -1718,10 +1826,25 @@ void CMainFrame::OnUpdateTransportAutoRewind(CCmdUI* pCmdUI)
 	pCmdUI->SetCheck(gEngine.GetAutoRewind());
 }
 
+void CMainFrame::OnTransportTapTempo() 
+{
+	if (gEngine.TapTempo())	// if tempo changed
+		NotifyEdit(0, UCODE_TAP_TEMPO, CUndoable::UE_COALESCE);
+}
+
+void CMainFrame::OnUpdateTransportTapTempo(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(!theApp.m_Engine.GetPatch().m_Sync.In.Enable);
+}
+
 void CMainFrame::OnMidiAssignments() 
 {
-	CMidiAssignsDlg	dlg;
-	dlg.DoModal();
+	ASSERT(m_MidiAssignsDlg == NULL);
+	m_MidiAssignsDlg = new CMidiAssignsDlg;
+	// window is created before modal loop runs, and destroyed after it exits
+	m_MidiAssignsDlg->DoModal();
+	delete m_MidiAssignsDlg;
+	m_MidiAssignsDlg = NULL;	// mark dialog as deleted
 }
 
 void CMainFrame::OnMidiNoteMappings() 
@@ -1732,18 +1855,12 @@ void CMainFrame::OnMidiNoteMappings()
 
 void CMainFrame::OnMidiInput() 
 {
-	bool	bShow = !m_MidiInputBar.IsWindowVisible();
-	ShowControlBar(&m_MidiInputBar, bShow, 0);
-	UpdateHookMidiInput();
-	m_MidiInputBar.OnShowBar(bShow);
+	ShowControlBar(&m_MidiInputBar, !m_MidiInputBar.IsWindowVisible(), 0);
 }
 
 void CMainFrame::OnMidiOutput() 
 {
-	bool	bShow = !m_MidiOutputBar.IsWindowVisible();
-	ShowControlBar(&m_MidiOutputBar, bShow, 0);
-	UpdateHookMidiOutput();
-	m_MidiOutputBar.OnShowBar(bShow);
+	ShowControlBar(&m_MidiOutputBar, !m_MidiOutputBar.IsWindowVisible(), 0);
 }
 
 void CMainFrame::OnUpdateMidiInput(CCmdUI* pCmdUI) 
@@ -1832,10 +1949,7 @@ void CMainFrame::OnUpdateViewParts(CCmdUI* pCmdUI)
 
 void CMainFrame::OnMidiDevices() 
 {
-	bool	bShow = !m_DeviceBar.IsWindowVisible();
-	ShowControlBar(&m_DeviceBar, bShow, 0);
-	if (bShow)	// if showing
-		m_DeviceBar.UpdateView();
+	ShowControlBar(&m_DeviceBar, !m_DeviceBar.IsWindowVisible(), 0);
 }
 
 void CMainFrame::OnUpdateMidiDevices(CCmdUI* pCmdUI) 
@@ -1845,9 +1959,10 @@ void CMainFrame::OnUpdateMidiDevices(CCmdUI* pCmdUI)
 
 void CMainFrame::OnViewThreads() 
 {
-	if (m_ThreadsDlg.IsEmpty())	// if dialog doesn't exist
-		m_ThreadsDlg.Create(IDD_THREADS);
-	else	// dialog exists
+	if (m_ThreadsDlg.IsEmpty()) {	// if dialog doesn't exist
+		if (!m_ThreadsDlg.Create(IDD_THREADS))
+			AfxThrowResourceException();
+	} else	// dialog exists
 		m_ThreadsDlg.Destroy();
 }
 
@@ -1859,7 +1974,8 @@ void CMainFrame::OnUpdateViewThreads(CCmdUI* pCmdUI)
 void CMainFrame::OnViewPiano() 
 {
 	if (m_PianoDlg.IsEmpty()) {	// if dialog doesn't exist
-		m_PianoDlg.Create(IDD_PIANO);
+		if (!m_PianoDlg.Create(IDD_PIANO))
+			AfxThrowResourceException();
 		UpdateHookMidiInput();
 	} else	// dialog exists
 		m_PianoDlg.Destroy();
@@ -1872,10 +1988,7 @@ void CMainFrame::OnUpdateViewPiano(CCmdUI* pCmdUI)
 
 void CMainFrame::OnViewOutputNotes() 
 {
-	bool	bShow = !m_OutputNotesBar.IsWindowVisible();
-	ShowControlBar(&m_OutputNotesBar, bShow, 0);
-	UpdateHookMidiOutput();
-	m_OutputNotesBar.OnShowBar(bShow);
+	ShowControlBar(&m_OutputNotesBar, !m_OutputNotesBar.IsWindowVisible(), 0);
 }
 
 void CMainFrame::OnUpdateViewOutputNotes(CCmdUI* pCmdUI) 
@@ -1887,4 +2000,26 @@ void CMainFrame::OnViewRecordPlayer()
 {
 	CRecordPlayerDlg	dlg;
 	dlg.DoModal();
+}
+
+void CMainFrame::OnViewChordDictionary() 
+{
+	if (m_ChordDictDlg.IsEmpty()) {	// if dialog doesn't exist
+		if (!m_ChordDictDlg.Create(IDD_CHORD_DICTIONARY))
+			AfxThrowResourceException();
+		m_ChordDictDlg->SetUndoManager(&m_ChordDictUndoMgr);
+		m_ChordDictUndoMgr.SetRoot(m_ChordDictDlg);
+		m_ChordDictDlg->SetDictionary(gEngine.GetSong().GetChordDictionary());
+		if (!gEngine.GetSong().IsEmpty()) {	// if song is loaded
+			int	iHarm = gEngine.GetHarmonyIndex();
+			int	iType = gEngine.GetHarmony(iHarm).m_Type;
+			m_ChordDictDlg->SetCurType(iType);	// select song's current chord type
+		}
+	} else	// dialog exists
+		m_ChordDictDlg.Destroy();
+}
+
+void CMainFrame::OnUpdateViewChordDictionary(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(!m_ChordDictDlg.IsEmpty());
 }

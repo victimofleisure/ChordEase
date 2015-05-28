@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		20mar15	add arpeggio adapt
 
 		part comp dialog
  
@@ -50,6 +51,7 @@ void CPartCompDlg::GetPart(CPart& Part) const
 	Part.m_Comp.Arp.Period = m_ArpPeriod.GetVal();
 	Part.m_Comp.Arp.Order = m_ArpOrder.GetCurSel();
 	Part.m_Comp.Arp.Repeat = m_ArpRepeat.GetCheck() != 0;
+	Part.m_Comp.Arp.Adapt = m_ArpAdapt.GetCheck() != 0;
 	Part.m_Comp.ChordResetsAlt = m_ChordResetsAlt.GetCheck() != 0;
 }
 
@@ -60,6 +62,7 @@ void CPartCompDlg::SetPart(const CPart& Part)
 	m_ArpPeriod.SetVal(Part.m_Comp.Arp.Period);
 	m_ArpOrder.SetCurSel(Part.m_Comp.Arp.Order);
 	m_ArpRepeat.SetCheck(Part.m_Comp.Arp.Repeat);
+	m_ArpAdapt.SetCheck(Part.m_Comp.Arp.Adapt);
 	m_ChordResetsAlt.SetCheck(Part.m_Comp.ChordResetsAlt);
 }
 
@@ -76,6 +79,7 @@ void CPartCompDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CPartPageDlg::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CPartCompDlg)
+	DDX_Control(pDX, IDC_PART_COMP_ARP_ADAPT, m_ArpAdapt);
 	DDX_Control(pDX, IDC_PART_COMP_ARP_ORDER, m_ArpOrder);
 	DDX_Control(pDX, IDC_PART_COMP_ARP_REPEAT, m_ArpRepeat);
 	DDX_Control(pDX, IDC_PART_COMP_ARP_PERIOD, m_ArpPeriod);

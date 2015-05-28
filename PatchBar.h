@@ -9,6 +9,9 @@
 		rev		date	comments
 		00		14sep13	initial version
 		01		07oct14	add sync page
+		02		16mar15	add const overload of MIDI target dialog accessor
+		03		21mar15	add tempo accessor
+		04		23mar15	add MIDI chase support
 
         patch bar
  
@@ -57,12 +60,16 @@ public:
 	const CDialog	*GetPage(int PageIdx) const;
 	CString	GetControlCaption(UINT CtrlID) const;
 	CPatchMidiTargetDlg&	GetMidiTargetDlg();
+	const CPatchMidiTargetDlg&	GetMidiTargetDlg() const;
+	static	int		GetMidiTargetPage(int TargetIdx);
+	double	GetTempo() const;
 
 // Operations
 public:
 	void	UpdateView();
 	void	FocusControl(UINT CtrlID);
 	void	UpdatePage(int PageIdx, const CBasePatch& Patch);
+	void	ChaseMidiTarget(int PageIdx, int TargetIdx);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -83,6 +90,9 @@ protected:
 	//}}AFX_MSG
 	afx_msg LRESULT	OnTabbedDlgSelect(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
+
+// Constants
+	static const int	m_MidiTargetPage[CPatch::MIDI_TARGETS];
 
 // Member data
 	CTabbedDlg	m_TabDlg;	// tabbed dialog
@@ -123,6 +133,22 @@ inline void CPatchBar::FocusControl(UINT CtrlID)
 inline CPatchMidiTargetDlg& CPatchBar::GetMidiTargetDlg()
 {
 	return(m_MidiTargetDlg);
+}
+
+inline const CPatchMidiTargetDlg& CPatchBar::GetMidiTargetDlg() const
+{
+	return(m_MidiTargetDlg);
+}
+
+inline int CPatchBar::GetMidiTargetPage(int TargetIdx)
+{
+	ASSERT(TargetIdx >= 0 && TargetIdx < CPatch::MIDI_TARGETS);
+	return(m_MidiTargetPage[TargetIdx]);
+}
+
+inline double CPatchBar::GetTempo() const
+{
+	return(m_GeneralDlg.GetTempo());
 }
 
 /////////////////////////////////////////////////////////////////////////////

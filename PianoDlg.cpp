@@ -10,6 +10,7 @@
         00      22apr14	initial version
 		01		15may14	in UpdateKeyLabels, add non-diatonic rules
 		02		09sep14	in OnShowWindow, reference note map instead of copying
+        03      06may15	add piano size submenu
 
 		piano dialog
 
@@ -23,6 +24,8 @@
 #include "PianoDlg.h"
 #include "Note.h"
 #include "Diatonic.h"
+#include "ChordEaseDoc.h"
+#include "ChordEaseView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -32,6 +35,11 @@ static char THIS_FILE[] = __FILE__;
 
 /////////////////////////////////////////////////////////////////////////////
 // CPianoDlg dialog
+
+const CPianoDlg::PIANO_RANGE CPianoDlg::m_PianoRange[PIANO_SIZES] = {
+	#define PIANOSIZEDEF(StartNote, KeyCount) {StartNote, KeyCount},
+	#include "PianoSizeDef.h"
+};
 
 #define RK_PIANO_STATE	REG_SETTINGS _T("\\Piano")
 
@@ -300,8 +308,8 @@ BEGIN_MESSAGE_MAP(CPianoDlg, CModelessDlg)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnToolTipNeedText)
 	ON_MESSAGE(UWM_PIANOKEYCHANGE, OnPianoKeyChange)
+	ON_COMMAND_RANGE(SMID_PIANO_SIZE_START, SMID_PIANO_SIZE_END, OnPianoSize)
 	ON_COMMAND_RANGE(ID_PIANO_KEY_LABEL_TYPE, ID_PIANO_KEY_LABEL_TYPE6, OnKeyLabelType)
-	ON_UPDATE_COMMAND_UI_RANGE(ID_PIANO_KEY_LABEL_TYPE, ID_PIANO_KEY_LABEL_TYPE6, OnUpdateKeyLabelType)
 	ON_WM_EXITMENULOOP()
 END_MESSAGE_MAP()
 
@@ -425,7 +433,24 @@ void CPianoDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 	CMenu	menu;
 	menu.LoadMenu(IDM_PIANO_CTX);
 	CMenu	*mp = menu.GetSubMenu(0);
-	CPersistDlg::UpdateMenu(this, mp);
+	// make piano size submenu
+	CStringArray	item;	// menu item strings
+	CString	s;
+	item.SetSize(PIANO_SIZES);
+	int	iPianoSize = -1;
+	for (int iItem = 0; iItem < PIANO_SIZES; iItem++) {
+		const PIANO_RANGE&	pr = m_PianoRange[iItem];
+		if (pr.StartNote == m_State.StartNote && pr.KeyCount == m_State.KeyCount)
+			iPianoSize = iItem;	// preset range matches current state
+		s.Format(_T("%d"), pr.KeyCount);
+		item[iItem] = s;
+	}
+	CMenu	*pPopup = mp->GetSubMenu(SM_PIANO_SIZE);
+	CChordEaseView::MakePopup(*pPopup, SMID_PIANO_SIZE_START, item, iPianoSize);
+	// CCmdUI radio button implementation uses absurdly small button bitmap
+	pPopup = mp->GetSubMenu(SM_KEY_LABEL);	// so create radio button explicitly
+	pPopup->CheckMenuRadioItem(0, KEY_LABEL_TYPES, m_State.KeyLabelType, MF_BYPOSITION);
+	CPersistDlg::UpdateMenu(this, mp);	// call UI handlers for bool checkmarks
 	mp->TrackPopupMenu(0, point.x, point.y, this);
 }
 
@@ -459,19 +484,24 @@ void CPianoDlg::OnSelchangeKeyCount()
 	UpdatePianoRange();
 }
 
+void CPianoDlg::OnPianoSize(UINT nID)
+{
+	int	iSize = nID - SMID_PIANO_SIZE_START;
+	ASSERT(iSize >= 0 && iSize < PIANO_SIZES);
+	const PIANO_RANGE&	pr = m_PianoRange[iSize];
+	m_State.StartNote = pr.StartNote;
+	m_State.KeyCount = pr.KeyCount;
+	m_StartNoteCombo.SetCurSel(pr.StartNote);
+	m_KeyCountCombo.SetCurSel(pr.KeyCount - MIN_KEYS);
+	UpdatePianoRange();
+}
+
 void CPianoDlg::OnKeyLabelType(UINT nID)
 {
 	int	iType = static_cast<int>(nID) - ID_PIANO_KEY_LABEL_TYPE;
 	ASSERT(iType >= 0 && iType < KEY_LABEL_TYPES);
 	m_State.KeyLabelType = iType;
 	UpdateKeyLabelType();
-}
-
-void CPianoDlg::OnUpdateKeyLabelType(CCmdUI* pCmdUI)
-{
-	int	iType = static_cast<int>(pCmdUI->m_nID) - ID_PIANO_KEY_LABEL_TYPE;
-	ASSERT(iType >= 0 && iType < KEY_LABEL_TYPES);
-	pCmdUI->SetRadio(iType == m_State.KeyLabelType);
 }
 
 void CPianoDlg::OnShowOctaves() 
@@ -543,8 +573,11 @@ void CPianoDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 
 void CPianoDlg::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
-	if (!(nFlags & MF_SYSMENU))	// if not system menu item
+	if (!(nFlags & MF_SYSMENU)) {	// if not system menu item
+		if (nItemID >= SMID_PIANO_SIZE_START && nItemID <= SMID_PIANO_SIZE_END)
+			nItemID = IDS_OUT_NOTES_SM_PIANO_SIZE;
 		AfxGetMainWnd()->SendMessage(WM_SETMESSAGESTRING, nItemID, 0);	// set status hint
+	}
 }
 
 void CPianoDlg::OnExitMenuLoop(BOOL bIsTrackPopupMenu)

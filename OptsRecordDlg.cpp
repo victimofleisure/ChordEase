@@ -10,6 +10,7 @@
         00      26mar14	initial version
         01      16apr14	remove record folder type
 		02		08jul14	in OnFolderBrowse, set initial directory
+		03		01apr15	add fix duplicate notes
 
         record options dialog
  
@@ -64,6 +65,7 @@ void COptsRecordDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxInt(pDX, m_oi.m_Record.BufferSize, 1000, INT_MAX);
 	DDX_Text(pDX, IDC_OPT_REC_MIDI_FILE_PPQ, m_oi.m_Record.MidiFilePPQ);
 	DDV_MinMaxShort(pDX, m_oi.m_Record.MidiFilePPQ, 24, SHRT_MAX);
+	DDX_Check(pDX, IDC_OPT_REC_FIX_DUP_NOTES, m_oi.m_Record.FixDupNotes);
 	DDX_Text(pDX, IDC_OPT_REC_FOLDER_PATH, m_oi.m_RecordFolderPath);
 	if (GetCustomFolder())	// if custom folder
 		CChordEaseApp::ValidateFolder(pDX, IDC_OPT_REC_FOLDER_PATH, m_oi.m_RecordFolderPath);

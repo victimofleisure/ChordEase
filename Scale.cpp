@@ -8,6 +8,9 @@
 		revision history:
 		rev		date	comments
 		00		23aug13	initial version
+		01		18mar15	move find into base class
+		02		19mar15	in FindNearest and FindLeastInterval, assert if empty
+		03		04apr15	add interval names
  
 		scale container
 
@@ -23,6 +26,13 @@ int CScale::GetTonality() const
 	return(third == Eb ? CNote::MINOR : CNote::MAJOR);
 }
 
+void CScale::CopyInts(const int *pScale, int nCount)
+{
+	SetSize(nCount);
+	for (int iNote = 0; iNote < nCount; iNote++)
+		SetAt(iNote, pScale[iNote]);
+}
+
 bool CScale::operator==(const CScale& Scale) const
 {
 	if (Scale.m_Size != m_Size)
@@ -33,6 +43,18 @@ bool CScale::operator==(const CScale& Scale) const
 			return(FALSE);
 	}
 	return(TRUE);
+}
+
+bool CScale::operator<(const CScale& Scale) const
+{
+	int	notes = min(m_Size, Scale.m_Size);
+	for (int iNote = 0; iNote < notes; iNote++) {
+		if (GetAt(iNote) < Scale[iNote])
+			return(TRUE);
+		if (GetAt(iNote) > Scale[iNote])
+			return(FALSE);
+	}
+	return(m_Size < Scale.m_Size);
 }
 
 void CScale::Print(CNote Key, int Tonality) const
@@ -75,21 +97,23 @@ CString CScale::NoteMidiNames(CNote Key, int Tonality) const
 	return(s);
 }
 
+CString	CScale::IntervalNames(CNote Key, int Tonality) const
+{
+	CString	s;
+	int	notes = m_Size;
+	for (int iNote = 0; iNote < notes; iNote++) {
+		if (iNote)
+			s += ' ';
+		s += Key.IntervalName(GetAt(iNote), Tonality);
+	}
+	return(s);
+}
+
 void CScale::Normalize()
 {
 	int	notes = m_Size;
 	for (int iNote = 0; iNote < notes; iNote++)
 		GetAt(iNote).Normalize();
-}
-
-int CScale::Find(CNote Note) const
-{
-	int	notes = m_Size;
-	for (int iNote = 0; iNote < notes; iNote++) {
-		if (GetAt(iNote) == Note)	// if note was found
-			return(iNote);
-	}
-	return(-1);	// fail
 }
 
 int CScale::FindNormal(CNote Note) const
@@ -105,6 +129,7 @@ int CScale::FindNormal(CNote Note) const
 
 int CScale::FindNearest(CNote Note) const
 {
+	ASSERT(!IsEmpty());	// scale can't be empty
 	int	iNearest = 0;
 	int	MinDelta = INT_MAX;
 	int	notes = m_Size;
@@ -122,6 +147,7 @@ int CScale::FindNearest(CNote Note) const
 
 int CScale::FindLeastInterval(CNote Note) const
 {
+	ASSERT(!IsEmpty());	// scale can't be empty
 	Note.Normalize();
 	int	iNearest = 0;
 	int	MinDelta = INT_MAX;

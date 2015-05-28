@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		13mar14	initial version
 		01		23may14	add UpdateDevices
+		02		29apr15	override OnShowChanged
 
         MIDI event bar
  
@@ -42,7 +43,6 @@ public:
 // Operations
 public:
 	void	AddEvent(WPARAM wParam, LPARAM lParam);
-	void	OnShowBar(bool Show);
 	void	UpdateDevices();
 
 // Overrides
@@ -64,6 +64,9 @@ protected:
 
 // Member data
 	CMidiEventDlg	m_Dlg;	// child dialog
+
+// Overrides
+	virtual	void	OnShowChanged(BOOL bShow);
 };
 
 inline void CMidiEventBar::AddEvent(WPARAM wParam, LPARAM lParam)

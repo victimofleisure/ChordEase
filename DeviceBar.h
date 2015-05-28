@@ -9,6 +9,7 @@
 		rev		date	comments
         00      08nov13	initial version
 		01		28apr14	add device state change handler
+		02		29apr15	override OnShowChanged
 
 		device bar
  
@@ -63,6 +64,9 @@ protected:
 
 // Member data
 	CDeviceDlg	m_Dlg;		// device child dialog
+
+// Overrides
+	virtual	void	OnShowChanged(BOOL bShow);
 };
 
 inline void CDeviceBar::UpdateView()

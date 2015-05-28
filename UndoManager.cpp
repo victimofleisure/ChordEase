@@ -24,6 +24,7 @@
 		14		05dec12	add UndoNoRedo
 		15		11feb13	add OnUpdateTitles and SetPos
 		16		01may14	widen CtrlID and Code to 32-bit
+		17		07may15	in DumpState, use address format for object pointer
 
         undoable edit interface
  
@@ -222,7 +223,7 @@ void CUndoManager::DiscardAllEdits()
 
 void CUndoManager::DumpState(LPCTSTR Tag, int Pos)
 {
-	_tprintf(_T("%s '%s' Pos=%d %s Obj=0x%x\n"), Tag, GetTitle(Pos), Pos, 
+	_tprintf(_T("%s '%s' Pos=%d %s Obj=%p\n"), Tag, GetTitle(Pos), Pos, 
 		m_List[Pos].DumpState(), m_List[Pos].GetObj());
 }
 

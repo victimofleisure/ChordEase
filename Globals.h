@@ -11,6 +11,8 @@
 		01		01jul14	add lead sheet file extension
 		02		09sep14	add undo test flags
 		03		29sep14	add OpenThread for MFC 6
+		04		05apr15	add chord dictionary change message
+		05		29apr15	remove hide sizing bar message
 
 		global definitions and inlines
 
@@ -193,7 +195,6 @@ enum {	// user windows messages
 	UWM_HANDLEDLGKEY,		// wParam: MSG pointer, lParam: none
 	UWM_TABBEDDLGSELECT,	// wParam: page index, lParam: CTabbedDlg HWND
 	UWM_MODELESSDESTROY,	// wParam: CDialog*, lParam: none
-	UWM_HIDESIZINGBAR,		// wParam: CMySizingControlBar*, lParam: none
 	UWM_DELAYEDCREATE,		// wParam: none, lParam: none
 	UWM_ENGINEERROR,		// wParam: string resource ID, lParam: CEngine*
 	UWM_ENGINENOTIFY,		// wParam: notification code, lParam: CEngine*
@@ -202,6 +203,7 @@ enum {	// user windows messages
 	UWM_MIDIINPUTDATA,		// wParam: MIDI message and device index in MSB, lParam: timestamp
 	UWM_MIDIOUTPUTDATA,		// wParam: MIDI message and device index in MSB, lParam: timestamp
 	UWM_COLORSTATUSBARPANE,	// wParam: HDC, lParam: pane index, return COLORREF
+	UWM_CHORDDICTCHANGE,	// wParam: CChordDictionaryDlg*, lParam: none
 };
 
 // file extensions

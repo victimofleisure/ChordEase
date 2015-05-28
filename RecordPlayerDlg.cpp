@@ -11,7 +11,9 @@
 		01		15dec14	in MillisToCount, use 64-bit round
 		02		17dec14	in Play, use SendMessage instead of PostMessage
 		03		23dec14	in Open, set slider page and line sizes
- 
+		04		01apr15	in Export, add fix duplicate notes
+		05		03apr15	use exact find string for combo box 
+
 		playback dialog for MIDI recordings
 
 */
@@ -273,8 +275,9 @@ bool CRecordPlayerDlg::Export(LPCTSTR Path)
 	CMidiRecord	Record;
 	CMidiRecord::CPartInfoArray	PartInfo;
 	GetEvents(Record, PartInfo);
+	const COptionsInfo&	opts = theApp.GetMain()->GetOptions();
 	return(Record.ExportMidiFile(Path, PartInfo, m_FileHdr.Tempo, 
-		theApp.GetMain()->GetOptions().m_Record.MidiFilePPQ, m_FileHdr.PerfFreq));
+		opts.m_Record.MidiFilePPQ, m_FileHdr.PerfFreq, opts.m_Record.FixDupNotes != 0));
 }
 
 void CRecordPlayerDlg::Play(bool Enable, bool NoUI)
@@ -349,7 +352,7 @@ CWnd *CRecordPlayerDlg::CTrackList::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, 
 				s.Format(_T("%d"), iChan);
 				pCombo->AddString(s);
 			}
-			pCombo->SetCurSel(pCombo->FindString(0, Text));
+			pCombo->SetCurSel(pCombo->FindStringExact(-1, Text));
 			pCombo->ShowDropDown();
 		}
 		return(pCombo);

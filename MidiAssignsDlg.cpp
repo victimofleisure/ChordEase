@@ -11,7 +11,10 @@
 		01		22apr14	in OnInitDialog, fix initial sort
 		02		29apr14	in SortCompare, don't assert on default case
  		03		11nov14	add shared controller column
- 
+		04		23mar15	add value column
+		05		23mar15	allow header drag/drop
+ 		06		06apr15	CMidiAssign no longer has device name; add lookups
+
 		MIDI assignments dialog
 
 */
@@ -60,6 +63,29 @@ void CMidiAssignsDlg::UpdateView(bool SortRows)
 		m_List.SortRows();
 }
 
+void CMidiAssignsDlg::OnMidiTargetChange(int PartIdx, int TargetIdx)
+{
+	ASSERT(m_hWnd);	// window must exist, else logic error
+	int	nAssigns = m_Assign.GetSize();
+	for (int iAss = 0; iAss < nAssigns; iAss++) {	// for each assignment
+		const CMidiAssign&	ass = m_Assign[iAss];
+		if (ass.m_TargetIdx == TargetIdx && ass.m_PartIdx == PartIdx) {
+			LVFINDINFO	fi;
+			fi.flags = LVFI_PARAM;
+			fi.lParam = iAss;
+			int	iItem = m_List.FindItem(&fi);	// find target's list item
+			ASSERT(iItem >= 0);
+			m_List.RedrawSubItem(iItem, COL_VALUE);
+			break;
+		}
+	}
+}
+
+int CMidiAssignsDlg::GetMidiShadow(const CMidiAssign& Assign) const
+{
+	return(gEngine.GetPatch().GetMidiShadow(Assign.m_PartIdx, Assign.m_TargetIdx));
+}
+
 #define SORT_CMP(x) retc = m_List.SortCmp(m_Assign[p1].x, m_Assign[p2].x)
 
 int	CMidiAssignsDlg::SortCompare(int p1, int p2)
@@ -67,7 +93,9 @@ int	CMidiAssignsDlg::SortCompare(int p1, int p2)
 	int	retc = 0;
 	switch (m_List.SortCol()) {
 	case COL_DEVICE:
-		SORT_CMP(m_DeviceName);
+		retc = m_List.SortCmp(
+			gEngine.GetSafeInputDeviceName(m_Assign[p1].m_Inst.Port),
+			gEngine.GetSafeInputDeviceName(m_Assign[p2].m_Inst.Port));
 		break;
 	case COL_PORT:
 		SORT_CMP(m_Inst.Port);
@@ -92,6 +120,9 @@ int	CMidiAssignsDlg::SortCompare(int p1, int p2)
 		break;
 	case COL_SHARED:
 		SORT_CMP(m_Sharers);
+		break;
+	case COL_VALUE:
+		retc = m_List.SortCmp(GetMidiShadow(m_Assign[p1]), GetMidiShadow(m_Assign[p2]));
 		break;
 	}
 	if (!retc)
@@ -143,7 +174,7 @@ BOOL CMidiAssignsDlg::OnInitDialog()
 	m_List.SetColumns(COLUMNS, m_ColInfo);
 	m_List.InitControl(0, CReportCtrl::SORT_ARROWS);
 	m_List.SetSortCallback(SortCompare, this);
-	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);
 	UpdateView(FALSE);	// don't sort rows; LoadHeaderState sorts them
 	// order matters: LoadHeaderState's initial row sort is pointless
 	// if rows haven't been created yet, so UpdateView must come first
@@ -162,13 +193,13 @@ void CMidiAssignsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 	if (item.mask & LVIF_TEXT) {
 		switch (item.iSubItem) {
 		case COL_DEVICE:
-			_tcsncpy(item.pszText, ass.m_DeviceName, item.cchTextMax);
+			_tcsncpy(item.pszText, gEngine.GetSafeInputDeviceName(ass.m_Inst.Port), item.cchTextMax);
 			break;
 		case COL_PORT:
 			_stprintf(item.pszText, _T("%d"), ass.m_Inst.Port);
 			break;
 		case COL_EVENT:
-			_tcsncpy(item.pszText, CMidiTarget::GetEventTypeName(ass.m_Event), item.cchTextMax);
+			_tcsncpy(item.pszText, ass.GetEventTypeName(), item.cchTextMax);
 			break;
 		case COL_CHANNEL:
 			_stprintf(item.pszText, _T("%d"), ass.m_Inst.Chan + 1);
@@ -176,7 +207,7 @@ void CMidiAssignsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 		case COL_CONTROL:
 			switch (ass.m_Event) {
 			case CMidiTarget::EVT_CONTROL:
-				CMidiTarget::GetControllerName(item.pszText, item.cchTextMax, ass.m_Control);
+				_tcsncpy(item.pszText, ass.GetControllerName(), item.cchTextMax);
 				break;
 			}
 			break;
@@ -194,6 +225,9 @@ void CMidiAssignsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 				int	nID = ass.m_Sharers > 1 ? IDS_COMMON_YES : IDS_COMMON_NO;
 				_tcsncpy(item.pszText, LDS(nID), item.cchTextMax);
 			}
+			break;
+		case COL_VALUE:
+			_stprintf(item.pszText, _T("%d"), GetMidiShadow(ass));
 			break;
 		default:
 			NODEFAULTCASE;

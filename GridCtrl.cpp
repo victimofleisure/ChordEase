@@ -11,6 +11,7 @@
 		01		03may14	in OnParentNotify, event is low word of message
 		02		31may14	add OnItemChange
 		03		17nov14	in PreTranslateMessage, let tab edit first subitem
+		04		04apr15	use base class column count accessor
 
 		grid control
  
@@ -48,7 +49,7 @@ CGridCtrl::~CGridCtrl()
 bool CGridCtrl::EditSubitem(int Row, int Col)
 {
 	ASSERT(Row >= 0 && Row < GetItemCount());	// validate row
-	ASSERT(Col >= 1 && Col < GetHeaderCtrl()->GetItemCount());	// subitems only
+	ASSERT(Col >= 1 && Col < GetColumnCount());	// subitems only
 	EndEdit();	// end previous edit if any
 	EnsureVisible(Row, FALSE);	// make sure specified row is fully visible
 	POSITION	pos = GetFirstSelectedItemPosition();
@@ -88,7 +89,7 @@ void CGridCtrl::GotoSubitem(int DeltaRow, int DeltaCol)
 	ASSERT(abs(DeltaRow) <= 1);	// valid delta range is [-1..1]
 	ASSERT(abs(DeltaCol) <= 1);
 	ASSERT(IsEditing());
-	int	cols = GetHeaderCtrl()->GetItemCount();
+	int	cols = GetColumnCount();
 	int	col = m_EditCol + DeltaCol;
 	if (col >= cols) {	// if after last column
 		col = 1;	// wrap to first column
@@ -190,7 +191,7 @@ BOOL CGridCtrl::PreTranslateMessage(MSG* pMsg)
 	} else {	// not editing
 		if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_TAB
 		&& !(GetKeyState(VK_SHIFT) & GKS_DOWN)	// if unshifted tab key pressed
-		&& GetHeaderCtrl()->GetItemCount() > 1) {	// and at least one subitem
+		&& GetColumnCount() > 1) {	// and at least one subitem
 			int	iRow = GetSelectionMark();
 			if (iRow >= 0) {	// if current row valid
 				EditSubitem(iRow, 1);	// edit row's first subitem

@@ -12,6 +12,13 @@
 		02		30apr14	add OnDropFiles
 		03		23jul14	add OnTransportGoTo
 		04		11nov14	add MIDI target accessors
+		05		08mar15	add start tag command
+		06		16mar15	add method to generate MIDI targets table
+		07		21mar15	add tempo accessor
+		08		23mar15	add MIDI assignments dialog pointer
+		09		05apr15	add chord dictionary editing
+		10		29apr15	remove OnHideSizingBar
+		11		13may15	add chord dictionary undo manager
 
 		ChordEase main frame
  
@@ -41,9 +48,11 @@
 #include "PianoDlg.h"
 #include "ModelessDlgPtr.h"
 #include "OutputNotesBar.h"
+#include "ChordDictionaryDlg.h"
 
 class CChordEaseView;
 class CThreadsDlg;
+class CMidiAssignsDlg;
 
 class CMainFrame : public CFrameWnd, public CUndoable
 {
@@ -61,6 +70,7 @@ public:
 
 public:
 // Attributes
+	bool	IsCreated() const;
 	CChordEaseView	*GetView();
 	void	SetView(CChordEaseView *View);
 	HACCEL	GetAccelTable() const;
@@ -91,6 +101,7 @@ public:
 	static	const CMidiTarget&	GetMidiTarget(int PartIdx, int TargetIdx);
 	void	SetMidiTarget(int PartIdx, int TargetIdx, const CMidiTarget& Target);
 	void	ResetMidiTarget(int PartIdx, int TargetIdx);
+	void	SetTempo(double Tempo);
 
 // Operations
 public:
@@ -100,6 +111,8 @@ public:
 	bool	OpenPatch(LPCTSTR Path);
 	void	OnUpdateSong();
 	void	OnSongPositionChange();
+	void	UpdateHookMidiInput();
+	void	UpdateHookMidiOutput();
 	bool	CheckForUpdates(bool Explicit);
 
 // Overrides
@@ -164,6 +177,8 @@ protected:
 	afx_msg void OnTransportRecord();
 	afx_msg void OnTransportRepeat();
 	afx_msg void OnTransportRewind();
+	afx_msg void OnTransportStartTag();
+	afx_msg void OnTransportTapTempo();
 	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditCut(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditDelete(CCmdUI* pCmdUI);
@@ -188,11 +203,15 @@ protected:
 	afx_msg void OnUpdateTransportRecord(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportRepeat(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportRewind(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransportStartTag(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransportTapTempo(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateViewChordDictionary(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewOutputNotes(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewParts(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewPatch(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewPiano(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewThreads(CCmdUI* pCmdUI);
+	afx_msg void OnViewChordDictionary();
 	afx_msg void OnViewOutputNotes();
 	afx_msg void OnViewParts();
 	afx_msg void OnViewPatch();
@@ -208,7 +227,6 @@ protected:
 	afx_msg LRESULT OnSetMessageString(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT	OnHandleDlgKey(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT	OnModelessDestroy(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT	OnHideSizingBar(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT	OnDelayedCreate(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT	OnEngineError(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT	OnEngineNotify(WPARAM wParam, LPARAM lParam);
@@ -217,6 +235,7 @@ protected:
 	afx_msg LRESULT	OnMidiOutputData(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT	OnDeviceNodeChange(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT	OnColorStatusBarPane(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT	OnChordDictChange(WPARAM wParam, LPARAM lParam);
 	afx_msg BOOL OnDeviceChange(UINT nEventType, W64ULONG dwData);
 	afx_msg void OnPatchMru(UINT nID);
 	afx_msg void OnUpdatePatchMru(CCmdUI* pCmdUI);
@@ -299,10 +318,16 @@ protected:
 		#include "MainPaneDef.h"
 		PANES
 	};
+	enum {	// modeless dialogs
+		#define MAINMODELESSDEF(name) MODELESS_##name,
+		#include "MainModelessDef.h"
+		MODELESS_DLGS
+	};
 	static const UINT	m_Indicators[STATUS_PANES];		// status panes
 	static const BAR_INFO m_SizingBarInfo[SIZING_BARS];	// sizing bar info
-	static const int m_PaneInfo[PANES];					// main pane info
-	static const int m_UndoTitleID[UNDO_CODES];			// undo codes
+	static const int	m_PaneInfo[PANES];				// main pane info
+	static const int	m_ModelessDlgOfs[MODELESS_DLGS];	// modeless dialog offsets
+	static const int	m_UndoTitleID[UNDO_CODES];		// undo codes
 	enum {
 		VIEW_TIMER_PERIOD = 50,		// view timer period in milliseconds
 		BUSY_TIMER_PERIOD = 30000,	// busy timer period in milliseconds
@@ -310,6 +335,7 @@ protected:
 
 // Data members
 	bool	m_WasShown;			// true if window was shown
+	bool	m_IsCreated;		// true if fully initialized
 	CColorStatusBar	m_StatusBar;	// status bar
 	CToolBar    m_ToolBar;		// tool bar
 	CPatchBar	m_PatchBar;		// patch bar
@@ -326,9 +352,13 @@ protected:
 	CStatusCache	m_StatusCache;	// status bar indicator cached values
 	bool	m_MidiLearn;		// true if learning MIDI assignments
 	bool	m_MidiChaseEvents;	// true if chasing MIDI events
+	bool	m_ChordDictModFlag;	// true if chord dictionary was modified
 	CModelessDlgPtr<CThreadsDlg>	m_ThreadsDlg;	// pointer to threads dialog
 	CModelessDlgPtr<CPianoDlg>	m_PianoDlg;	// pointer to piano dialog
+	CModelessDlgPtr<CChordDictionaryDlg>	m_ChordDictDlg;	// pointer to chord dictionary dialog
 	CString	m_RecordFilePath;	// record output file path
+	CMidiAssignsDlg	*m_MidiAssignsDlg;	// pointer to MIDI assignments dialog
+	CUndoManager	m_ChordDictUndoMgr;
 
 // Overrides
 	virtual	void	SaveUndoState(CUndoState& State);
@@ -342,15 +372,16 @@ protected:
 	bool	CreateSizingBars();
 	void	LoadToolDialogState();
 	void	SaveToolDialogState();
+	CModelessDlgPtrBase	*GetModelessDlgPtr(int iDlg) const;
+	int		FindModelessDlg(const CDialog *pSrcDlg, CModelessDlgPtrBase*& DlgPtr) const;
 	bool	CreateEngine();
 	void	GetClipboardUndoInfo(CUndoState& State);
 	void	UpdateClipboardUndoInfo(int UndoPos);
 	void	ApplyOptions(const COptionsInfo& PrevOpts, bool ForceUpdate = FALSE);
 	void	SkipPane(int Delta);
-	void	UpdateHookMidiInput();
-	void	UpdateHookMidiOutput();
 	void	DockControlBarNextTo(CControlBar* pBar, CControlBar* pTargetBar);
 	void	EnableAppToolTips(bool Enable);
+	void	WriteMidiTargetsTable(LPCTSTR Path);
 	static	UINT	CheckForUpdatesThreadFunc(LPVOID Param);
 
 // Undo state values
@@ -361,6 +392,11 @@ protected:
 	CUNDOSTATE_VAL(	UVPatchPageIdx,	WORD,	p.y.w.lo)
 	CUNDOSTATE_VAL(	UVPartsPageIdx,	WORD,	p.y.w.hi)
 };
+
+inline bool CMainFrame::IsCreated() const
+{
+	return(m_IsCreated);
+}
 
 inline CChordEaseView *CMainFrame::GetView()
 {

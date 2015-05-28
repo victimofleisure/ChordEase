@@ -16,6 +16,7 @@
 		06		01jul14	add ReadLeadSheet
 		07		28aug14	in IsMergeable, add chord arg
  		08		09sep14	use default memberwise copy
+        09      05apr15	add chord dictionary set and write methods
 
 		song container
 
@@ -30,11 +31,91 @@
 
 #define WHITESPACE _T(" \t")
 #define COMMENT_DELIMITER _T("//")	// same as default in TokenFile.cpp
+#define DEFAULT_CHORD_TYPE_NAME _T("NULL")	// usually reserved for major triad
 
 const LPCTSTR CSong::m_Command[COMMANDS] = {
 	#define SONGCOMMANDDEF(name, str) _T(str),
 	#include "SongCommandDef.h"
 };
+
+bool CSong::CChordType::IsAliasOf(const CChordType& Type) const
+{
+	if (Type.m_Scale != m_Scale || Type.m_Mode != m_Mode)
+		return(FALSE);
+	for (int iVar = 0; iVar < COMP_VARIANTS; iVar++) {
+		if (Type.m_Comp[iVar] != m_Comp[iVar])
+			return(FALSE);
+	}
+	return(TRUE);
+}
+
+void CSong::CChordType::MakeAliasOf(const CChordType& Info)
+{
+	CString	sName(m_Name);	// save type name
+	*this = Info;	// copy caller's type
+	m_Name = sName;	// restore type name
+}
+
+CString CSong::CChordType::CompToStr(const CScale& CompVar)
+{
+	CString	sResult, sTone;
+	int	nTones = CompVar.GetSize();
+	for (int iTone = 0; iTone < nTones; iTone++) {
+		sTone.Format(_T("%d"), CompVar[iTone] + 1);
+		if (iTone)
+			sResult += ',';
+		sResult += sTone;
+	}
+	return(sResult);
+}
+
+int CSong::CChordType::StrToComp(CString Str, CScale& CompVar)
+{
+	CScale	scale;
+	CString sToken;
+	int	iStart = 0;
+	while (!(sToken = Tokenize(Str, _T(", "), iStart)).IsEmpty()) {
+		int	iDegree;
+		if (_stscanf(sToken, _T("%d"), &iDegree) != 1)
+			return(IDS_SONG_ERR_BAD_CHORD);
+		if (scale.GetSize() >= scale.GetMaxSize())
+			return(IDS_SONG_ERR_SCALE_TOO_LONG);
+		iDegree--;	// convert scale degree from one-origin to zero-origin
+		if (!CDiatonic::IsValidDegree(iDegree))
+			return(IDS_SONG_ERR_CHORD_TONE_RANGE);
+		scale.Add(iDegree);
+	}
+	CompVar = scale;
+	return(0);	// success
+}
+
+int CSong::CChordDictionary::Find(LPCTSTR Name) const
+{
+	int	nTypes = GetSize();
+	for (int iType = 0; iType < nTypes; iType++) {	// for each chord type
+		if (GetAt(iType).m_Name == Name)	// if its name matches caller's
+			return(iType);
+	}
+	return(-1);	// not found
+}
+
+void CSong::CChordDictionary::GetAliases(CIntArrayEx& AliasOf) const
+{
+	// create alias array; each element indicates whether the corresponding
+	// chord type is an alias, and if so, which chord type it's an alias of
+	int	nTypes = GetSize();
+	AliasOf.SetSize(nTypes);
+	int	iType;
+	for (iType = 0; iType < nTypes; iType++)	// for each chord type
+		AliasOf[iType] = -1;	// init to non-alias (canonical)
+	for (iType = 0; iType < nTypes; iType++) {	// for each chord type
+		for (int iDup = iType + 1; iDup < nTypes; iDup++) {	// for remaining chord types
+			// if inner type not processed yet and it's an alias of outer type
+			if (AliasOf[iDup] < 0 && GetAt(iType).IsAliasOf(GetAt(iDup)))
+				AliasOf[iDup] = iType;	// set inner type's alias array element
+		}
+	}
+}
 
 bool CSong::CMeter::IsValidMeter() const
 {
@@ -182,7 +263,7 @@ void CSong::SetProperties(const CProperties& Props)
 
 CString	CSong::MakeChordName(CNote Root, CNote Bass, int Type, CNote Key) const
 {
-	CString	s(Root.Name(Key) + GetChordInfo(Type).m_Name);
+	CString	s(Root.Name(Key) + GetChordType(Type).m_Name);
 	if (Bass != Root) {	// if slash chord
 		s += '/';
 		s += Bass.Name(Key);
@@ -231,77 +312,108 @@ void CSong::ReportError(CTokenFile& File, int MsgFmtID, ...)
 
 bool CSong::ReadChord(CTokenFile& File, CScale& Chord)
 {
-	enum {
-		TRIAD_TONES = 3,
-		TETRA_TONES = 4,
-	};
-	Chord.SetSize(TETRA_TONES);
 	CString	s(File.ReadToken(WHITESPACE));
-	int	convs = _stscanf(s, _T("[%d,%d,%d,%d]"),
-		&Chord[0], 
-		&Chord[1], 
-		&Chord[2], 
-		&Chord[3]);
-	if (convs < TRIAD_TONES || convs > TETRA_TONES) {
+	int	len = s.GetLength();
+	if (len < 2 || s[0] != '[' || s[len - 1] != ']') {	// check syntax
 		ReportError(File, IDS_SONG_ERR_BAD_CHORD, s);
 		return(FALSE);
 	}
-	Chord.SetSize(convs);
-	for (int iTone = 0; iTone < convs; iTone++) {	// for each chord tone
-		Chord[iTone]--;	// convert to zero origin
-		if (!CDiatonic::IsValidDegree(Chord[iTone])) {	// if out of range
-			ReportError(File, IDS_SONG_ERR_CHORD_TONE_RANGE, s);
-			return(FALSE);
-		}
+	int	ErrID = CChordType::StrToComp(s.Mid(1, len - 2), Chord);
+	if (ErrID) {	// if conversion error
+		ReportError(File, ErrID, s);
+		return(FALSE);
 	}
 	return(TRUE);
 }
 
-bool CSong::ReadChordDictionary(LPCTSTR Path)
+bool CSong::ReadChordDictionary(LPCTSTR Path, CChordDictionary& Dictionary)
 {
 	TRY {
 		CTokenFile	fp(Path, CFile::modeRead | CFile::shareDenyWrite);
-		m_Dictionary.RemoveAll();
+		Dictionary.RemoveAll();
 		while (1) {
-			CChordInfo	info;
+			CChordType	type;
 			CString	ChordTypeName(fp.ReadToken(WHITESPACE));
 			if (ChordTypeName.IsEmpty())
 				break;	// assume end of file
-			if (ChordTypeName == _T("NULL"))	// usually reserved for major triad
+			if (ChordTypeName == DEFAULT_CHORD_TYPE_NAME)
 				ChordTypeName.Empty();
-			if (FindChordType(ChordTypeName) >= 0) {
+			if (Dictionary.Find(ChordTypeName) >= 0) {
 				ReportError(fp, IDS_SONG_ERR_DUP_CHORD_TYPE, ChordTypeName);
 				return(FALSE);
 			}
 			CString	ScaleName(fp.ReadToken(WHITESPACE));
 			CString	ModeName(fp.ReadToken(WHITESPACE));
 			if (ScaleName == '=') {	// if alias, mode name is source chord type
-				if (ModeName == _T("NULL"))	// usually reserved for major triad
+				if (ModeName == DEFAULT_CHORD_TYPE_NAME)
 					ModeName.Empty();
-				int	iType = FindChordType(ModeName);
+				int	iType = Dictionary.Find(ModeName);
 				if (iType < 0) {	// if source chord type not defined
 					ReportError(fp, IDS_SONG_ERR_BAD_CHORD_TYPE, ModeName);
 					return(FALSE);
 				}
-				info = m_Dictionary[iType];	// copy chord definition from source
+				type = Dictionary[iType];	// copy chord definition from source
 			} else {	// chord type definition, not alias
-				info.m_Scale = CDiatonic::FindScale(ScaleName);
-				if (info.m_Scale < 0) {	// if scale not found
+				type.m_Scale = CDiatonic::FindScale(ScaleName);
+				if (type.m_Scale < 0) {	// if scale not found
 					ReportError(fp, IDS_SONG_ERR_BAD_SCALE, ScaleName);
 					return(FALSE);
 				}
-				info.m_Mode = CDiatonic::FindMode(ModeName);
-				if (info.m_Mode < 0) {	// if mode not found
+				type.m_Mode = CDiatonic::FindMode(ModeName);
+				if (type.m_Mode < 0) {	// if mode not found
 					ReportError(fp, IDS_SONG_ERR_BAD_MODE, ModeName);
 					return(FALSE);
 				}
-				for (int iVar = 0; iVar < CChordInfo::COMP_VARIANTS; iVar++) {
-					if (!ReadChord(fp, info.m_Comp[iVar]))	// read chord tones
+				for (int iVar = 0; iVar < CChordType::COMP_VARIANTS; iVar++) {
+					if (!ReadChord(fp, type.m_Comp[iVar]))	// read chord tones
 						return(FALSE);
 				}
 			}
-			info.m_Name = ChordTypeName;
-			m_Dictionary.Add(info);
+			type.m_Name = ChordTypeName;
+			Dictionary.Add(type);
+		}
+	}
+	CATCH (CFileException, e) {
+		TCHAR	msg[256];
+		e->GetErrorMessage(msg, _countof(msg));
+		OnError(msg);
+		return(FALSE);
+	}
+	END_CATCH
+	return(TRUE);
+}
+
+bool CSong::WriteChordDictionary(LPCTSTR Path, const CChordDictionary& Dictionary)
+{
+	TRY {
+		CStdioFile	fp(Path, CFile::modeWrite | CFile::modeCreate);
+		int	nTypes = Dictionary.GetSize();
+		CIntArrayEx	AliasOf;
+		Dictionary.GetAliases(AliasOf);
+		CString	sLine;
+		for (int iType = 0; iType < nTypes; iType++) {
+			const CChordType&	type = Dictionary[iType];
+			CString	sTypeName(type.m_Name.IsEmpty() ? DEFAULT_CHORD_TYPE_NAME : type.m_Name);
+			int	iAlias = AliasOf[iType];
+			if (iAlias >= 0) {	// if chord type is an alias
+				const CChordType&	base = Dictionary[iAlias];
+				CString	sBaseName(base.m_Name.IsEmpty() ? DEFAULT_CHORD_TYPE_NAME : base.m_Name);
+				sLine.Format(_T("%-7s = %s"), sTypeName, sBaseName);
+			} else {	// chord type isn't an alias
+				sLine.Format(_T("%-11s %-19s %-11s"), sTypeName,
+					CDiatonic::ScaleName(type.m_Scale),
+					CDiatonic::ModeName(type.m_Mode));
+				for (int iVar = 0; iVar < CChordType::COMP_VARIANTS; iVar++) {
+					CString	sComp('[' + CChordType::CompToStr(type.m_Comp[iVar]) + ']');
+					if (iVar < CChordType::COMP_VARIANTS - 1) {	// if not last variant
+						CString	s;
+						s.Format(_T("%-11s"), sComp);
+						sLine += s;
+					} else	// last variant
+						sLine += sComp;	// omit padding
+				}
+			}
+			fp.WriteString(sLine + '\n');
 		}
 	}
 	CATCH (CFileException, e) {
@@ -317,20 +429,10 @@ bool CSong::ReadChordDictionary(LPCTSTR Path)
 void CSong::CreateDefaultChordDictionary()
 {
 	m_Dictionary.SetSize(1);
-	CChordInfo	info;
-	info.m_Scale = MAJOR;
-	info.m_Mode = LYDIAN;
-	m_Dictionary[0] = info;
-}
-
-int CSong::FindChordType(LPCTSTR Name) const
-{
-	int	nTypes = GetChordTypeCount();
-	for (int iType = 0; iType < nTypes; iType++) {	// for each chord type
-		if (!_tcscmp(Name, m_Dictionary[iType].m_Name))
-			return(iType);
-	}
-	return(-1);
+	CChordType	type;
+	type.m_Scale = MAJOR;
+	type.m_Mode = LYDIAN;
+	m_Dictionary[0] = type;
 }
 
 int CSong::FindSection(int BeatIdx) const

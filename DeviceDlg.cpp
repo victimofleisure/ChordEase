@@ -9,6 +9,8 @@
 		rev		date	comments
         00      13oct13	initial version
 		01		28apr14	add state column; refactor to use callbacks
+		02		21mar15	in OnGetdispinfo, check device index range
+		03		07may15	in OnGetdispinfo, copy device state safely
 
         device dialog
  
@@ -148,13 +150,13 @@ void CDeviceDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 			{
 				bool	iState = DS_CLOSED;
 				if (iDevType == DT_IN) {	// if input device
-					if (gEngine.GetInputDeviceCount())
+					if (item.iItem < gEngine.GetInputDeviceCount())
 						iState = gEngine.IsInputDeviceOpen(item.iItem);
 				} else {	// output device
-					if (gEngine.GetOutputDeviceCount())
+					if (item.iItem < gEngine.GetOutputDeviceCount())
 						iState = gEngine.IsOutputDeviceOpen(item.iItem);
 				}
-				_tcscpy(item.pszText, m_DeviceState[iState]);
+				_tcsncpy(item.pszText, m_DeviceState[iState], item.cchTextMax);
 			}
 			break;
 		default:

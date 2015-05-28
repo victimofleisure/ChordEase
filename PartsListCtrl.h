@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		15mar15	add OnLButtonDown
 
 		parts list control
  
@@ -50,6 +51,7 @@ public:
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CPartsListCtrl)
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

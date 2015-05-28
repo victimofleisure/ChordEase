@@ -11,6 +11,7 @@
 		01		02oct04	add optional origin shift to initial parent rect
 		02		30jul05	make style compatible
 		03		01jul09	in CtrlInfo, use HWND instead of CWnd
+		04		24mar15	upgrade old-school struct definitions
  
 		resize a windows control
 
@@ -32,10 +33,10 @@ enum {
 
 class CCtrlResize : public WObject {
 public:
-	typedef struct tagCTRL_LIST {
+	struct CTRL_LIST {
 		int		CtrlID;
 		int		BindType;
-	} CTRL_LIST;
+	};
 	CCtrlResize();
 	void	OnSize();
 	void	SetParentWnd(CWnd *pWnd);

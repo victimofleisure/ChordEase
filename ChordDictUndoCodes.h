@@ -1,4 +1,4 @@
-// Copyleft 2013 Chris Korda
+// Copyleft 2015 Chris Korda
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or any later version.
@@ -7,27 +7,24 @@
  
 		revision history:
 		rev		date	comments
-        00      07oct13	initial version
-		01		21mar15	add tap tempo
+        00      13may15	initial version
 
-		undo code data
+		chord dictionary undo codes
  
 */
 
-UCODE_DEF(BASE_PATCH)
-UCODE_DEF(PART)
-UCODE_DEF(SELECT_PATCH_PAGE)
-UCODE_DEF(SELECT_PART_PAGE)
-UCODE_DEF(SELECT_PART)
-UCODE_DEF(ENABLE_PART)
-UCODE_DEF(RENAME)
+UCODE_DEF(NAME)
+UCODE_DEF(SCALE)
+UCODE_DEF(MODE)
+UCODE_DEF(COMP)
+UCODE_DEF(ALIAS)
+UCODE_DEF(SORT)
 UCODE_DEF(CUT)
 UCODE_DEF(PASTE)
-UCODE_DEF(INSERT)
 UCODE_DEF(DELETE)
+UCODE_DEF(INSERT)
 UCODE_DEF(REORDER)
-UCODE_DEF(MIDI_CHASE)
-UCODE_DEF(MIDI_TARGETS)
-UCODE_DEF(TAP_TEMPO)
+UCODE_DEF(OPEN)
+UCODE_DEF(CANCEL)
 
 #undef UCODE_DEF

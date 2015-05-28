@@ -12,6 +12,7 @@
         02      22apr14	add show tooltips
 		03		29apr14	add data folder path
  		04		09sep14	use default memberwise copy
+		05		01apr15	in record options, add fix duplicate notes
 
 		container for options information
  
@@ -32,6 +33,7 @@ struct OPTIONS_INFO {
 		int		BufferSize;			// size of record buffer, in events
 		short	MidiFilePPQ;		// output MIDI file's time resolution,
 									// in pulses per quarter note
+		BOOL	FixDupNotes;		// fix duplicate notes in MIDI file
 	};
 	struct OTHER {	// updates options
 		BOOL	AutoCheckUpdates;	// if true, automatically check for updates

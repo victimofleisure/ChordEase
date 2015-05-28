@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		23sep13	initial version
+		01		16mar15	send end edit message instead of posting it
 
 		popup edit control
 
@@ -33,6 +34,7 @@ IMPLEMENT_DYNAMIC(CPopupEdit, CEdit);
 
 CPopupEdit::CPopupEdit()
 {
+	m_EndingEdit = FALSE;
 }
 
 CPopupEdit::~CPopupEdit()
@@ -51,6 +53,7 @@ bool CPopupEdit::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT 
 
 void CPopupEdit::EndEdit()
 {
+	m_EndingEdit = TRUE;	// avoid reentrance if we lose focus
 	if (GetModify()) {	// if text was modified
 		CString	text;
 		GetWindowText(text);
@@ -79,7 +82,8 @@ END_MESSAGE_MAP()
 void CPopupEdit::OnKillFocus(CWnd* pNewWnd) 
 {
 	CEdit::OnKillFocus(pNewWnd);
-	PostMessage(UWM_END_EDIT);
+	if (!m_EndingEdit)	// if not ending edit already
+		SendMessage(UWM_END_EDIT);
 }
 
 BOOL CPopupEdit::PreTranslateMessage(MSG* pMsg) 
@@ -87,11 +91,9 @@ BOOL CPopupEdit::PreTranslateMessage(MSG* pMsg)
 	if (pMsg->message == WM_KEYDOWN) {
 		switch (pMsg->wParam) {
 		case VK_RETURN:
-			PostMessage(UWM_END_EDIT);
-			break;
 		case VK_ESCAPE:
-			PostMessage(UWM_END_EDIT, TRUE);	// cancel edit
-			break;
+			SendMessage(UWM_END_EDIT, pMsg->wParam == VK_ESCAPE);	// cancel if escape
+			return TRUE;	// no further processing; our instance is deleted
 		}
 	}
 	return CEdit::PreTranslateMessage(pMsg);

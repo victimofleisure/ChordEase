@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		13mar14	initial version
 		01		23may14	add UpdateDevices
+		02		29apr15	override OnShowChanged
 
         MIDI event bar
  
@@ -18,7 +19,8 @@
 //
 
 #include "stdafx.h"
-#include "Resource.h"
+#include "ChordEase.h"
+#include "MainFrm.h"
 #include "MidiEventBar.h"
 
 #ifdef _DEBUG
@@ -43,12 +45,18 @@ CMidiEventBar::~CMidiEventBar()
 {
 }
 
-void CMidiEventBar::OnShowBar(bool Show)
+void CMidiEventBar::OnShowChanged(BOOL bShow)
 {
-	if (Show)
-		m_Dlg.UpdateDevices();
-	else
-		m_Dlg.RemoveAllEvents();
+	if (theApp.GetMain()->IsCreated()) {	// saves time during startup
+		if (m_Dlg.IsOutput())	// if output bar
+			theApp.GetMain()->UpdateHookMidiOutput();	// update output hook
+		else	// input bar
+			theApp.GetMain()->UpdateHookMidiInput();	// update input hook
+		if (bShow)	// if bar was shown
+			m_Dlg.UpdateDevices();
+		else	// bar was hidden
+			m_Dlg.RemoveAllEvents();
+	}
 }
 
 void CMidiEventBar::UpdateDevices()

@@ -23,6 +23,7 @@
 		13		04mar13	make SortRows virtual
 		14		02sep13	replace header image list with sort format flags
 		15		10dec13	derive from CListCtrlExSel
+		16		24mar15	upgrade old-school struct definitions
 
         simplified report view list control
  
@@ -54,18 +55,18 @@ public:
 	enum STYLE {
 		SORT_ARROWS	= 0x01
 	};
-	typedef struct {
+	struct COLUMN {
 		LPCTSTR	Title;
 		int		Align;
 		int		Width;
 		DIR		InitSort;
-	} COLUMN;
-	typedef struct {
+	};
+	struct RES_COL {
 		int		TitleID;
 		int		Align;
 		int		Width;
 		DIR		InitSort;
-	} RES_COL;
+	};
 
 // Construction
 public:
@@ -122,13 +123,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 // Types
-	struct tagHEADER_STATE;
-	typedef struct tagHEADER_STATE {	// variable size
+	struct HEADER_STATE {	// variable size
 		int		Columns;			// # of columns
 		int		SortCol;			// sort column
 		int		SortDir;			// 0 = ascending, 1 = descending
 		int		ColInfo[1];			// column order and column width arrays
-	} HEADER_STATE;
+	};
 
 // Member data
 	const	COLUMN	*m_Column;

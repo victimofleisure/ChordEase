@@ -23,6 +23,7 @@
 		13		28jan13	add GetReport
 		14		02sep13	replace header image list with sort format flags
 		15		10dec13	derive from CListCtrlExSel
+		16		07may15	fix delete syntax for arrays
 
         simplified report view list control
  
@@ -294,7 +295,7 @@ bool CReportCtrl::StoreHeaderState(LPCTSTR Key, LPCTSTR SubKey)
 		pColWidth[i] = GetColumnWidth(i);
 	GetColumnOrderArray(ph->ColInfo, cols);
 	bool	retc = CPersist::WriteBinary(Key, SubKey, ph, hsz) != 0;
-	delete ph;
+	delete [] ph;
 	return(retc);
 }
 
@@ -312,7 +313,7 @@ bool CReportCtrl::LoadHeaderState(LPCTSTR Key, LPCTSTR SubKey)
 			SetColumnWidth(i, pColWidth[i]);
 		SetColumnOrderArray(cols, ph->ColInfo);
 	}
-	delete ph;
+	delete [] ph;
 	return(retc);
 }
 
@@ -325,7 +326,7 @@ void CReportCtrl::ResetHeaderState()
 		pColOrder[i] = i;
 	}
 	SetColumnOrderArray(cols, pColOrder);
-	delete pColOrder;
+	delete [] pColOrder;
 	Invalidate();
 }
 

@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		23sep13	initial version
 		01		31may14	add class factory
+		02		16mar15	add ending edit flag to avoid reentrance
 
 		popup combo box control
 
@@ -65,6 +66,9 @@ protected:
 	//}}AFX_MSG
 	afx_msg LRESULT OnEndEdit(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
+
+// Data members
+	bool	m_EndingEdit;	// true if ending edit
 };
 
 /////////////////////////////////////////////////////////////////////////////

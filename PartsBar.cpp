@@ -8,6 +8,11 @@
 		revision history:
 		rev		date	comments
 		00		20sep13	initial version
+		01		20mar15	bump clipboard type for arpeggio adapt
+		02		23mar15	add MIDI chase support
+		03		27mar15	compute list pane default width
+		04		04apr15	move GetInsertPos implemention into list control
+		05		04apr15	in OnListDrop, move compensation into list control
 
         parts bar
  
@@ -37,7 +42,7 @@ IMPLEMENT_DYNAMIC(CPartsBar, CMySizingControlBar);
 #define RK_PARTS_LIST_WIDTH _T("PartsListWidth")
 
 CPartsBar::CPartsBar() :
-	m_Clipboard(NULL, _T("ChordEasePartArray"))
+	m_Clipboard(NULL, _T("ChordEasePartArray2"))	// change whenever part layout changes
 {
 	m_szHorz = CSize(400, 200);	// default size when horizontally docked
 	m_szVert = m_szHorz;	// default size when vertically docked
@@ -215,10 +220,7 @@ void CPartsBar::DeletePart(int PartIdx)
 
 int CPartsBar::GetInsertPos()
 {
-	int	iItem = GetListCtrl().GetSelection();
-	if (iItem >= 0)
-		return(iItem);
-	return(GetPartCount());
+	return(GetListCtrl().GetInsertPos());
 }
 
 CString CPartsBar::MakePartName() const
@@ -298,17 +300,9 @@ void CPartsBar::SetActivePane(int PaneIdx)
 
 bool CPartsBar::OnListDrop(int PartIdx)
 {
-	CIntArrayEx	sel;
-	GetSelection(sel);
-	int	sels = sel.GetSize();
-	if (!(sels > 1 || (sels == 1 && PartIdx != sel[0])))
+	if (!GetListCtrl().CompensateDropPos(PartIdx))
 		return(FALSE);	// nothing changed
 	theApp.GetMain()->NotifyEdit(0, UCODE_REORDER);
-	// reverse iterate for stability
-	for (int iSel = sels - 1; iSel >= 0; iSel--) {	// for each selected item
-		if (sel[iSel] <= PartIdx)	// if below drop position
-			PartIdx--;	// compensate drop position
-	}
 	PartIdx = max(PartIdx, 0);
 	CEngine::CRun	stop(gEngine);
 	CPartArray	part;
@@ -316,6 +310,19 @@ bool CPartsBar::OnListDrop(int PartIdx)
 	DeleteSelectedParts();
 	InsertPart(PartIdx, part);
 	return(TRUE);
+}
+
+void CPartsBar::ChaseMidiTarget(int PartIdx, int PageIdx, int TargetIdx)
+{
+	if (!IsWindowVisible())	// if bar hidden
+		GetParentFrame()->ShowControlBar(this, TRUE, 0);	// show bar
+	if (PageIdx >= 0) {	// if target on a tabbed dialog page
+		if (PartIdx != GetCurPart())	// if target's part not current
+			SetCurPart(PartIdx);	// chase to target's part
+		SetCurPage(PageIdx);	// chase to target's page
+		if (PageIdx == CPartPageView::PAGE_MidiTarget)	// if page is MIDI target dialog
+			GetMidiTargetDlg().EnsureVisible(TargetIdx);	// chase to target's row
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -339,7 +346,7 @@ int CPartsBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (!m_Split.CreateStatic(this, 1, PANES))	// create splitter window
 		return -1;
 	CCreateContext	ctx;
-	CSize	sz(130, 0);	// initial pane size; only width matters
+	CSize	sz(LIST_PANE_DEFAULT_WIDTH, 0);	// initial pane size; only width matters
 	theApp.RdReg(RK_PARTS_LIST_WIDTH, sz.cx);	// load parts list pane width
 	// create list view
 	if (!m_Split.CreateView(0, PANE_LIST, RUNTIME_CLASS(CPartsListView), sz, &ctx))

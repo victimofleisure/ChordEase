@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		14sep13	initial version
+		01		23mar15	add MIDI chase support
 
         patch bar
  
@@ -33,6 +34,11 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNAMIC(CPatchBar, CMySizingControlBar);
 
 #define RK_PATCH_PAGE _T("PatchPage")
+
+const int CPatchBar::m_MidiTargetPage[CPatch::MIDI_TARGETS] = {
+	#define PATCHMIDITARGETDEF(name, page, tag, ctrltype) CPatchBar::PAGE_##page,
+	#include "PatchMidiTargetDef.h"	// map patch MIDI targets to patch pages
+};
 
 CPatchBar::CPatchBar()
 {
@@ -68,6 +74,15 @@ void CPatchBar::UpdatePage(int PageIdx, const CBasePatch& Patch)
 	#define	PATCHPAGEDEF(name) case PAGE_##name: m_##name##Dlg.SetPatch(Patch); break;
 	#include "PatchPageDef.h"	// generate code to update pages from patch data
 	};
+}
+
+void CPatchBar::ChaseMidiTarget(int PageIdx, int TargetIdx)
+{
+	if (!IsWindowVisible())	// if bar hidden
+		GetParentFrame()->ShowControlBar(this, TRUE, 0);	// show bar
+	SetCurPage(PageIdx);	// chase to target's page
+	if (PageIdx == PAGE_MidiTarget)	// if page is MIDI target dialog
+		m_MidiTargetDlg.EnsureVisible(TargetIdx);	// chase to target's row
 }
 
 /////////////////////////////////////////////////////////////////////////////

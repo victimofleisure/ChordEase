@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      24sep14	initial version
+		01		07apr15	in Find methods, make string arg const
 
         CString utility functions
  
@@ -17,8 +18,8 @@
 
 class CStringUtil {
 public:
-	static int	FindNoCase(CString& str, LPCTSTR pSub, int nStart = -1);
-	static int	ReverseFind(CString& str, LPCTSTR pSub, int nStart = -1);
-	static int	ReverseFindNoCase(CString& str, LPCTSTR pSub, int nStart = -1);
+	static int	FindNoCase(const CString& str, LPCTSTR pSub, int nStart = -1);
+	static int	ReverseFind(const CString& str, LPCTSTR pSub, int nStart = -1);
+	static int	ReverseFindNoCase(const CString& str, LPCTSTR pSub, int nStart = -1);
 	static int	ReplaceNoCase(CString& str, LPCTSTR pszOld, LPCTSTR pszNew);
 };

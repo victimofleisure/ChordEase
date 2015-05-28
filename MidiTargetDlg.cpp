@@ -11,6 +11,10 @@
         01      23apr14	define columns via macro
 		02		12jun14	refactor to use grid control instead of row view
 		03		11nov14	add CheckSharers, refactor OnTargetChange
+		04		16mar15	update target in OnItemChange instead of posting message
+		05		23mar15	move UpdateShadowVal to header file
+		06		24mar15	add registry key; make column widths persistent
+		07		03apr15	use exact find string for combo box
 
 		MIDI target dialog
  
@@ -46,22 +50,24 @@ const int CMidiTargetDlg::m_ColToolTip[COLUMNS] = {
 	#include "MidiTargetColDef.h"
 };
 
-CMidiTargetDlg::CMidiTargetDlg(CWnd* pParent /*=NULL*/)
-	: CChildDlg(IDD, pParent)
+#define RK_COLUMN_WIDTHS _T("MidiTargetCW")
+
+CMidiTargetDlg::CMidiTargetDlg(LPCTSTR RegKey, CWnd* pParent /*=NULL*/)
+	: CChildDlg(IDD, pParent), m_RegKey(RegKey)
 {
 	//{{AFX_DATA_INIT(CMidiTargetDlg)
 	//}}AFX_DATA_INIT
 	m_List.m_pParent = this;
 	m_List.SetDragEnable(FALSE);
-	m_TargetNameID = NULL;
+	m_TargetInfo = NULL;
 	m_ListItemHeight = 0;
+	m_PrevTarget = -1;
 }
 
-void CMidiTargetDlg::SetTargets(const int *TargetNameID, int Targets)
+void CMidiTargetDlg::SetTargets(const CMidiTarget::FIXED_INFO *Info, int Targets)
 {
 	m_Target.SetSize(Targets);
-	m_TargetNameID = TargetNameID;
-	m_List.SetItemCountEx(Targets);
+	m_TargetInfo = Info;
 }
 
 void CMidiTargetDlg::SetCurSel(int RowIdx)
@@ -76,6 +82,17 @@ void CMidiTargetDlg::SetCurSel(int RowIdx)
 void CMidiTargetDlg::OnLearnChange()
 {
 	m_List.Invalidate();
+}
+
+int CMidiTargetDlg::FindTargetByCtrlID(int CtrlID) const
+{
+	ASSERT(m_TargetInfo != NULL);
+	int	nTargets = GetTargetCount();
+	for (int iTarg = 0; iTarg < nTargets; iTarg++) {	// for each target
+		if (m_TargetInfo[iTarg].CtrlID == CtrlID)	// if control ID found
+			return(iTarg);
+	}
+	return(-1);
 }
 
 BOOL CMidiTargetDlg::CTargetGridCtrl::PreCreateWindow(CREATESTRUCT& cs)
@@ -141,8 +158,8 @@ void CMidiTargetDlg::CTargetGridCtrl::OnItemChange(LPCTSTR Text)
 	case COL_EVENT:
 		{
 			CPopupCombo	*pCombo = STATIC_DOWNCAST(CPopupCombo, m_EditCtrl);
-			int	iType = pCombo->FindString(0, Text);
-			if (iType >= 0) {	// if text found in combo
+			int	iType = pCombo->GetCurSel();
+			if (iType >= 0) {	// if valid selection
 				if (iType == targ.m_Event)	// if value unchanged
 					return;	// don't update target
 				ASSERT(iType < CMidiTarget::EVENT_TYPES);
@@ -165,9 +182,16 @@ void CMidiTargetDlg::CTargetGridCtrl::OnItemChange(LPCTSTR Text)
 	default:
 		NODEFAULTCASE;
 	}
-	// must post message instead of calling OnTargetChange directly, else
-	// popup edit fails if derived OnTargetChange displays a modal dialog
-	m_pParent->PostMessage(UWM_TARGET_CHANGE, m_EditRow, m_EditCol);	// update target
+	// must copy modified target before calling CheckSharers, because in 
+	// replace case, CheckSharers updates derived object's target array
+	CMidiTarget	NewTarg(targ);	// copy modified target
+	int	ShareCode;
+	if (m_EditCol <= COL_CONTROL)	// if controller changed
+		ShareCode = m_pParent->CheckSharers(targ);	// check for controller sharing
+	else	// controller didn't change
+		ShareCode = CSR_NONE;	// previous assignments don't matter
+	if (ShareCode != CSR_CANCEL)	// if user didn't cancel
+		m_pParent->OnTargetChange(NewTarg, m_EditRow, m_EditCol, ShareCode);	// call derived handler
 }
 
 int CMidiTargetDlg::CTargetGridCtrl::GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text)
@@ -184,19 +208,32 @@ int CMidiTargetDlg::GetShadowValue(int RowIdx)
 	return(0);
 }
 
+CString	CMidiTargetDlg::GetTargetName(int RowIdx) const
+{
+	return(LDS(GetTargetInfo(RowIdx).NameID));
+}
+
+CString CMidiTargetDlg::GetTargetHint(int RowIdx) const
+{
+	CString	s;
+	int	nID = GetTargetInfo(RowIdx).CtrlID;	// get target's control ID
+	s.LoadString(nID);
+	int	iNewline = s.ReverseFind('\n');	// find item's toolbar hint if any
+	if (iNewline >= 0)	// if toolbar hint found
+		s = s.Left(iNewline);	// remove it
+	return(s);
+}
+
 int CMidiTargetDlg::GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text)
 {
+	if (pHTI->iSubItem == COL_NAME && pHTI->iItem >= 0) {	// if name column and valid row
+		Text = GetTargetHint(pHTI->iItem);
+		return(0);
+	}
 	ASSERT(pHTI->iSubItem < COLUMNS);
 	if (pHTI->iSubItem < 0)
 		return(IDC_MIDI_TARGET_LIST);
 	return(m_ColToolTip[pHTI->iSubItem]);
-}
-
-void CMidiTargetDlg::UpdateShadowVal(int RowIdx)
-{
-	CRect	rItem;
-	m_List.GetSubItemRect(RowIdx, COL_VALUE, LVIR_LABEL, rItem);
-	m_List.InvalidateRect(rItem);
 }
 
 int CMidiTargetDlg::CheckSharers(const CMidiTarget& Target)
@@ -237,6 +274,27 @@ int CMidiTargetDlg::CheckSharers(const CMidiTarget& Target)
 	}
 }
 
+void CMidiTargetDlg::UpdateTarget(const CMidiTarget& Target, int PartIdx, int RowIdx, int ColIdx, int ShareCode)
+{
+	// if replacing previous assignments, CheckSharers already notified undo
+	if (ShareCode != CSR_REPLACE) {
+		int	UndoCode;
+		if (PartIdx < 0)	// if patch target
+			UndoCode = UCODE_BASE_PATCH;
+		else	// part target
+			UndoCode = UCODE_PART;
+		UINT	Flags;
+		if (RowIdx != m_PrevTarget) {	// if different target
+			m_PrevTarget = RowIdx;	// update cached index
+			Flags = 0;
+		} else	// same target
+			Flags = CUndoable::UE_COALESCE;	// coalesce edits
+		theApp.GetMain()->NotifyEdit(
+			m_ColInfo[ColIdx].TitleID, UndoCode, Flags);
+	}
+	theApp.GetMain()->SetMidiTarget(PartIdx, RowIdx, Target);
+}
+
 void CMidiTargetDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CChildDlg::DoDataExchange(pDX);
@@ -258,8 +316,8 @@ BEGIN_MESSAGE_MAP(CMidiTargetDlg, CChildDlg)
 	ON_COMMAND(ID_MIDI_LEARN, OnMidiLearn)
 	ON_UPDATE_COMMAND_UI(ID_MIDI_LEARN, OnUpdateMidiLearn)
 	ON_COMMAND(ID_MIDI_TARGET_RESET, OnMidiTargetReset)
+	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
-	ON_MESSAGE(CTargetGridCtrl::UWM_TARGET_CHANGE, OnPostTargetChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -292,9 +350,17 @@ BOOL CMidiTargetDlg::OnInitDialog()
 {
 	CChildDlg::OnInitDialog();
 	m_List.CreateColumns(m_ColInfo, COLUMNS);
+	m_List.LoadColumnWidths(REG_SETTINGS, m_RegKey + RK_COLUMN_WIDTHS);
+	m_List.SetItemCountEx(GetTargetCount());
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CMidiTargetDlg::OnDestroy() 
+{
+	m_List.SaveColumnWidths(REG_SETTINGS, m_RegKey + RK_COLUMN_WIDTHS);
+	CChildDlg::OnDestroy();
 }
 
 void CMidiTargetDlg::OnSize(UINT nType, int cx, int cy) 
@@ -306,7 +372,7 @@ void CMidiTargetDlg::OnSize(UINT nType, int cx, int cy)
 void CMidiTargetDlg::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 {
 	if (nIDCtl == IDC_MIDI_TARGET_LIST) {
-		if (!m_ListItemHeight)	// if retrieving item height
+		if (lpMeasureItemStruct->itemHeight > m_ListItemHeight)	// if height increased
 			m_ListItemHeight = lpMeasureItemStruct->itemHeight;	// save height
 		else	// reapplying saved item height
 			lpMeasureItemStruct->itemHeight = m_ListItemHeight;	// set height
@@ -321,7 +387,7 @@ void CMidiTargetDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 	if (item.mask & LVIF_TEXT) {
 		switch (item.iSubItem) {
 		case COL_NAME:
-			_tcsncpy(item.pszText, LDS(m_TargetNameID[iItem]), item.cchTextMax);
+			_tcsncpy(item.pszText, LDS(GetTargetInfo(iItem).NameID), item.cchTextMax);
 			break;
 		case COL_PORT:
 			_stprintf(item.pszText, _T("%d"), m_Target[iItem].m_Inst.Port);
@@ -330,7 +396,7 @@ void CMidiTargetDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 			_stprintf(item.pszText, _T("%d"), m_Target[iItem].m_Inst.Chan + 1);
 			break;
 		case COL_EVENT:
-			_tcsncpy(item.pszText, CMidiTarget::GetEventTypeName(m_Target[iItem].m_Event), item.cchTextMax);
+			_tcsncpy(item.pszText, m_Target[iItem].GetEventTypeName(), item.cchTextMax);
 			break;
 		case COL_CONTROL:
 			_stprintf(item.pszText, _T("%d"), m_Target[iItem].m_Control);
@@ -401,21 +467,4 @@ void CMidiTargetDlg::OnMidiTargetReset()
 		OnTargetChange(m_Target[iSel], iSel, 0);
 		m_List.Invalidate();
 	}
-}
-
-LRESULT CMidiTargetDlg::OnPostTargetChange(WPARAM wParam, LPARAM lParam)
-{
-	int	iRow = INT64TO32(wParam);
-	int	iCol = INT64TO32(lParam);
-	// must copy modified target before calling CheckSharers, because in 
-	// replace case, CheckSharers updates our derived object's target array
-	CMidiTarget	targ(m_Target[iRow]);
-	int	ShareCode;
-	if (iCol <= COL_CONTROL)	// if controller changed
-		ShareCode = CheckSharers(targ);	// check for controller sharing
-	else	// controller didn't change
-		ShareCode = CSR_NONE;	// previous assignments don't matter
-	if (ShareCode != CSR_CANCEL)	// if user didn't cancel
-		OnTargetChange(targ, iRow, iCol, ShareCode);	// call derived handler
-	return(0);
 }

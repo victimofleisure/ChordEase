@@ -11,6 +11,9 @@
 		01		13feb14	add SetSelected
 		02		15jun14	add tool tip support
 		03		15jul14	fix OnToolHitTest return type
+		04		23mar15	add RedrawSubItem
+		05		24mar15	add column order methods
+		06		04apr15	add GetInsertPos
 
 		extended selection list control
  
@@ -47,12 +50,16 @@ public:
 
 // Attributes
 public:
+	int		GetColumnCount() const;
 	int		GetSelection() const;
 	void	GetSelection(CIntArrayEx& Sel) const;
 	void	SetSelection(const CIntArrayEx& Sel);
 	void	GetColumnWidths(CIntArrayEx& Width);
 	void	SetColumnWidths(const CIntArrayEx& Width);
+	bool	GetColumnOrder(CIntArrayEx& Order);
+	bool	SetColumnOrder(const CIntArrayEx& Order);
 	void	SetSelected(int ItemIdx, bool Enable);
+	int		GetInsertPos() const;
 
 // Operations
 public:
@@ -64,8 +71,13 @@ public:
 	void	Deselect();
 	bool	SaveColumnWidths(LPCTSTR Section, LPCTSTR Key);
 	bool	LoadColumnWidths(LPCTSTR Section, LPCTSTR Key);
+	void	ResetColumnWidths(const COL_INFO *ColInfo, int Columns);
+	bool	SaveColumnOrder(LPCTSTR Section, LPCTSTR Key);
+	bool	LoadColumnOrder(LPCTSTR Section, LPCTSTR Key);
+	bool	ResetColumnOrder();
 	void	FixContextMenuPoint(CPoint& Point);
 	void	EnableToolTips(BOOL bEnable = TRUE);
+	void	RedrawSubItem(int iItem, int iSubItem);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -83,7 +95,15 @@ protected:
 
 // Overrideables
 	virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
+
+// Helpers
+	bool	LoadArray(LPCTSTR Section, LPCTSTR Key, CIntArrayEx& Array, int Elems);
 };
+
+inline int CListCtrlExSel::GetColumnCount() const
+{
+	return(const_cast<CListCtrlExSel *>(this)->GetHeaderCtrl()->GetItemCount());
+}
 
 /////////////////////////////////////////////////////////////////////////////
 

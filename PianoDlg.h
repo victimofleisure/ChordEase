@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      22apr14	initial version
+        01      06may15	add piano size submenu
 
 		piano dialog
 
@@ -85,8 +86,8 @@ protected:
 	//}}AFX_MSG
 	afx_msg BOOL OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg LRESULT OnPianoKeyChange(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnPianoSize(UINT nID);
 	afx_msg void OnKeyLabelType(UINT nID);
-	afx_msg void OnUpdateKeyLabelType(CCmdUI* pCmdUI);
 	afx_msg void OnExitMenuLoop(BOOL bIsTrackPopupMenu);
 	DECLARE_MESSAGE_MAP()
 
@@ -102,23 +103,41 @@ protected:
 		bool	ShowOctaves;	// if true, show notes with octaves appended
 		bool	Vertical;		// if true, orient keyboard vertically
 	};
+	struct PIANO_RANGE {
+		int		StartNote;	// MIDI note number of keyboard's first note
+		int		KeyCount;	// total number of keys on keyboard
+	};
 
 // Constants
 	enum {
 		MAX_PORTS = 32,			// maximum number of ports
 		MIN_KEYS = 12,			// minimum number of keys
-		MAX_KEYS = 88,			// maximum number of keys
+		MAX_KEYS = MIDI_NOTES,	// maximum number of keys
 		MIN_PIANO_HEIGHT = 32,	// minimum height of piano control, in pixels
 	};
-	enum {	//	key label types; must match menu item order
+	enum {	// context menu submenus
+		SM_PIANO_SIZE,
+		SM_KEY_LABEL,
+		SUBMENUS
+	};
+	enum {	//	key label types; must match submenu item order
 		KL_NONE,				// no key labels
 		KL_SHORTCUTS,			// show shortcuts
 		KL_INPUT_NOTES,			// show input notes
 		KL_OUTPUT_NOTES,		// show output notes
 		KL_INTERVALS,			// show intervals
 		KL_SCALE_TONES,			// show scale tones
-		KEY_LABEL_TYPES
+		KEY_LABEL_TYPES,
 	};
+	enum {	// piano sizes
+		#define PIANOSIZEDEF(StartNote, KeyCount) PS_##KeyCount,
+		#include "PianoSizeDef.h"	// generate piano size enum
+		PIANO_SIZES,
+		SMID_FIRST = 0xa000,	// first command ID of submenus
+		SMID_PIANO_SIZE_START = SMID_FIRST,
+		SMID_PIANO_SIZE_END = SMID_PIANO_SIZE_START + PIANO_SIZES - 1,
+	};
+	static const PIANO_RANGE	m_PianoRange[PIANO_SIZES];	// range for each piano size
 
 // Data members
 	CPianoCtrl	m_Piano;		// piano control

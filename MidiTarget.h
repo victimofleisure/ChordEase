@@ -11,6 +11,8 @@
  		01		09sep14	use default memberwise copy
 		02		11nov14	add GetAssignee
 		03		23dec14	uninline GetEventTypeName
+		04		16mar15	add fixed info struct
+		05		06apr15	add array header for assignee specializations
 
 		MIDI target container
 
@@ -21,6 +23,7 @@
 
 #include "MidiInst.h"
 #include "Note.h"
+#include "ArrayEx.h"
 
 class CMidiTarget : public WCopyable {
 public:
@@ -33,6 +36,11 @@ public:
 		#include "MidiEventTypeDef.h"
 		EVENT_TYPES
 	};
+	enum {	// control types
+		#define MIDITARGETCTRLTYPEDEF(x) x,
+		#include "MidiTargetCtrlTypeDef.h"
+		CONTROL_TYPES
+	};
 
 // Types
 	union ASSIGNEE {	// pack assignment attributes into single identifier
@@ -44,17 +52,26 @@ public:
 		};
 		UINT	id;	// packed identifier
 	};
+	struct FIXED_INFO {	// fixed information about a target
+		LPCTSTR	Name;		// target name; for internal use only
+		int		NameID;		// resource string identifier of target's display name
+		int		CtrlID;		// identifier of target's associated windows control
+		int		CtrlType;	// target's native MIDI control type; see enum above
+	};
 
 // Attributes
 	bool	IsDefault() const;
 	double	GetNormPos(int MidiVal) const;
-	static	CString	GetEventTypeName(int EventType);
+	CString	GetEventTypeName() const;
+	CString	GetControllerName() const;
 	bool	IsMatch(CMidiInst Inst, int Event, int Ctrl) const;
 	ASSIGNEE	GetAssignee() const;
 	bool	IsMatch(ASSIGNEE Assignee) const;
-	static	LPCTSTR	GetControllerName(int Ctrl);
+	static	CString	GetEventTypeName(int EventType);
+	static	CString	GetControlTypeName(int CtrlType);
+	static	LPCTSTR	GetControllerNamePtr(int Ctrl);
 	static	int		GetControllerName(LPTSTR Text, int TextMax, int Ctrl);
-	static	void	GetControllerName(CString& Str, int Ctrl);
+	static	CString	GetControllerName(int Ctrl);
 
 // Operations
 	void	Reset();
@@ -62,8 +79,8 @@ public:
 	bool	operator!=(const CMidiTarget& Target) const;
 	void	Load(LPCTSTR Section);
 	void	Save(LPCTSTR Section) const;
-	static	void	Load(LPCTSTR Section, CMidiTarget *Target, int nTargets, const LPCTSTR *TargetName);
-	static	void	Save(LPCTSTR Section, const CMidiTarget *Target, int nTargets, const LPCTSTR *TargetName);
+	static	void	Load(LPCTSTR Section, CMidiTarget *Target, int nTargets, const FIXED_INFO *Info);
+	static	void	Save(LPCTSTR Section, const CMidiTarget *Target, int nTargets, const FIXED_INFO *Info);
 	static	void	Serialize(CArchive& ar, CMidiTarget *Target, int nTargets);
 
 // Public data
@@ -76,7 +93,8 @@ public:
 // Constants
 	static const CMidiTarget	m_Default;	// default state
 	static const int	m_EventTypeName[EVENT_TYPES];	// event type string IDs
-	static const LPCTSTR	m_ControllerName[];
+	static const int	m_ControlTypeName[CONTROL_TYPES];	// control type string IDs
+	static const LPCTSTR	m_ControllerName[MIDI_NOTES];	// controller names
 };
 
 inline bool CMidiTarget::operator==(const CMidiTarget& Target) const
@@ -109,7 +127,17 @@ inline double CMidiTarget::GetNormPos(int MidiVal) const
 	return(m_RangeStart + MidiVal * (m_RangeEnd - m_RangeStart) / MIDI_NOTE_MAX);
 }
 
-inline LPCTSTR CMidiTarget::GetControllerName(int Ctrl)
+inline CString CMidiTarget::GetEventTypeName() const
+{
+	return(GetEventTypeName(m_Event));
+}
+
+inline CString CMidiTarget::GetControllerName() const
+{
+	return(GetControllerName(m_Control));
+}
+
+inline LPCTSTR CMidiTarget::GetControllerNamePtr(int Ctrl)
 {
 	ASSERT(Ctrl >= 0 && Ctrl < MIDI_NOTES);
 	return(m_ControllerName[Ctrl]);

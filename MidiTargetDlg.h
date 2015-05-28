@@ -11,6 +11,10 @@
         01      23apr14	define columns via macro
 		02		12jun14	refactor to use grid control instead of row view
 		03		11nov14	add CheckSharers, refactor OnTargetChange
+		04		15mar15 add IsEditing and EndEdit
+		05		16mar15	remove target change message
+		06		23mar15	in UpdateShadowVal, move subitem redraw into base class
+		07		24mar15	add registry key; make column widths persistent
 
 		MIDI target dialog
  
@@ -36,7 +40,7 @@ class CMidiTargetDlg : public CChildDlg
 	DECLARE_DYNAMIC(CMidiTargetDlg);
 // Construction
 public:
-	CMidiTargetDlg(CWnd* pParent = NULL);
+	CMidiTargetDlg(LPCTSTR RegKey, CWnd* pParent = NULL);
 
 // Constants
 	enum {	// column indices
@@ -52,22 +56,34 @@ public:
 	};
 
 // Attributes
-	void	SetTargets(const int *TargetNameID, int Targets);
+	void	SetTargets(const CMidiTarget::FIXED_INFO *Info, int Targets);
 	static	UINT	GetTemplateID();
 	int		GetCurSel() const;
 	void	SetCurSel(int RowIdx);
+	int		GetTargetCount() const;
 	CMidiTarget&	GetTarget(int RowIdx);
+	CString	GetTargetName(int RowIdx) const;
+	int		GetTargetControlType(int RowIdx) const;
+	CString	GetTargetControlTypeName(int RowIdx) const;
+	CString	GetTargetHint(int RowIdx) const;
+	const CMidiTarget::FIXED_INFO&	GetTargetInfo(int RowIdx) const;
+	bool	IsEditing() const;
+	void	EnsureVisible(int RowIdx);
+	UINT	GetListItemHeight() const;
 
 // Operations
+	int		FindTargetByCtrlID(int CtrlID) const;
 	void	OnLearnChange();
 	void	UpdateShadowVal(int RowIdx);
+	void	EndEdit();
 	void	EnableToolTips(BOOL bEnable = TRUE);
+	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
+	void	UpdateTarget(const CMidiTarget& Target, int PartIdx, int RowIdx, int ColIdx, int ShareCode);
 	static	int		CheckSharers(const CMidiTarget& Target);
 
 // Overrideables
 	virtual	void	OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode = 0);
 	virtual	int		GetShadowValue(int RowIdx);
-	virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -95,8 +111,8 @@ protected:
 	afx_msg void OnMidiLearn();
 	afx_msg void OnUpdateMidiLearn(CCmdUI *pCmdUI);
 	afx_msg void OnMidiTargetReset();
+	afx_msg void OnDestroy();
 	//}}AFX_MSG
-	afx_msg LRESULT OnPostTargetChange(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 // Types
@@ -107,9 +123,6 @@ protected:
 		virtual	void	OnItemChange(LPCTSTR Text);
 		virtual	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 		CMidiTargetDlg	*m_pParent;
-		enum {
-			UWM_TARGET_CHANGE = WM_USER + 1,
-		};
 	};
 
 // Constants
@@ -122,8 +135,10 @@ protected:
 // Data members
 	CTargetGridCtrl	m_List;			// target grid control
 	CMidiTargetArray	m_Target;	// array of targets
-	const int	*m_TargetNameID;	// pointer to array of target name string IDs
-	int		m_ListItemHeight;		// height of list item, in pixels
+	const CMidiTarget::FIXED_INFO	*m_TargetInfo;	// pointer to array of target info
+	UINT	m_ListItemHeight;		// height of list item, in pixels
+	int		m_PrevTarget;			// index of previously edited target
+	CString	m_RegKey;				// registry key for persistent state
 
 // Helpers
 };
@@ -138,14 +153,61 @@ inline int CMidiTargetDlg::GetCurSel() const
 	return(m_List.GetSelection());
 }
 
+inline int CMidiTargetDlg::GetTargetCount() const
+{
+	return(m_Target.GetSize());
+}
+
 inline CMidiTarget& CMidiTargetDlg::GetTarget(int RowIdx)
 {
 	return(m_Target[RowIdx]);
 }
 
+inline int CMidiTargetDlg::GetTargetControlType(int RowIdx) const
+{
+	return(GetTargetInfo(RowIdx).CtrlType);
+}
+
+inline CString CMidiTargetDlg::GetTargetControlTypeName(int RowIdx) const
+{
+	return(CMidiTarget::GetControlTypeName(GetTargetControlType(RowIdx)));
+}
+
+inline const CMidiTarget::FIXED_INFO& CMidiTargetDlg::GetTargetInfo(int RowIdx) const
+{
+	ASSERT(m_TargetInfo != NULL);
+	ASSERT(RowIdx >= 0 && RowIdx < GetTargetCount());
+	return(m_TargetInfo[RowIdx]);
+}
+
+inline bool CMidiTargetDlg::IsEditing() const
+{
+	return(m_List.IsEditing()); 
+}
+
+inline void CMidiTargetDlg::EndEdit()
+{
+	m_List.EndEdit(); 
+}
+
 inline void CMidiTargetDlg::EnableToolTips(BOOL bEnable)
 {
 	m_List.EnableToolTips(bEnable);
+}
+
+inline void CMidiTargetDlg::UpdateShadowVal(int RowIdx)
+{
+	m_List.RedrawSubItem(RowIdx, COL_VALUE);
+}
+
+inline void CMidiTargetDlg::EnsureVisible(int RowIdx)
+{
+	m_List.EnsureVisible(RowIdx, FALSE);
+}
+
+inline UINT CMidiTargetDlg::GetListItemHeight() const
+{
+	return(m_ListItemHeight);
 }
 
 //{{AFX_INSERT_LOCATION}}

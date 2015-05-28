@@ -19,6 +19,7 @@
 		09		21nov13	derive from extended selection list
 		10		22nov13	in PreTranslateMessage, do base class if not dragging
 		11		12jun14	add drag enable
+		12		04apr15	add GetCompensatedDropPos
 
         virtual list control with drag reordering
  
@@ -99,6 +100,31 @@ void CDragVirtualListCtrl::CancelDrag()
 			SetItemState(iItem, LVIS_FOCUSED, LVIS_FOCUSED);
 		ReleaseCapture();
 	}
+}
+
+bool CDragVirtualListCtrl::CompensateDropPos(int& DropPos) const
+{
+	int	iPos = DropPos;
+	CIntArrayEx	sel;
+	GetSelection(sel);
+	int	nSels = sel.GetSize();
+	if (!(nSels > 1 || (nSels == 1 && iPos != sel[0])))
+		return(FALSE);	// nothing changed
+	// reverse iterate for stability
+	for (int iSel = nSels - 1; iSel >= 0; iSel--) {	// for each selected item
+		if (sel[iSel] < iPos)	// if below drop position
+			iPos--;	// compensate drop position
+	}
+	DropPos = max(iPos, 0);	// keep it positive
+	return(TRUE);
+}
+
+int CDragVirtualListCtrl::GetCompensatedDropPos() const
+{
+	int	iPos = GetDropPos();
+	if (!CompensateDropPos(iPos))
+		return(-1);	// nothing changed
+	return(iPos);
 }
 
 BEGIN_MESSAGE_MAP(CDragVirtualListCtrl, CListCtrlExSel)

@@ -160,6 +160,22 @@ SOURCE=.\ChildDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ChordDictDlgColDef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChordDictionaryDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChordDictionaryDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChordDictUndoCodes.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ChordEase.cpp
 # End Source File
 # Begin Source File
@@ -553,6 +569,10 @@ SOURCE=.\MidiTarget.h
 # Begin Source File
 
 SOURCE=.\MidiTargetColDef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MidiTargetCtrlTypeDef.h
 # End Source File
 # Begin Source File
 
@@ -1068,6 +1088,10 @@ SOURCE=.\Resource.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\RingBuf.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Round.h
 # End Source File
 # Begin Source File
@@ -1326,6 +1350,10 @@ SOURCE=.\WinAppCK.cpp
 # Begin Source File
 
 SOURCE=.\WinAppCK.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\WinAppCKRegTypes.h
 # End Source File
 # Begin Source File
 

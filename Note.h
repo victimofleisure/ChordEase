@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		23aug13	initial version
+		01		03apr15	add archive operators
  
 		note object
 
@@ -207,6 +208,21 @@ inline LPCTSTR CNote::TonalityName(int Tonality)
 {
 	ASSERT(IsValidTonality(Tonality));
 	return(m_TonalityName[Tonality]);
+}
+
+inline CArchive& operator<<(CArchive& ar, const CNote& Note)
+{
+	int	tmp = Note;
+	ar << tmp;
+	return(ar);
+}
+
+inline CArchive& operator>>(CArchive& ar, CNote& Note)
+{
+	int	tmp;
+	ar >> tmp; 
+	Note = tmp;
+	return(ar);
 }
 
 #endif

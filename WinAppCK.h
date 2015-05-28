@@ -18,6 +18,7 @@
 		08		10jul13	add GetLastErrorString
 		09		27sep13	convert persistence methods to templates
 		10		19nov13	in EnableChildWindows, add Deep argument
+		11		24mar15	generate template specializations for numeric types
 
         enhanced application
  
@@ -73,49 +74,21 @@ public:
 	{
 		CPersist::WriteBinary(REG_SETTINGS, Key, &Value, sizeof(T));
 	}
-	void	RdReg(LPCTSTR Key, int& Value)
-	{
-		Value = GetProfileInt(REG_SETTINGS, Key, Value);
-	}
-	void	RdReg(LPCTSTR Key, long& Value)
-	{
-		Value = GetProfileInt(REG_SETTINGS, Key, Value);
-	}
-	void	RdReg(LPCTSTR Key, UINT& Value)
-	{
-		Value = GetProfileInt(REG_SETTINGS, Key, Value);
-	}
-	void	RdReg(LPCTSTR Key, DWORD& Value)
-	{
-		Value = GetProfileInt(REG_SETTINGS, Key, Value);
-	}
-	void	RdReg(LPCTSTR Key, bool& Value)
-	{
-		Value = GetProfileInt(REG_SETTINGS, Key, Value) != 0;
-	}
+	#define	WINAPPCK_REG_TYPE_DEF(T, prefix) \
+		void	RdReg(LPCTSTR Key, T& Value)	\
+		{	\
+			Value = static_cast<T>(prefix GetProfileInt(REG_SETTINGS, Key, Value));	\
+		}
+	#include "WinAppCKRegTypes.h"	// specialize RdReg for numeric types
+	#define	WINAPPCK_REG_TYPE_DEF(T, prefix) \
+		void	WrReg(LPCTSTR Key, const T& Value)	\
+		{	\
+			WriteProfileInt(REG_SETTINGS, Key, Value);	\
+		}
+	#include "WinAppCKRegTypes.h"	// specialize WrReg for numeric types
 	void	RdReg(LPCTSTR Key, CString& Value)
 	{
 		Value = GetProfileString(REG_SETTINGS, Key, Value);
-	}
-	void	WrReg(LPCTSTR Key, const int& Value)
-	{
-		WriteProfileInt(REG_SETTINGS, Key, Value);
-	}
-	void	WrReg(LPCTSTR Key, const long& Value)
-	{
-		WriteProfileInt(REG_SETTINGS, Key, Value);
-	}
-	void	WrReg(LPCTSTR Key, const UINT& Value)
-	{
-		WriteProfileInt(REG_SETTINGS, Key, Value);
-	}
-	void	WrReg(LPCTSTR Key, const DWORD& Value)
-	{
-		WriteProfileInt(REG_SETTINGS, Key, Value);
-	}
-	void	WrReg(LPCTSTR Key, const bool& Value)
-	{
-		WriteProfileInt(REG_SETTINGS, Key, Value);
 	}
 	void	WrReg(LPCTSTR Key, const CString& Value)
 	{
@@ -134,49 +107,21 @@ public:
 	{
 		CPersist::WriteBinary(Section, Key, &Value, sizeof(T));
 	}
-	void	RdReg(LPCTSTR Section, LPCTSTR Key, int& Value)
-	{
-		Value = GetProfileInt(Section, Key, Value);
-	}
-	void	RdReg(LPCTSTR Section, LPCTSTR Key, long& Value)
-	{
-		Value = GetProfileInt(Section, Key, Value);
-	}
-	void	RdReg(LPCTSTR Section, LPCTSTR Key, UINT& Value)
-	{
-		Value = GetProfileInt(Section, Key, Value);
-	}
-	void	RdReg(LPCTSTR Section, LPCTSTR Key, DWORD& Value)
-	{
-		Value = GetProfileInt(Section, Key, Value);
-	}
-	void	RdReg(LPCTSTR Section, LPCTSTR Key, bool& Value)
-	{
-		Value = GetProfileInt(Section, Key, Value) != 0;
-	}
+	#define	WINAPPCK_REG_TYPE_DEF(T, prefix) \
+		void	RdReg(LPCTSTR Section, LPCTSTR Key, T& Value)	\
+		{	\
+			Value = static_cast<T>(prefix GetProfileInt(Section, Key, Value));	\
+		}
+	#include "WinAppCKRegTypes.h"	// specialize RdReg for numeric types
+	#define	WINAPPCK_REG_TYPE_DEF(T, prefix) \
+		void	WrReg(LPCTSTR Section, LPCTSTR Key, const T& Value)	\
+		{	\
+			WriteProfileInt(Section, Key, Value);	\
+		}
+	#include "WinAppCKRegTypes.h"	// specialize WrReg for numeric types
 	void	RdReg(LPCTSTR Section, LPCTSTR Key, CString& Value)
 	{
 		Value = GetProfileString(Section, Key, Value);
-	}
-	void	WrReg(LPCTSTR Section, LPCTSTR Key, const int& Value)
-	{
-		WriteProfileInt(Section, Key, Value);
-	}
-	void	WrReg(LPCTSTR Section, LPCTSTR Key, const long& Value)
-	{
-		WriteProfileInt(Section, Key, Value);
-	}
-	void	WrReg(LPCTSTR Section, LPCTSTR Key, const UINT& Value)
-	{
-		WriteProfileInt(Section, Key, Value);
-	}
-	void	WrReg(LPCTSTR Section, LPCTSTR Key, const DWORD& Value)
-	{
-		WriteProfileInt(Section, Key, Value);
-	}
-	void	WrReg(LPCTSTR Section, LPCTSTR Key, const bool& Value)
-	{
-		WriteProfileInt(Section, Key, Value);
 	}
 	void	WrReg(LPCTSTR Section, LPCTSTR Key, const CString& Value)
 	{

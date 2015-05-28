@@ -15,6 +15,7 @@
 		05		04oct13	add drop position tracking
 		06		21nov13	derive from extended selection list
 		07		12jun14	add drag enable
+		08		04apr15	add GetCompensatedDropPos
 
         virtual list control with drag reordering
  
@@ -48,12 +49,14 @@ public:
 	void	SetDragEnable(bool Enable);
 	bool	GetDragEnable() const;
 	int		GetDropPos() const;
+	int		GetCompensatedDropPos() const;
 	bool	IsDragging() const;
 	void	TrackDropPos(bool Enable);
 
 // Operations
 public:
 	void	CancelDrag();
+	bool	CompensateDropPos(int& DropPos) const;
 
 // Overrides
 	// ClassWizard generated virtual function overrides

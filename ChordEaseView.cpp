@@ -22,6 +22,8 @@
 		12		18sep14	add transpose and length commands
 		13		20sep14	add ApplyMeter; update chord durations on meter change
 		14		19oct14	in ApplyMeter, ChangeLength now modifies selection arg
+		15		08mar15	move measure/beat conversions into engine
+		16		04apr15	in MakeChordPopups, rename chord type accessor
 
 		ChordEase view
  
@@ -754,7 +756,7 @@ int CChordEaseView::GetCurChord() const
 
 int CChordEaseView::GetCurMeasure() const
 {
-	return(BeatToMeasure(GetCurBeat()));
+	return(gEngine.BeatToMeasure(GetCurBeat()));
 }
 
 void CChordEaseView::SetCurBeat(int BeatIdx)
@@ -779,7 +781,7 @@ void CChordEaseView::SetCurChord(int ChordIdx)
 
 void CChordEaseView::SetCurMeasure(int MeasureIdx)
 {
-	SetCurBeat(MeasureToBeat(MeasureIdx));
+	SetCurBeat(gEngine.MeasureToBeat(MeasureIdx));
 	EmptySelection();
 }
 
@@ -807,8 +809,8 @@ void CChordEaseView::SkipLines(int LineDelta, bool Select)
 	int	MeasureDelta = LineDelta * m_MeasuresPerLine;
 	if (Select) {
 		int	iBeat = m_ChordSymbol[GetSelectionMark()].m_Beat;
-		int	iMeasure = BeatToMeasure(iBeat) + MeasureDelta;
-		iBeat = MeasureToBeat(iMeasure);
+		int	iMeasure = gEngine.BeatToMeasure(iBeat) + MeasureDelta;
+		iBeat = gEngine.MeasureToBeat(iMeasure);
 		iBeat = CLAMP(iBeat, 0, GetBeatCount() - 1);
 		SelectToChord(m_BeatMap[iBeat]);
 	} else
@@ -821,16 +823,6 @@ void CChordEaseView::SkipToPos(int ChordIdx, bool Select)
 		SelectToChord(ChordIdx);
 	else
 		SetCurChord(ChordIdx);
-}
-
-int CChordEaseView::BeatToMeasure(int BeatIdx)
-{
-	return(BeatIdx / gEngine.GetSong().GetMeter().m_Numerator);
-}
-
-int CChordEaseView::MeasureToBeat(int MeasureIdx)
-{
-	return(MeasureIdx * gEngine.GetSong().GetMeter().m_Numerator);
 }
 
 int CChordEaseView::GetSongChordIndex(int ChordIdx) const
@@ -914,7 +906,7 @@ bool CChordEaseView::MakeChordPopups(CMenu& Menu, int ChordIdx)
 	int	nChordTypes = gEngine.GetSong().GetChordTypeCount();
 	item.SetSize(nChordTypes);
 	for (int iType = 0; iType < nChordTypes; iType++)	// for each chord type
-		item[iType] = gEngine.GetSong().GetChordInfo(iType).m_Name;
+		item[iType] = gEngine.GetSong().GetChordType(iType).m_Name;
 	pPopup = Menu.GetSubMenu(CSM_TYPE);	// make type popup
 	if (!MakePopup(*pPopup, CSMID_TYPE_START, item, chord.m_Type))
 		return(FALSE);

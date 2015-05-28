@@ -14,6 +14,7 @@
 		04		29mar13	remove FastIsVisible
 		05      23apr13	handle command help
 		06      20mar14	derive from variable base class
+		07		29apr15	add OnShowChanged overridable
 
         wrapper for Cristi Posea's sizable control bar
  
@@ -48,12 +49,23 @@ protected:
 // Generated message map functions
 	//{{AFX_MSG(CMySizingControlBar)
 	afx_msg void OnWindowPosChanged(WINDOWPOS* lpwndpos);
-	afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnWindowPosChanging(WINDOWPOS FAR* lpwndpos);
 	//}}AFX_MSG
+	afx_msg LRESULT OnShowChanging(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
+
+// Constants
+	enum {
+		UWM_SHOWCHANGING = WM_USER + 1865	// wParam: bShow, lParam: none
+	};
 
 // Member data
 	bool	m_IsSizeValid;		// if true, OnSize arguments are valid
+	bool	m_IsShowChanging;	// if true, show changing message is pending
+
+// Overridables
+	virtual	void	OnShowChanged(BOOL bShow);
 };
 
 //{{AFX_INSERT_LOCATION}}

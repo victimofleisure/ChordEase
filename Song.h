@@ -15,6 +15,8 @@
 		05		01jul14	add ReadLeadSheet
 		06		28aug14	in IsMergeable, add chord arg
  		07		09sep14	use default memberwise copy
+		08		08mar15	in CSection, add dynamic flag
+        09      05apr15	add chord dictionary set and write methods
 
 		song container
 
@@ -49,20 +51,28 @@ public:
 		int		m_Type;			// chord info index
 	};
 	typedef CArrayEx<CChord, CChord&> CChordArray;
-	class CChordInfo : public WCopyable {
+	class CChordType : public WCopyable {
 	public:
 		enum {	// comp variants
 			COMP_A,
 			COMP_B,
 			COMP_VARIANTS = 2
 		};
-		CChordInfo();
+		CChordType();
 		CString	m_Name;			// chord name
 		int		m_Scale;		// scale index
 		int		m_Mode;			// mode index
 		CScale	m_Comp[COMP_VARIANTS];	// comp chord tones
+		bool	IsAliasOf(const CChordType& Info) const;
+		void	MakeAliasOf(const CChordType& Info);
+		static	CString	CompToStr(const CScale& CompVar);
+		static	int		StrToComp(CString Str, CScale& CompVar);
 	};
-	typedef CArrayEx<CChordInfo, CChordInfo&> CChordInfoArray;
+	class CChordDictionary : public CArrayEx<CChordType, CChordType&> {
+	public:
+		int		Find(LPCTSTR Name) const;
+		void	GetAliases(CIntArrayEx& AliasOf) const;
+	};
 	class CMeter : public WCopyable {
 	public:
 		enum {
@@ -84,7 +94,8 @@ public:
 	class CSection : public WCopyable {
 	public:
 		enum {	// flags
-			F_IMPLICIT	= 0x01	// section was generated implicitly
+			F_IMPLICIT	= 0x01,	// section was generated implicitly
+			F_DYNAMIC	= 0x02,	// section was generated dynamically
 		};
 		CSection();
 		CSection(int Start, int Length, int Repeat, UINT Flags = 0);
@@ -134,7 +145,7 @@ public:
 	CString	GetChordName(int ChordIdx, int Transpose) const;
 	CString	GetChordName(const CChord& Chord, int Transpose) const;
 	int		GetChordTypeCount() const;
-	const CChordInfo&	GetChordInfo(int Type) const;
+	const CChordType&	GetChordType(int TypeIdx) const;
 	int		GetSectionCount() const;
 	const CSection&	GetSection(int SectionIdx) const;
 	CString	GetSectionName(int SectionIdx) const;
@@ -145,6 +156,8 @@ public:
 	void	SetProperties(const CProperties& Props);
 	CString	GetComments() const;
 	void	SetComments(const CString& Comments);
+	const CChordDictionary&	GetChordDictionary() const;
+	void	SetChordDictionary(const CChordDictionary& Dictionary);
 
 // Operations
 	CString	MakeChordName(CNote Root, CNote Bass, int Type, CNote Key = C) const;
@@ -152,6 +165,9 @@ public:
 	void	Reset();
 	void	Add(CChord& Chord);
 	bool	ReadChordDictionary(LPCTSTR Path);
+	bool	ReadChordDictionary(LPCTSTR Path, CChordDictionary& Dictionary);
+	bool	WriteChordDictionary(LPCTSTR Path);
+	bool	WriteChordDictionary(LPCTSTR Path, const CChordDictionary& Dictionary);
 	void	CreateDefaultChordDictionary();
 	int		FindChordType(LPCTSTR Name) const;
 	int		ParseChordSymbol(CString Symbol, CChord& Chord) const;
@@ -180,7 +196,7 @@ protected:
 	CChordArray	m_Chord;	// array of chords
 	CIntArrayEx	m_BeatMap;	// array of chord indices, one per beat
 	CIntArrayEx	m_StartBeat;	// array of starting beats, one per chord
-	CChordInfoArray	m_Dictionary;	// array of chord info, one per chord type
+	CChordDictionary	m_Dictionary;	// array of chord info, one per chord type
 	CSectionArray	m_Section;	// array of sections
 	CStringArrayEx	m_SectionName;	// array of section names
 	CString	m_Comments;		// one or more newline-terminated comments
@@ -281,7 +297,7 @@ inline bool CSong::CChord::EqualNoDuration(const CChord& Chord) const
 	return(!memcmp(&m_Root, &Chord.m_Root, sizeof(CChord) - sizeof(m_Duration)));
 }
 
-inline CSong::CChordInfo::CChordInfo()
+inline CSong::CChordType::CChordType()
 {
 }
 
@@ -360,9 +376,9 @@ inline int CSong::GetChordTypeCount() const
 	return(m_Dictionary.GetSize());
 }
 
-inline const CSong::CChordInfo& CSong::GetChordInfo(int Type) const
+inline const CSong::CChordType& CSong::GetChordType(int TypeIdx) const
 {
-	return(m_Dictionary[Type]);
+	return(m_Dictionary[TypeIdx]);
 }
 
 inline void CSong::SetEmpty()
@@ -388,6 +404,31 @@ inline const CSong::CSection& CSong::GetSection(int SectionIdx) const
 inline CString CSong::GetSectionName(int SectionIdx) const
 {
 	return(m_SectionName[SectionIdx]);
+}
+
+inline const CSong::CChordDictionary& CSong::GetChordDictionary() const
+{
+	return(m_Dictionary);
+}
+
+inline void CSong::SetChordDictionary(const CChordDictionary& Dictionary)
+{
+	m_Dictionary = Dictionary;
+}
+
+inline bool CSong::ReadChordDictionary(LPCTSTR Path)
+{
+	return(ReadChordDictionary(Path, m_Dictionary));
+}
+
+inline bool CSong::WriteChordDictionary(LPCTSTR Path)
+{
+	return(WriteChordDictionary(Path, m_Dictionary));
+}
+
+inline int CSong::FindChordType(LPCTSTR Name) const
+{
+	return(m_Dictionary.Find(Name));
 }
 
 #endif

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		20mar15	add arpeggio adapt
 
 		part comp dialog
  
@@ -55,6 +56,7 @@ protected:
 // Dialog Data
 	//{{AFX_DATA(CPartCompDlg)
 	enum { IDD = IDD_PART_COMP };
+	CButton	m_ArpAdapt;
 	CComboBox	m_ArpOrder;
 	CButton	m_ArpRepeat;
 	CDurationComboBox	m_ArpPeriod;

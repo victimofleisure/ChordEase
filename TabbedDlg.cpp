@@ -9,6 +9,7 @@
 		rev		date	comments
         00      14sep13	initial version
 		01		02jul14	add OnCommandHelp
+		02		13jun15	in RemovePage, rename local var for clarity
 
         tabbed dialog
  
@@ -48,9 +49,9 @@ void CTabbedDlg::AddPage(CDialog& Page)
 void CTabbedDlg::RemovePage(int PageIdx)
 {
 	m_Page.RemoveAt(PageIdx);
-	int	iPage = GetCurPage();
+	int	iCurPage = GetCurPage();
 	m_TabCtrl.DeleteItem(PageIdx);
-	if (iPage < PageIdx) {	// if current page is still valid
+	if (iCurPage < PageIdx) {	// if current page is still valid
 		UpdateCurPage();
 	} else {	// current page page was removed
 		m_CurPage = -1;	// don't try to hide removed page

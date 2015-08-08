@@ -13,6 +13,7 @@
 		03		29sep14	add OpenThread for MFC 6
 		04		05apr15	add chord dictionary change message
 		05		29apr15	remove hide sizing bar message
+		06		11jun15	remove chord dictionary change message
 
 		global definitions and inlines
 
@@ -203,7 +204,6 @@ enum {	// user windows messages
 	UWM_MIDIINPUTDATA,		// wParam: MIDI message and device index in MSB, lParam: timestamp
 	UWM_MIDIOUTPUTDATA,		// wParam: MIDI message and device index in MSB, lParam: timestamp
 	UWM_COLORSTATUSBARPANE,	// wParam: HDC, lParam: pane index, return COLORREF
-	UWM_CHORDDICTCHANGE,	// wParam: CChordDictionaryDlg*, lParam: none
 };
 
 // file extensions

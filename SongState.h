@@ -11,6 +11,7 @@
 		01		23jul14	add InsertSection
  		02		09sep14	use default memberwise copy
 		03		18sep14	add Transpose and ChangeLength
+		04		15jun15	add TranslateChordTypes
  
 		song editing container
 
@@ -51,6 +52,7 @@ public:
 	void	RemoveSectionMap();
 	void	Transpose(CIntRange BeatRange, int Steps);
 	bool	ChangeLength(CIntRange& BeatRange, double Scale);
+	bool	TranslateChordTypes(const CIntArrayEx& TranTbl, int& UndefTypeIdx);
 
 protected:
 // Member data
@@ -104,6 +106,11 @@ inline const CSong::CChord& CSongState::GetChord(int ChordIdx) const
 inline void CSongState::GetChords(CSong::CChordArray& Chord) const
 {
 	Chord = m_Chord;
+}
+
+inline bool CSongState::TranslateChordTypes(const CIntArrayEx& TranTbl, int& UndefTypeIdx)
+{
+	return(m_Chord.TranslateChordTypes(TranTbl, UndefTypeIdx));
 }
 
 #endif

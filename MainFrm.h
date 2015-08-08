@@ -19,6 +19,8 @@
 		09		05apr15	add chord dictionary editing
 		10		29apr15	remove OnHideSizingBar
 		11		13may15	add chord dictionary undo manager
+		12		10jun15	add chord bar
+		13		12jun15	make chord dictionary dialog a permanent member
 
 		ChordEase main frame
  
@@ -49,6 +51,7 @@
 #include "ModelessDlgPtr.h"
 #include "OutputNotesBar.h"
 #include "ChordDictionaryDlg.h"
+#include "ChordBar.h"
 
 class CChordEaseView;
 class CThreadsDlg;
@@ -80,6 +83,7 @@ public:
 	void	SetBasePatchAndParts(const CPatch& CPatch);
 	CColorStatusBar&	GetStatusBar();
 	CToolBar&	GetToolBar();
+	CChordBar&	GetChordBar();
 	CPatchBar&	GetPatchBar();
 	CPartsBar&	GetPartsBar();
 	CDeviceBar&	GetDeviceBar();
@@ -102,6 +106,7 @@ public:
 	void	SetMidiTarget(int PartIdx, int TargetIdx, const CMidiTarget& Target);
 	void	ResetMidiTarget(int PartIdx, int TargetIdx);
 	void	SetTempo(double Tempo);
+	CChordDictionaryDlg&	GetChordDictionaryDlg();
 
 // Operations
 public:
@@ -205,12 +210,14 @@ protected:
 	afx_msg void OnUpdateTransportRewind(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportStartTag(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateTransportTapTempo(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateViewChordBar(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewChordDictionary(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewOutputNotes(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewParts(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewPatch(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewPiano(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewThreads(CCmdUI* pCmdUI);
+	afx_msg void OnViewChordBar();
 	afx_msg void OnViewChordDictionary();
 	afx_msg void OnViewOutputNotes();
 	afx_msg void OnViewParts();
@@ -235,7 +242,6 @@ protected:
 	afx_msg LRESULT	OnMidiOutputData(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT	OnDeviceNodeChange(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT	OnColorStatusBarPane(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT	OnChordDictChange(WPARAM wParam, LPARAM lParam);
 	afx_msg BOOL OnDeviceChange(UINT nEventType, W64ULONG dwData);
 	afx_msg void OnPatchMru(UINT nID);
 	afx_msg void OnUpdatePatchMru(CCmdUI* pCmdUI);
@@ -259,6 +265,10 @@ protected:
 	class CBasePatchUndoInfo : public CRefObj {
 	public:
 		CBasePatch	m_Patch;	// pre-edit base patch
+	};
+	class CPatchUndoInfo : public CRefObj {
+	public:
+		CPatch	m_Patch;		// pre-edit patch
 	};
 	class CPartUndoInfo : public CRefObj {
 	public:
@@ -301,6 +311,7 @@ protected:
 		CBI_MIDI_INPUT,
 		CBI_MIDI_OUTPUT,
 		CBI_OUTPUT_NOTES,
+		CBI_CHORD,
 		CONTROL_BARS
 	};
 	enum {	// status bar panes
@@ -338,6 +349,7 @@ protected:
 	bool	m_IsCreated;		// true if fully initialized
 	CColorStatusBar	m_StatusBar;	// status bar
 	CToolBar    m_ToolBar;		// tool bar
+	CChordBar	m_ChordBar;		// chord bar
 	CPatchBar	m_PatchBar;		// patch bar
 	CPartsBar	m_PartsBar;		// parts bar
 	CDeviceBar	m_DeviceBar;	// device bar
@@ -352,13 +364,11 @@ protected:
 	CStatusCache	m_StatusCache;	// status bar indicator cached values
 	bool	m_MidiLearn;		// true if learning MIDI assignments
 	bool	m_MidiChaseEvents;	// true if chasing MIDI events
-	bool	m_ChordDictModFlag;	// true if chord dictionary was modified
 	CModelessDlgPtr<CThreadsDlg>	m_ThreadsDlg;	// pointer to threads dialog
 	CModelessDlgPtr<CPianoDlg>	m_PianoDlg;	// pointer to piano dialog
-	CModelessDlgPtr<CChordDictionaryDlg>	m_ChordDictDlg;	// pointer to chord dictionary dialog
+	CChordDictionaryDlg	m_ChordDictDlg;	// chord dictionary dialog
 	CString	m_RecordFilePath;	// record output file path
 	CMidiAssignsDlg	*m_MidiAssignsDlg;	// pointer to MIDI assignments dialog
-	CUndoManager	m_ChordDictUndoMgr;
 
 // Overrides
 	virtual	void	SaveUndoState(CUndoState& State);
@@ -377,6 +387,7 @@ protected:
 	bool	CreateEngine();
 	void	GetClipboardUndoInfo(CUndoState& State);
 	void	UpdateClipboardUndoInfo(int UndoPos);
+	CUndoManager	*GetFocusedUndoManager();
 	void	ApplyOptions(const COptionsInfo& PrevOpts, bool ForceUpdate = FALSE);
 	void	SkipPane(int Delta);
 	void	DockControlBarNextTo(CControlBar* pBar, CControlBar* pTargetBar);
@@ -423,6 +434,11 @@ inline CToolBar& CMainFrame::GetToolBar()
 	return(m_ToolBar);
 }
 
+inline CChordBar& CMainFrame::GetChordBar()
+{
+	return(m_ChordBar);
+}
+
 inline CPatchBar& CMainFrame::GetPatchBar()
 {
 	return(m_PatchBar);
@@ -451,6 +467,11 @@ inline CMidiEventBar& CMainFrame::GetMidiOutputBar()
 inline COutputNotesBar& CMainFrame::GetOutputNotesBar()
 {
 	return(m_OutputNotesBar);
+}
+
+inline CChordDictionaryDlg& CMainFrame::GetChordDictionaryDlg()
+{
+	return(m_ChordDictDlg);
 }
 
 inline CUndoManager& CMainFrame::GetUndoMgr()

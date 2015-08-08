@@ -14,6 +14,7 @@
 		04		05aug14	add DlgCtrlHelp
 		05		29sep14	add ThreadBoost DLL
 		06		22dec14	add CloseHtmlHelp
+		07		27jun15	add load/store string array methods
 
 		ChordEase application
  
@@ -96,6 +97,8 @@ public:
 	static	int		FindHelpID(int ResID);
 	bool	BoostThreads();
 	void	CloseHtmlHelp();
+	static	void	StoreStringArray(LPCTSTR Section, const CStringArrayEx& Arr);
+	static	void	LoadStringArray(LPCTSTR Section, CStringArrayEx& Arr);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

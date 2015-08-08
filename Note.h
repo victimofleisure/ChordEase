@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		23aug13	initial version
 		01		03apr15	add archive operators
+		02		12jun15	in IntervalName, add default note argument
  
 		note object
 
@@ -69,7 +70,7 @@ public:
 	bool	Parse(LPCTSTR Name);
 	bool	ParseMidi(LPCTSTR Name);
 	CNote	LeastInterval(CNote Note) const;
-	LPCTSTR	IntervalName(CNote Note, int Tonality = MAJOR) const;
+	LPCTSTR	IntervalName(CNote Note = C, int Tonality = MAJOR) const;
 	static	int		Mod(int Val, int Modulo);
 	static	bool	IsValidTonality(int Tonality);
 	static	LPCTSTR	TonalityName(int Tonality);

@@ -13,6 +13,7 @@
 		03		16dec08	in OnShowWindow, move LoadWnd within bShow block
 		04		24mar09	add special handling for main accelerators
 		05		21dec12	in OnShowWindow, don't clamp to work area if maximized
+		06		24jul15	override DoModal to save and restore focus
 
         dialog that saves and restores its position
  
@@ -135,4 +136,13 @@ BOOL CPersistDlg::PreTranslateMessage(MSG* pMsg)
 		}
 	}
 	return CDialog::PreTranslateMessage(pMsg);
+}
+
+W64INT CPersistDlg::DoModal() 
+{
+	HWND	hWndFocus = ::GetFocus();
+	W64INT	retc = CDialog::DoModal();
+	if (IsWindow(hWndFocus) && ::IsWindowVisible(hWndFocus))	// extra cautious
+		::SetFocus(hWndFocus);
+	return retc;
 }

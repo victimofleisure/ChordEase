@@ -9,7 +9,8 @@
 		rev		date	comments
 		00		29apr14	initial version
 		01		23mar15	allow header drag/drop
- 
+ 		02		25jul15	add properties dialog
+
 		MIDI note mappings dialog
 
 */
@@ -21,6 +22,7 @@
 #include "ChordEase.h"
 #include "MidiNoteMapDlg.h"
 #include "MainFrm.h"
+#include "NoteMapPropsDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -44,6 +46,7 @@ CMidiNoteMapDlg::CMidiNoteMapDlg(CWnd* pParent /*=NULL*/)
 {
 	//{{AFX_DATA_INIT(CMidiNoteMapDlg)
 	//}}AFX_DATA_INIT
+	m_UndoNotified = FALSE;
 }
 
 void CMidiNoteMapDlg::UpdateView()
@@ -115,6 +118,14 @@ int	CALLBACK CMidiNoteMapDlg::SortCompare(LPARAM p1, LPARAM p2, LPARAM This)
 	return(pDlg->SortCompare(INT64TO32(p1), INT64TO32(p2)));
 }
 
+void CMidiNoteMapDlg::NotifyUndo()
+{
+	if (!m_UndoNotified) {	// only notify undo manager once per instance
+		theApp.GetMain()->NotifyEdit(0, UCODE_PATCH);
+		m_UndoNotified = TRUE;
+	}
+}
+
 void CMidiNoteMapDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CPersistDlg::DoDataExchange(pDX);
@@ -132,6 +143,10 @@ BEGIN_MESSAGE_MAP(CMidiNoteMapDlg, CPersistDlg)
 	ON_WM_SIZE()
 	ON_WM_CONTEXTMENU()
 	ON_WM_DESTROY()
+	ON_WM_SYSCOMMAND()
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_EDIT_PROPERTIES, OnEditProperties)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PROPERTIES, OnUpdateEditProperties)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -221,4 +236,52 @@ void CMidiNoteMapDlg::OnDestroy()
 {
 	CPersistDlg::OnDestroy();
 	m_List.StoreHeaderState(REG_SETTINGS, RK_LIST_HDR_STATE);
+}
+
+void CMidiNoteMapDlg::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+	m_List.FixContextMenuPoint(point);
+	CMenu	menu;
+	menu.LoadMenu(IDM_MIDI_NOTE_MAP_CTX);
+	CMenu	*mp = menu.GetSubMenu(0);
+	UpdateMenu(this, mp);
+	mp->TrackPopupMenu(0, point.x, point.y, this);
+}
+
+void CMidiNoteMapDlg::OnSysCommand(UINT nID, LPARAM lParam)
+{
+	if (nID == SC_KEYMENU && lParam == VK_RETURN)
+		OnEditProperties();
+	else
+		CPersistDlg::OnSysCommand(nID, lParam);
+}
+
+void CMidiNoteMapDlg::OnUpdateEditProperties(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_List.GetSelectedCount());
+}
+
+void CMidiNoteMapDlg::OnEditProperties()
+{
+	CIntArrayEx	sel;
+	m_List.GetSelection(sel);
+	int	nSels = sel.GetSize();
+	if (!nSels)	// if no selection
+		return;		// nothing to do
+	CNoteMapPropsDlg	dlg;
+	for (int iSel = 0; iSel < nSels; iSel++) {	// for selected parts
+		int	iPart = INT64TO32(m_List.GetItemData(sel[iSel]));	// dereference sort
+		sel[iSel] = iPart;	// convert selection index to part index
+		dlg.SetPart(gEngine.GetPart(iPart));	// add part to dialog
+	}
+	if (dlg.DoModal() == IDOK) {	// if changes were saved
+		for (int iSel = 0; iSel < nSels; iSel++) {	// for selected parts
+			int	iPart = sel[iSel];	// load part index, accounting for sort
+			CPart	part(gEngine.GetPart(iPart));	// copy engine part to buffer
+			dlg.GetPart(part);	// update buffered part from dialog
+			NotifyUndo();
+			theApp.GetMain()->SetPart(iPart, part);	// update engine part
+		}
+		m_List.Invalidate();
+	}
 }

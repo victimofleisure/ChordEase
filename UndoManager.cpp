@@ -25,6 +25,7 @@
 		15		11feb13	add OnUpdateTitles and SetPos
 		16		01may14	widen CtrlID and Code to 32-bit
 		17		07may15	in DumpState, use address format for object pointer
+		18		23jun15	in SwapState, save to temporary in case restore throws
 
         undoable edit interface
  
@@ -131,8 +132,10 @@ void CUndoManager::SwapState(int Pos)
 	ASSERT(Pos >= 0 && Pos < GetSize());
 	CUndoState	PrevState = m_List[Pos];
 	CUndoable	*uap = m_Root;
-	uap->SaveUndoState(m_List[Pos]);
+	CUndoState	NewState(PrevState);	// initialize temporary
+	uap->SaveUndoState(NewState);	// save to temporary in case restore throws
 	uap->RestoreUndoState(PrevState);
+	m_List[Pos] = NewState;
 #if UNDO_NATTER
 	if (uap == NULL)
 		_tprintf(_T("Can't find instance.\n"));

@@ -51,7 +51,7 @@ CWnd *CPartsListCtrl::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& re
 		int	DropHeight = 100;
 		CPopupCombo	*pCombo = CPopupCombo::Factory(0, rect, pParentWnd, nID, DropHeight);
 		if (pCombo != NULL) {
-			for (int iFunc = 0; iFunc < CPartsListView::FUNCTIONS; iFunc++)
+			for (int iFunc = 0; iFunc < CPart::FUNCTIONS; iFunc++)
 				pCombo->AddString(CPartsListView::GetFunctionName(iFunc));
 			pCombo->SetCurSel(pCombo->FindStringExact(-1, Text));
 			pCombo->ShowDropDown();

@@ -8,11 +8,12 @@
 		revision history:
 		rev		date	comments
 		00		20sep13	initial version
-		01		20mar15	bump clipboard type for arpeggio adapt
+		01		20mar15	bump clipboard format for arpeggio adapt
 		02		23mar15	add MIDI chase support
 		03		27mar15	compute list pane default width
 		04		04apr15	move GetInsertPos implemention into list control
 		05		04apr15	in OnListDrop, move compensation into list control
+		06		11jun15	bump clipboard format for new part MIDI targets
 
         parts bar
  
@@ -42,7 +43,7 @@ IMPLEMENT_DYNAMIC(CPartsBar, CMySizingControlBar);
 #define RK_PARTS_LIST_WIDTH _T("PartsListWidth")
 
 CPartsBar::CPartsBar() :
-	m_Clipboard(NULL, _T("ChordEasePartArray2"))	// change whenever part layout changes
+	m_Clipboard(NULL, _T("ChordEasePartArray3"))	// change whenever part layout changes
 {
 	m_szHorz = CSize(400, 200);	// default size when horizontally docked
 	m_szVert = m_szHorz;	// default size when vertically docked

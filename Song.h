@@ -17,6 +17,9 @@
  		07		09sep14	use default memberwise copy
 		08		08mar15	in CSection, add dynamic flag
         09      05apr15	add chord dictionary set and write methods
+        10      10jun15	in CChord, allow bass note to be -1 for unspecified
+		11		10jun15	add SetChordScale and SetChordMode
+		12		11jun15	refactor SetChordDictionary to update chord array
 
 		song container
 
@@ -45,12 +48,12 @@ public:
 		bool	operator==(const CChord& Chord) const;
 		bool	operator!=(const CChord& Chord) const;
 		bool	EqualNoDuration(const CChord& Chord) const;
+		bool	TranslateType(const CIntArrayEx& TranTbl);
 		int		m_Duration;		// duration in beats
 		CNote	m_Root;			// normalized root note
-		CNote	m_Bass;			// normalized bass note
+		CNote	m_Bass;			// normalized bass note, or -1 if unspecified
 		int		m_Type;			// chord info index
 	};
-	typedef CArrayEx<CChord, CChord&> CChordArray;
 	class CChordType : public WCopyable {
 	public:
 		enum {	// comp variants
@@ -72,6 +75,12 @@ public:
 	public:
 		int		Find(LPCTSTR Name) const;
 		void	GetAliases(CIntArrayEx& AliasOf) const;
+		void	MakeTranslationTable(const CChordDictionary& Dict, CIntArrayEx& TranTbl) const;
+		bool	IsCompatible(const CChordDictionary& Dict) const;
+	};
+	class CChordArray : public CArrayEx<CChord, CChord&> {
+	public:
+		bool	TranslateChordTypes(const CIntArrayEx& TranTbl, int& UndefTypeIdx);
 	};
 	class CMeter : public WCopyable {
 	public:
@@ -158,6 +167,10 @@ public:
 	void	SetComments(const CString& Comments);
 	const CChordDictionary&	GetChordDictionary() const;
 	void	SetChordDictionary(const CChordDictionary& Dictionary);
+	bool	SetChordDictionary(const CChordDictionary& Dictionary, const CIntArrayEx& TranTbl, int& UndefTypeIdx);
+	void	SetChordType(int TypeIdx, const CSong::CChordType& Type);
+	void	SetChordScale(int TypeIdx, int Scale);
+	void	SetChordMode(int TypeIdx, int Mode);
 
 // Operations
 	CString	MakeChordName(CNote Root, CNote Bass, int Type, CNote Key = C) const;
@@ -225,6 +238,26 @@ inline CSong::CChord::CChord(int Duration, CNote Root, CNote Bass, int Type)
 	m_Type = Type;
 }
 
+inline bool CSong::CChord::operator==(const CChord& Chord) const
+{
+	return(!memcmp(this, &Chord, sizeof(CChord)));	// binary compare
+}
+
+inline bool CSong::CChord::operator!=(const CChord& Chord) const
+{
+	return(!operator==(Chord));
+}
+
+inline bool CSong::CChord::EqualNoDuration(const CChord& Chord) const
+{
+	// binary compare; also assumes duration is first member, followed by root
+	return(!memcmp(&m_Root, &Chord.m_Root, sizeof(CChord) - sizeof(m_Duration)));
+}
+
+inline CSong::CChordType::CChordType()
+{
+}
+
 inline CSong::CMeter::CMeter()
 {
 }
@@ -233,6 +266,16 @@ inline CSong::CMeter::CMeter(int Numerator, int Denominator)
 {
 	m_Numerator = Numerator;
 	m_Denominator = Denominator;
+}
+
+inline bool CSong::CMeter::operator==(const CMeter& Meter) const
+{
+	return(!memcmp(this, &Meter, sizeof(CMeter)));	// binary compare
+}
+
+inline bool CSong::CMeter::operator!=(const CMeter& Meter) const
+{
+	return(!operator==(Meter));
 }
 
 inline CSong::CSection::CSection()
@@ -269,36 +312,6 @@ inline bool CSong::CSection::Implicit() const
 inline bool CSong::CSection::Explicit() const
 {
 	return(!Implicit());
-}
-
-inline bool CSong::CMeter::operator==(const CMeter& Meter) const
-{
-	return(!memcmp(this, &Meter, sizeof(CMeter)));	// binary compare
-}
-
-inline bool CSong::CMeter::operator!=(const CMeter& Meter) const
-{
-	return(!operator==(Meter));
-}
-
-inline bool CSong::CChord::operator==(const CChord& Chord) const
-{
-	return(!memcmp(this, &Chord, sizeof(CChord)));	// binary compare
-}
-
-inline bool CSong::CChord::operator!=(const CChord& Chord) const
-{
-	return(!operator==(Chord));
-}
-
-inline bool CSong::CChord::EqualNoDuration(const CChord& Chord) const
-{
-	// binary compare; also assumes duration is first member, followed by root
-	return(!memcmp(&m_Root, &Chord.m_Root, sizeof(CChord) - sizeof(m_Duration)));
-}
-
-inline CSong::CChordType::CChordType()
-{
 }
 
 inline CSong::CProperties::CProperties()
@@ -411,11 +424,6 @@ inline const CSong::CChordDictionary& CSong::GetChordDictionary() const
 	return(m_Dictionary);
 }
 
-inline void CSong::SetChordDictionary(const CChordDictionary& Dictionary)
-{
-	m_Dictionary = Dictionary;
-}
-
 inline bool CSong::ReadChordDictionary(LPCTSTR Path)
 {
 	return(ReadChordDictionary(Path, m_Dictionary));
@@ -426,9 +434,29 @@ inline bool CSong::WriteChordDictionary(LPCTSTR Path)
 	return(WriteChordDictionary(Path, m_Dictionary));
 }
 
+inline void CSong::SetChordDictionary(const CChordDictionary& Dictionary)
+{
+	m_Dictionary = Dictionary;
+}
+
 inline int CSong::FindChordType(LPCTSTR Name) const
 {
 	return(m_Dictionary.Find(Name));
+}
+
+inline void CSong::SetChordType(int TypeIdx, const CSong::CChordType& Type)
+{
+	m_Dictionary[TypeIdx] = Type;
+}
+
+inline void CSong::SetChordScale(int TypeIdx, int Scale)
+{
+	m_Dictionary[TypeIdx].m_Scale = Scale;
+}
+
+inline void CSong::SetChordMode(int TypeIdx, int Mode)
+{
+	m_Dictionary[TypeIdx].m_Mode = Mode;
 }
 
 #endif

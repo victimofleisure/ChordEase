@@ -30,7 +30,7 @@ static char THIS_FILE[] = __FILE__;
 // CChangeLengthDlg dialog
 
 CChangeLengthDlg::CChangeLengthDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CChangeLengthDlg::IDD, pParent)
+	: CDialog(IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CChangeLengthDlg)
 	m_Percent = 100;

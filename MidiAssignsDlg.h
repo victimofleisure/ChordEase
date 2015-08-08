@@ -10,7 +10,8 @@
 		00		21nov13	initial version
 		01		11nov14	add shared controller column
 		02		23mar15	add value column
- 
+ 		03		17jun15	add properties dialog
+
 		MIDI assignments dialog
 
 */
@@ -43,8 +44,6 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMidiAssignsDlg)
-	public:
-	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
@@ -63,8 +62,13 @@ protected:
 	afx_msg void OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
-	afx_msg void OnDeleteSelectedItems();
+	afx_msg void OnEditDelete();
 	afx_msg void OnDestroy();
+	afx_msg void OnEditProperties();
+	afx_msg void OnUpdateEditDelete(CCmdUI *pCmdUI);
+	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
+	afx_msg void OnEditSelectAll();
+	afx_msg void OnUpdateEditSelectAll(CCmdUI *pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -78,12 +82,14 @@ protected:
 
 // Data members
 	CMidiAssignArray	m_Assign;	// array of MIDI assignments
+	bool	m_UndoNotified;			// true if undo was notified
 
 // Helpers
+	CMidiAssign&	GetAssign(int ItemIdx);
 	void	UpdateView(bool SortRows = TRUE);
-	void	DeleteSelectedItems();
 	int		SortCompare(int p1, int p2);
 	int		GetMidiShadow(const CMidiAssign& Assign) const;
+	void	NotifyUndo();
 	static	int	CALLBACK SortCompare(LPARAM p1, LPARAM p2, LPARAM This);
 };
 

@@ -16,6 +16,9 @@
 		06		18sep14	add transpose and length commands
 		07		20sep14	add ApplyMeter; update chord durations on meter change
 		08		08mar15	move measure/beat conversions into engine
+		09		15jun15	add OnChordDictionaryChange
+		10		18jun15	override OnPrepareDC to select font into attribute DC for print preview
+		11		18jun15	add grid line width, scaled proportionately for printing
 
 		ChordEase view
  
@@ -100,6 +103,7 @@ public:
 	void	BeginPopupEdit(int ChordIdx);
 	void	EndPopupEdit(bool Cancel = FALSE);
 	void	CancelDrag();
+	bool	OnChordDictionaryChange(const CSong::CChordDictionary& OldDict, const CSong::CChordDictionary& NewDict, int& UndefTypeIdx);
 	static	int		DurationToPreset(int Duration);
 	static	int		PresetToDuration(int PresetIdx);
 	static	bool	MakePopup(CMenu& Menu, int StartID, CStringArray& Item, int SelIdx);
@@ -120,6 +124,7 @@ public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	virtual void OnInitialUpdate();
 	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
+	virtual void OnPrepareDC(CDC* pDC, CPrintInfo* pInfo = NULL);
 	protected:
 	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
 	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
@@ -205,6 +210,7 @@ protected:
 // Constants
 	enum {
 		PAGE_LINES = 8,			// lines per page
+		GRID_LINE_WIDTH = 1,	// width of screen grid lines, in pixels
 	};
 	static const CSize	m_ScreenMargin;	// screen margins, in pixels
 	static const float	m_PrintMarginX;	// printer horizontal margin, in inches
@@ -244,18 +250,16 @@ protected:
 	};
 
 // Types
-	class CMeasureChord : public WObject {
+	class CMeasureChord : public WCopyable {
 	public:
 		CSong::CChordArray	m_Chord;	// array of chords
 		CIntArrayEx	m_BeatMap;		// chord symbol index for each beat
 	};
 	typedef CArrayEx<CMeasureChord, CMeasureChord&> CMeasureChordArray;
-	class CSymbol : public WObject {
+	class CSymbol : public WCopyable {
 	public:
 		CSymbol();
 		CSymbol(CString Name, int Beat, const CRect& Rect);
-		CSymbol&	operator=(const CSymbol& Symbol);
-		// don't forget to add members to operator=
 		CString	m_Name;				// symbol text
 		int		m_Beat;				// index of starting beat
 		CRect	m_Rect;				// text bounding rectangle
@@ -271,7 +275,7 @@ protected:
 	};
 	class CClipboardEditUndoInfo : public CRefObj {
 	public:
-		CSongState	m_State;	// song editing container
+		CSongState	m_State;		// song editing container
 		CIntRange	m_Selection;	// selection range
 		int		m_Beat;				// current beat
 	};
@@ -298,8 +302,8 @@ protected:
 	CSize	m_MeasureSize;			// measure size in client coords
 	CPoint	m_PtUnused;				// top left corner of unused measures
 	CRect	m_ChartRect;			// chart rectangle in client coords
-	CSymbolArray	m_ChordSymbol;		// array of chord symbols
-	CSymbolArray	m_SectionSymbol;		// array of section symbols
+	CSymbolArray	m_ChordSymbol;	// array of chord symbols
+	CSymbolArray	m_SectionSymbol;	// array of section symbols
 	CIntArrayEx	m_BeatMap;			// chord info index for each beat
 	float	m_FontScale;			// font scaling factor for printing
 	int		m_LinesPerPage;			// number of chart lines per printed page
@@ -316,6 +320,7 @@ protected:
 	bool	m_InContextMenu;		// true if tracking context menu
 	int		m_PrevTranspose;		// previous transposition in steps
 	double	m_PrevLengthChange;		// previous length change percentage
+	int		m_GridLineWidth;		// width of grid lines, in pixels
 
 // Overrides
 	virtual	void	SaveUndoState(CUndoState& State);
@@ -339,6 +344,7 @@ protected:
 	CPoint	GetMaxScrollPos() const;
 	static	void	Quantize(long& Val, int Unit);
 	bool	MakeChordPopups(CMenu& Menu, int ChordIdx);
+	bool	UpdateChordTypes(const CUndoState& State, const CIntArrayEx& TranTbl, int& UndefTypeIdx);
 	static	bool	ApplyMeter(CSong::CMeter& Meter, CSongState& State);
 };
 
@@ -349,14 +355,6 @@ inline CChordEaseView::CSymbol::CSymbol()
 inline CChordEaseView::CSymbol::CSymbol(CString Name, int Beat, const CRect& Rect)
 	: m_Name(Name), m_Beat(Beat), m_Rect(Rect)
 {
-}
-
-inline CChordEaseView::CSymbol& CChordEaseView::CSymbol::operator=(const CSymbol& Symbol)
-{
-	m_Name = Symbol.m_Name;
-	m_Beat = Symbol.m_Beat;
-	m_Rect = Symbol.m_Rect;
-	return(*this);
 }
 
 inline bool CChordEaseView::IsValidBeatIndex(int BeatIdx) const

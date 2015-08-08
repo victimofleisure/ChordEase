@@ -10,6 +10,7 @@
         00      20sep13	initial version
         01      23apr14	add tooltip support
 		02		15jul14	add OnCommandHelp
+		03		25jul15	remove part function enum
 
 		parts list view
  
@@ -53,11 +54,6 @@ public:
 		#include "PartsListColDef.h"
 		COLUMNS
 	};
-	enum {	// functions
-		#define PARTFUNCTIONDEF(name) FUNC_##name,
-		#include "PartFunctionDef.h"
-		FUNCTIONS
-	};
 
 // Attributes
 public:
@@ -76,6 +72,7 @@ public:
 	public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	virtual void OnDraw(CDC* pDC);      // overridden to draw this view
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -103,7 +100,7 @@ protected:
 
 // Constants
 	static const CPartsListCtrl::COL_INFO	m_ColInfo[COLUMNS];
-	static const LPCTSTR	m_FunctionName[FUNCTIONS];
+	static const LPCTSTR	m_FunctionName[CPart::FUNCTIONS];
 
 // Data members
 	CPartsListCtrl	m_List;		// child list control

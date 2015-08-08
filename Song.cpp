@@ -17,6 +17,8 @@
 		07		28aug14	in IsMergeable, add chord arg
  		08		09sep14	use default memberwise copy
         09      05apr15	add chord dictionary set and write methods
+        10      10jun15	in CChord, allow bass note to be -1 for unspecified
+		11		11jun15	refactor SetChordDictionary to update chord array
 
 		song container
 
@@ -37,6 +39,14 @@ const LPCTSTR CSong::m_Command[COMMANDS] = {
 	#define SONGCOMMANDDEF(name, str) _T(str),
 	#include "SongCommandDef.h"
 };
+
+bool CSong::CChord::TranslateType(const CIntArrayEx& TranTbl)
+{
+	if (TranTbl[m_Type] < 0)	// if chord type has no translation, fail
+		return(FALSE);
+	m_Type = TranTbl[m_Type];	// translate chord type
+	return(TRUE);
+}
 
 bool CSong::CChordType::IsAliasOf(const CChordType& Type) const
 {
@@ -117,6 +127,56 @@ void CSong::CChordDictionary::GetAliases(CIntArrayEx& AliasOf) const
 	}
 }
 
+void CSong::CChordDictionary::MakeTranslationTable(const CSong::CChordDictionary& Dict, CIntArrayEx& TranTbl) const
+{
+	CMap<CString, LPCTSTR, int, int>	NewTypeMap;
+	int	nNewTypes = Dict.GetSize();
+	NewTypeMap.InitHashTable(nNewTypes);	// minimize collisions
+	for (int iNewType = 0; iNewType < nNewTypes; iNewType++)	// for each new type
+		NewTypeMap.SetAt(Dict[iNewType].m_Name, iNewType);	// add its name to map
+	int	nOldTypes = GetSize();
+	TranTbl.SetSize(nOldTypes);	// allocate translation table
+	for (int iOldType = 0; iOldType < nOldTypes; iOldType++) {	// for each old type
+		int	iNewType;
+		if (!NewTypeMap.Lookup(GetAt(iOldType).m_Name, iNewType))	// look it up in map
+			iNewType = -1;	// not found in new dictionary; mark it undefined
+		TranTbl[iOldType] = iNewType;	// store type's position within new dictionary
+	}
+}
+
+bool CSong::CChordDictionary::IsCompatible(const CChordDictionary& Dict) const
+{
+	int	nTypes = GetSize();
+	if (Dict.GetSize() != nTypes)	// if dictionaries aren't the same size
+		return(FALSE);
+	for (int iType = 0; iType < nTypes; iType++) {	// for each type
+		if (Dict[iType].m_Name != GetAt(iType).m_Name)	// if name differs
+			return(FALSE);
+	}
+	return(TRUE);	// same names in same order
+}
+
+bool CSong::CChordArray::TranslateChordTypes(const CIntArrayEx& TranTbl, int& UndefTypeIdx)
+{
+	CIntArrayEx	ChordType;
+	int	nChords = GetSize();
+	ChordType.SetSize(nChords);
+	int iChord;
+	for (iChord = 0; iChord < nChords; iChord++) {	// for each chord
+		int	iOldType = GetAt(iChord).m_Type;	// get its old type index
+		int	iNewType = TranTbl[iOldType];	// look up its new type index if any
+		if (iNewType < 0) {	// if type not available in new dictionary
+			UndefTypeIdx = iOldType;	// return index of first undefined type
+			return(FALSE);	// fail with no harm done
+		}
+		ChordType[iChord] = iNewType;	// store chord's new type index
+	}
+	// all needed chord types remain defined, so it's safe to update
+	for (iChord = 0; iChord < nChords; iChord++)	// for each chord
+		ElementAt(iChord).m_Type = ChordType[iChord];	// update chord type index
+	return(TRUE);
+}
+
 bool CSong::CMeter::IsValidMeter() const
 {
 	return(m_Numerator >= MIN_BEATS && m_Numerator <= MAX_BEATS
@@ -170,9 +230,9 @@ void CSong::Reset()
 
 bool CSong::IsValid(const CChord& Chord) const
 {
-	// non-zero duration, normalized root and bass note, and type within range
 	return(Chord.m_Duration > 0 
-		&& Chord.m_Root.IsNormal() && Chord.m_Bass.IsNormal()
+		&& Chord.m_Root.IsNormal()
+		&& Chord.m_Bass >= -1 && Chord.m_Bass < NOTES
 		&& Chord.m_Type >= 0 && Chord.m_Type < GetChordTypeCount());
 }
 
@@ -264,7 +324,7 @@ void CSong::SetProperties(const CProperties& Props)
 CString	CSong::MakeChordName(CNote Root, CNote Bass, int Type, CNote Key) const
 {
 	CString	s(Root.Name(Key) + GetChordType(Type).m_Name);
-	if (Bass != Root) {	// if slash chord
+	if (Bass >= 0) {	// if slash chord
 		s += '/';
 		s += Bass.Name(Key);
 	}
@@ -284,7 +344,8 @@ CString	CSong::GetChordName(int ChordIdx, int Transpose) const
 
 CString CSong::GetChordName(const CChord& Chord, int Transpose) const
 {
-	return(MakeChordName(Chord.m_Root + Transpose, Chord.m_Bass + Transpose,
+	return(MakeChordName(Chord.m_Root + Transpose, 
+		Chord.m_Bass >= 0 ? Chord.m_Bass + Transpose : -1,
 		Chord.m_Type, m_Key + Transpose));
 }
 
@@ -323,6 +384,16 @@ bool CSong::ReadChord(CTokenFile& File, CScale& Chord)
 		ReportError(File, ErrID, s);
 		return(FALSE);
 	}
+	return(TRUE);
+}
+
+bool CSong::SetChordDictionary(const CChordDictionary& Dictionary, const CIntArrayEx& TranTbl, int& UndefTypeIdx)
+{
+	if (!Dictionary.GetSize())	// new dictionary can't be empty
+		return(FALSE);
+	if (!m_Chord.TranslateChordTypes(TranTbl, UndefTypeIdx))
+		return(FALSE);	// clean failure, song unmodified
+	m_Dictionary = Dictionary;	// update member dictionary
 	return(TRUE);
 }
 
@@ -560,14 +631,15 @@ int CSong::ParseChordSymbol(CString Symbol, CChord& Chord) const
 	if (!CharsRead)	// if root not scanned
 		return(IDS_SONG_ERR_BAD_ROOT);
 	Symbol = Symbol.Mid(CharsRead);	// remove root
-	CNote	bass(root);	// bass note defaults to root
+	CNote	bass;
 	int	iSlash = Symbol.ReverseFind('/');
 	if (iSlash >= 0) {	// if bass note separator found
 		CString	sBass(Symbol.Mid(iSlash + 1));	// bass note follows
 		if (!CDiatonic::ScanNoteName(sBass, bass))	// if base note not scanned
 			return(IDS_SONG_ERR_BAD_BASS_NOTE);
 		Symbol = Symbol.Left(iSlash);	// remove bass note
-	}
+	} else	// not slash chord
+		bass = -1;	// bass note unspecified
 	int	type = FindChordType(Symbol);
 	if (type < 0)	// if chord type not found
 		return(IDS_SONG_ERR_BAD_CHORD_TYPE);
@@ -818,7 +890,6 @@ bool CSong::ReadLeadSheet(LPCTSTR Path)
 		Reset();
 		CTokenFile	fp(Path, CFile::modeRead | CFile::shareDenyWrite);
 		CString	sType, sToken;
-		CNote	root, bass;
 		int	nMetaLevels = 0;
 		while (!(sToken = fp.ReadToken(_T(" "))).IsEmpty()) {
 			int	nTokenLen = sToken.GetLength();

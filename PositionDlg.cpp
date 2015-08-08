@@ -29,9 +29,8 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CPositionDlg dialog
 
-
 CPositionDlg::CPositionDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CPositionDlg::IDD, pParent)
+	: CDialog(IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CPositionDlg)
 	m_Pos = _T("");

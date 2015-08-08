@@ -15,6 +15,7 @@
 		05		23mar15	move UpdateShadowVal to header file
 		06		24mar15	add registry key; make column widths persistent
 		07		03apr15	use exact find string for combo box
+		08		17jun15	add InitEventTypeCombo
 
 		MIDI target dialog
  
@@ -104,24 +105,20 @@ BOOL CMidiTargetDlg::CTargetGridCtrl::PreCreateWindow(CREATESTRUCT& cs)
 CWnd *CMidiTargetDlg::CTargetGridCtrl::CreateEditCtrl(LPCTSTR Text, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID)
 {
 	switch (m_EditCol) {
-	case CMidiTargetDlg::COL_CHAN:
-	case CMidiTargetDlg::COL_EVENT:
+	case COL_CHAN:
+	case COL_EVENT:
 		{
 			int	DropHeight = 100;
 			const CMidiTarget&	targ = m_pParent->GetTarget(m_EditRow);
 			CPopupCombo	*pCombo = CPopupCombo::Factory(0, rect, pParentWnd, nID, DropHeight);
 			if (pCombo != NULL) {
 				switch (m_EditCol) {
-				case CMidiTargetDlg::COL_CHAN:
+				case COL_CHAN:
 					CChordEaseApp::InitNumericCombo(*pCombo, 
 						CIntRange(1, MIDI_CHANNELS), targ.m_Inst.Chan + 1);
 					break;
-				case CMidiTargetDlg::COL_EVENT:
-					{
-						for (int iType = 0; iType < CMidiTarget::EVENT_TYPES; iType++)
-							pCombo->AddString(CMidiTarget::GetEventTypeName(iType));
-						pCombo->SetCurSel(targ.m_Event);
-					}
+				case COL_EVENT:
+					InitEventTypeCombo(*pCombo, targ.m_Event);
 					break;
 				default:
 					NODEFAULTCASE;
@@ -201,6 +198,13 @@ int CMidiTargetDlg::CTargetGridCtrl::GetToolTipText(const LVHITTESTINFO* pHTI, C
 
 void CMidiTargetDlg::OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode)
 {
+}
+
+void CMidiTargetDlg::InitEventTypeCombo(CComboBox& Combo, int SelIdx)
+{
+	for (int iType = 0; iType < CMidiTarget::EVENT_TYPES; iType++)
+		Combo.AddString(CMidiTarget::GetEventTypeName(iType));
+	Combo.SetCurSel(SelIdx);
 }
 
 int CMidiTargetDlg::GetShadowValue(int RowIdx)

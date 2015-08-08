@@ -10,6 +10,7 @@
 		01		22apr14	initial version
 		02		05apr15	derive from non-template base class
 		03		13may15	add reference and pointer operators
+		04		11jun15	allow pointer operator to return NULL
 
 		modeless dialog pointer
  
@@ -74,12 +75,14 @@ inline CDialog* CModelessDlgPtrBase::operator->() const
 
 inline CModelessDlgPtrBase::operator CDialog&() const
 {
-	return(*operator->());
+	ASSERT(!IsEmpty());
+	return(*m_pDlg);
 }
 
 inline CModelessDlgPtrBase::operator CDialog*() const
 {
-	return(operator->());
+	// no assert; this accessor may return NULL
+	return(m_pDlg);
 }
 
 inline bool CModelessDlgPtrBase::operator==(const CDialog* pDlg) const
@@ -128,11 +131,13 @@ inline T* CModelessDlgPtr<T>::operator->() const
 template<class T>
 inline CModelessDlgPtr<T>::operator T&() const
 {
-	return(*operator->());
+	ASSERT(!IsEmpty());
+	return(*static_cast<T*>(m_pDlg));	// downcast to derived dialog
 }
 
 template<class T>
 inline CModelessDlgPtr<T>::operator T*() const
 {
-	return(operator->());
+	// no assert; this accessor may return NULL
+	return(static_cast<T*>(m_pDlg));	// downcast to derived dialog
 }

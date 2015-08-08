@@ -10,6 +10,7 @@
         00      20sep13	initial version
 		01		15may14	remove chromatic checkbox
 		02		07aug14	add approach trigger button
+		03		11jun15	rename lowest note member for clarity
 
 		part bass dialog
  
@@ -61,7 +62,7 @@ protected:
 	CComboBox	m_TargetAlignment;
 	CButton	m_SlashChords;
 	CDurationComboBox	m_ApproachLength;
-	CSpinNoteEdit	m_BassLowest;
+	CSpinNoteEdit	m_BassLowestNote;
 	//}}AFX_DATA
 
 // Generated message map functions

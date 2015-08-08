@@ -11,6 +11,7 @@
 		01		07oct14	add OnUpdatePPQ
 		02		08mar15	add tag length and repeat
 		03		21mar15	add tap tempo
+		04		11jun15	in OnSelchangeKey, standardize range check
 
         patch general dialog
  
@@ -160,7 +161,7 @@ void CPatchGeneralDlg::OnTranspose(NMHDR* pNMHDR, LRESULT* pResult)
 void CPatchGeneralDlg::OnSelchangeKey() 
 {
 	CNote	sel(m_Key.GetCurSel());
-	ASSERT(sel >= 0 && sel < NOTES);
+	ASSERT(sel.IsNormal());
 	int	iTranspose = sel.LeastInterval(gEngine.GetSong().GetKey());
 	m_Transpose.SetVal(iTranspose, CNumEdit::NTF_PARENT);	// notify parent
 }

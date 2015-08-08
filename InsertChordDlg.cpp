@@ -10,6 +10,7 @@
         00      13may14	initial version
 		01		28aug14	add SetChord and ability to edit existing chord
 		02		04apr15	in OnInitDialog, rename chord type accessor
+        03      10jun15	in OnInitDialog and OnOK, handle negative bass note
 
         insert chord dialog
  
@@ -163,12 +164,7 @@ BOOL CInsertChordDlg::OnInitDialog()
 	CPatchGeneralDlg::InitNoteCombo(m_Root);
 	CPatchGeneralDlg::InitNoteCombo(m_Bass);
 	m_Root.SetCurSel(m_Chord.m_Root);
-	int	iBass;
-	if (m_Chord.m_Bass == m_Chord.m_Root)	// if bass note same as root
-		iBass = 0;	// select root item
-	else	// bass note differs from root
-		iBass = m_Chord.m_Bass + 1;	// offset to account for root item
-	m_Bass.SetCurSel(iBass);
+	m_Bass.SetCurSel(m_Chord.m_Bass + 1);	// compensate for root item
 	// init chord type combo
 	int	nTypes = gEngine.GetSong().GetChordTypeCount();
 	ASSERT(nTypes > 0);	// engine supposedly guarantees at least one chord type
@@ -211,17 +207,11 @@ void CInsertChordDlg::OnOK()
 {
 	m_Chord.m_Root = m_Root.GetCurSel();
 	m_Chord.m_Type = m_Type.GetCurSel();
-	m_Chord.m_Bass = m_Bass.GetCurSel() - 1;
-	if (m_Chord.m_Bass < 0)	// if bass is same as root
-		m_Chord.m_Bass = m_Chord.m_Root;	// make it so
+	m_Chord.m_Bass = m_Bass.GetCurSel() - 1;	// compensate for root item
 	m_Chord.m_Duration = m_Beats.GetIntVal();
 	m_DurationPreset = GetMeasures();
 	m_InsertType = GetRadio(this, IDC_INSCH_INSERT_TYPE, IDC_INSCH_INSERT_TYPE2);
-	ASSERT(m_Chord.m_Root.IsNormal());	// sanity check
-	ASSERT(m_Chord.m_Bass.IsNormal());
-	ASSERT(m_Chord.m_Type >= 0);
-	ASSERT(m_Chord.m_Type < gEngine.GetSong().GetChordTypeCount());
-	ASSERT(m_Chord.m_Duration > 0);
+	ASSERT(gEngine.GetSong().IsValid(m_Chord));	// sanity check
 	CDialog::OnOK();
 }
 

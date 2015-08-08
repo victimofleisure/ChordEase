@@ -11,6 +11,7 @@
 		01		18mar15	move find into base class
 		02		19mar15	in FindNearest and FindLeastInterval, assert if empty
 		03		04apr15	add interval names
+		04		12jun15	in IntervalNames, reverse difference
  
 		scale container
 
@@ -104,7 +105,7 @@ CString	CScale::IntervalNames(CNote Key, int Tonality) const
 	for (int iNote = 0; iNote < notes; iNote++) {
 		if (iNote)
 			s += ' ';
-		s += Key.IntervalName(GetAt(iNote), Tonality);
+		s += GetAt(iNote).IntervalName(Key, Tonality);
 	}
 	return(s);
 }

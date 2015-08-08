@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		23aug13	initial version
+		01		12jun15	in IntervalName, reverse difference
  
 		note object
 
@@ -142,7 +143,7 @@ void CNote::ShiftToWindow(CNote Note)
 
 LPCTSTR CNote::IntervalName(CNote Note, int Tonality) const
 {
-	int	iInterval = CNote(Note - m_Note).Normal();
+	int	iInterval = CNote(m_Note - Note).Normal();
 	if (iInterval == 6 && Tonality == MAJOR)	// if tritone in major tonality
 		return(_T("#4"));	// show sharp four instead of flat five
 	else	// normal case

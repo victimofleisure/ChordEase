@@ -31,7 +31,7 @@ static char THIS_FILE[] = __FILE__;
 // CTransposeDlg dialog
 
 CTransposeDlg::CTransposeDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CTransposeDlg::IDD, pParent)
+	: CDialog(IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CTransposeDlg)
 	m_Steps = 0;

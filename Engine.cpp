@@ -20,6 +20,13 @@
 		10		21mar15	add tap tempo
         11      04apr15	add chord dictionary set and write methods
 		12		08apr15	in GetCompChord, allow drop for four or more
+		13		08jun15	in SetChord, replace MakeHarmony with GetHarmony
+		14		10jun15	add SetChordRoot, SetChordType and similar methods
+        15      10jun15	in GetHarmony, handle negative chord bass note
+		16		11jun15	refactor SetChordDictionary; remove ReloadSong
+		17		11jun15	add MIDI targets for lowest note, chord resets alt
+		18		27jun15	add chord dictionary MIDI target
+		19		11jul15	support repeated sections and tagging while stopped
 
 		engine
  
@@ -128,7 +135,8 @@ bool CEngine::CMySection::LastPass() const
 }
 
 CEngine::CEngine() :
-	m_TapTempoHistory(TAP_TEMPO_HISTORY_SIZE)
+	m_TapTempoHistory(TAP_TEMPO_HISTORY_SIZE),
+	m_DefaultChord(1, C, -1, 0)	// one beat, root C, no bass, first chord type
 {
 	CDiatonic::MakeAccidentalsTable();
 	m_MidiInProc = MidiInProc;
@@ -474,14 +482,43 @@ void CEngine::PrevChord()
 
 void CEngine::SkipChords(int ChordDelta)
 {
+	ASSERT(abs(ChordDelta) == 1);	// section wrapping only handles +/- 1
 	int	nChords = m_Song.GetChordCount();
-	if (nChords) {
-		int	iBeat = GetBeat();
-		int	iChord = m_Song.GetChordIndex(iBeat) + ChordDelta;
-		iChord = CNote::Mod(iChord, nChords);	// wrap chord index
-		iBeat = m_Song.GetStartBeat(iChord);
-		SetBeat(iBeat);
+	if (!nChords)	// if empty song
+		return;	// nothing to do
+	int	iBeat = GetBeat();
+	int	iChord = m_Song.GetChordIndex(iBeat);	// convert beat to chord
+	iChord += ChordDelta;	// increment or decrement chord index
+	CMySection	sec(m_Section);	// cache current section info
+	CIntRange	SecChordIdx(m_Song.GetChordIndex(sec.m_Start),
+		m_Song.GetChordIndex(sec.End()));	// convert section to chord index range
+	if (ChordDelta > 0) {	// if skipping forward
+		if (iChord > SecChordIdx.End) {	// if at end of current section
+			sec.m_Passes++;	// increment number of passes through section
+			// if section not repeating indefinitely and last pass through section
+			if (sec.m_Repeat && sec.m_Passes >= sec.m_Repeat) {
+				sec.m_Passes = -1;	// invalidate cached section
+				if (iChord >= nChords)	// if at end of song
+					iChord = 0;	// wrap to start of song
+			} else	// repeat section
+				iChord = SecChordIdx.Start;	// wrap to start of section
+		}
+	} else {	// skipping backward
+		if (iChord < SecChordIdx.Start) {	// if at start of current section
+			sec.m_Passes--;	// decrement number of passes through section
+			// if first pass through section or section exit requested
+			if ((sec.m_Repeat > 0 && sec.m_Passes < 0) || sec.m_Repeat < 0) {
+				sec.m_Passes = -1;	// invalidate cached section
+				if (iChord < 0)	// if at start of song
+					iChord = nChords - 1;	// wrap to end of song
+			} else	// repeat section
+				iChord = SecChordIdx.End;	// wrap to end of section
+		}
 	}
+	iBeat = m_Song.GetStartBeat(iChord);	// convert chord to beat
+	SetBeat(iBeat);	// updates section as side effect
+	if (sec.m_Passes >= 0)	// if cached section valid
+		m_Section = sec;	// restore section
 }
 
 void CEngine::Panic()
@@ -555,18 +592,85 @@ void CEngine::OnSongEdit()
 	UpdateSection();
 }
 
+const CSong::CChord& CEngine::GetSafeChord(int ChordIdx) const
+{
+	if (m_Song.GetChordCount())	// if song not empty
+		return(m_Song.GetChord(ChordIdx));	// return specified chord
+	else	// song is empty
+		return(m_DefaultChord);	// return default chord; index is ignored
+}
+
 bool CEngine::SetChord(int ChordIdx, const CSong::CChord& Chord)
 {
-	if (Chord.m_Duration != GetChord(ChordIdx).m_Duration) {	// if duration changed
-		STOP_ENGINE(*this);	// for thread safety
-		if (!m_Song.SetChord(ChordIdx, Chord))
-			return(FALSE);
-		OnSongEdit();
-	} else {	// duration didn't change
-		if (!m_Song.SetChord(ChordIdx, Chord))
-			return(FALSE);
-		MakeHarmony();	// thread-safe provided song length is unchanged
+	if (m_Song.GetChordCount()) {	// if song not empty
+		if (Chord.m_Duration != GetChord(ChordIdx).m_Duration) {	// if duration changed
+			STOP_ENGINE(*this);	// for thread safety
+			if (!m_Song.SetChord(ChordIdx, Chord))
+				return(FALSE);
+			OnSongEdit();
+		} else {	// duration didn't change
+			if (!m_Song.SetChord(ChordIdx, Chord))
+				return(FALSE);
+			GetHarmony(Chord, m_Harmony[ChordIdx]);	// update chord's harmony
+		}
+	} else {	// song is empty
+		m_DefaultChord = Chord;	// set default chord
+		GetHarmony(Chord, m_Harmony[0]);	// update chord's harmony
 	}
+	return(TRUE);
+}
+
+bool CEngine::SetChordRoot(int ChordIdx, CNote Root)
+{
+	CSong::CChord	chord(GetSafeChord(ChordIdx));
+	if (Root == chord.m_Root)	// if root unchanged
+		return(FALSE);
+	chord.m_Root = Root;	// update chord's root
+	SetChord(ChordIdx, chord);
+	return(TRUE);
+}
+
+bool CEngine::SetChordBass(int ChordIdx, CNote Bass)
+{
+	CSong::CChord	chord(GetSafeChord(ChordIdx));
+	if (Bass == chord.m_Bass)	// if bass unchanged
+		return(FALSE);
+	chord.m_Bass = Bass;	// update chord's bass
+	SetChord(ChordIdx, chord);
+	return(TRUE);
+}
+
+bool CEngine::SetChordType(int ChordIdx, int Type)
+{
+	CSong::CChord	chord(GetSafeChord(ChordIdx));
+	if (Type == chord.m_Type)	// if type unchanged
+		return(FALSE);
+	chord.m_Type = Type;	// update chord's type
+	SetChord(ChordIdx, chord);
+	return(TRUE);
+}
+
+void CEngine::SetChordType(int TypeIdx, const CSong::CChordType& Type)
+{
+	m_Song.SetChordType(TypeIdx, Type);
+	MakeHarmony();
+}
+
+bool CEngine::SetChordScale(int TypeIdx, int Scale)
+{
+	if (Scale == m_Song.GetChordType(TypeIdx).m_Scale)	// if scale unchanged
+		return(FALSE);
+	m_Song.SetChordScale(TypeIdx, Scale);	// update chord type's scale
+	MakeHarmony();
+	return(TRUE);
+}
+
+bool CEngine::SetChordMode(int TypeIdx, int Mode)
+{
+	if (Mode == m_Song.GetChordType(TypeIdx).m_Mode)	// if mode unchanged
+		return(FALSE);
+	m_Song.SetChordMode(TypeIdx, Mode);	// update chord type's mode
+	MakeHarmony();
 	return(TRUE);
 }
 
@@ -777,6 +881,9 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				case CPart::MIDI_TARGET_COMP_VARIATION:
 					UMT(part.m_Comp.Variation, NormParamToEnum(pos, CPart::COMP::VARIATION_SCHEMES));
 					break;
+				case CPart::MIDI_TARGET_COMP_CHORD_RESETS_ALT:
+					UMT(part.m_Comp.ChordResetsAlt, pos > 0);
+					break;
 				case CPart::MIDI_TARGET_COMP_ARP_PERIOD:
 					if (UMT(part.m_Comp.Arp.Period, pos) != 0)
 						m_PartState[iPart].OnTimeChange(part, m_Patch.m_PPQ);
@@ -793,6 +900,9 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 					break;
 				case CPart::MIDI_TARGET_COMP_ARP_ADAPT:
 					UMT(part.m_Comp.Arp.Adapt, pos > 0);
+					break;
+				case CPart::MIDI_TARGET_BASS_LOWEST_NOTE:
+					UMT(part.m_Bass.LowestNote, NormParamToMidiVal(pos));
 					break;
 				case CPart::MIDI_TARGET_BASS_SLASH_CHORDS:
 					UMT(part.m_Bass.SlashChords, pos > 0);
@@ -897,6 +1007,24 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				if (UpdateTrigger(m_PatchTrigger.StartTag, pos > 0))
 					StartTag();
 				break;
+			case CPatch::MIDI_TARGET_CHORD_ROOT:
+				TargetChanged = SetChordRoot(GetCurChordIndex(), NormParamToEnum(pos, NOTES));
+				break;
+			case CPatch::MIDI_TARGET_CHORD_TYPE:
+				TargetChanged = SetChordType(GetCurChordIndex(), NormParamToEnum(pos, m_Song.GetChordTypeCount()));
+				break;
+			case CPatch::MIDI_TARGET_CHORD_BASS:
+				TargetChanged = SetChordBass(GetCurChordIndex(), NormParamToEnum(pos, NOTES + 1) - 1);
+				break;
+			case CPatch::MIDI_TARGET_CHORD_SCALE:
+				TargetChanged = SetChordScale(GetCurHarmony().m_Type, NormParamToEnum(pos, SCALES));
+				break;
+			case CPatch::MIDI_TARGET_CHORD_MODE:
+				TargetChanged = SetChordMode(GetCurHarmony().m_Type, NormParamToEnum(pos, MODES));
+				break;
+			case CPatch::MIDI_TARGET_CHORD_DICTIONARY:
+				TargetChanged = TRUE;	// implemented externally
+				break;
 			default:
 				NODEFAULTCASE;	// missing target handler
 			}
@@ -927,11 +1055,27 @@ bool CEngine::WriteChordDictionary(LPCTSTR Path, const CSong::CChordDictionary& 
 	return(m_Song.WriteChordDictionary(Path, Dictionary));
 }
 
-bool CEngine::SetChordDictionary(const CSong::CChordDictionary& Dictionary)
+bool CEngine::SetChordDictionary(const CSong::CChordDictionary& Dictionary, int& UndefTypeIdx)
 {
+	if (!Dictionary.GetSize())	// dictionary can't be empty
+		return(FALSE);
 	STOP_ENGINE(*this);	// for thread safety
-	m_Song.SetChordDictionary(Dictionary);
-	return(ReloadSong());
+	CIntArrayEx	TranTbl;	// translates from old to new dictionary
+	m_Song.GetChordDictionary().MakeTranslationTable(Dictionary, TranTbl);
+	if (!m_Song.SetChordDictionary(Dictionary, TranTbl, UndefTypeIdx))
+		return(FALSE);
+	if (!m_DefaultChord.TranslateType(TranTbl))	// translate default chord
+		m_DefaultChord.m_Type = 0;	// if type not available, use first type
+	MakeHarmony();
+	return(TRUE);
+}
+
+void CEngine::SetCompatibleChordDictionary(const CSong::CChordDictionary& Dictionary)
+{
+	ASSERT(Dictionary.GetSize() == m_Song.GetChordTypeCount());	// must be same size
+	// assume both dictionaries define same names in same order
+	m_Song.SetChordDictionary(Dictionary);	// optimized case
+	MakeHarmony();
 }
 
 void CEngine::OnTimeChange()
@@ -1029,6 +1173,7 @@ void CEngine::OnNewSong()
 		}
 	}
 	MakeHarmony();
+	UpdateSection();
 	m_IsPlaying = FALSE;
 	m_Tick = 0;
 }
@@ -1055,7 +1200,6 @@ bool CEngine::ReadSong(LPCTSTR Path)
 	OnTimeChange();
 	if (!Run(WasRunning))	// possibly restart engine
 		return(FALSE);
-	m_SongPath = Path;
 	return(TRUE);
 }
 
@@ -1063,23 +1207,8 @@ bool CEngine::ResetSong()
 {
 	STOP_ENGINE(*this);	// for thread safety
 	m_Song.Reset();
-	m_SongPath.Empty();
 	OnNewSong();
 	ZeroMemory(&m_Section, sizeof(m_Section));
-	return(TRUE);
-}
-
-bool CEngine::ReloadSong()
-{
-	if (m_SongPath.IsEmpty())
-		return(FALSE);
-	STOP_ENGINE(*this);	// for thread safety
-	int	PrevTick = m_Tick;	// save current position
-	bool	WasPlaying = m_IsPlaying;	// save playing state
-	if (!ReadSong(m_SongPath))	// apply new dictionary to song
-		return(FALSE);
-	m_Tick = PrevTick;	// restore current position
-	m_IsPlaying = WasPlaying;	// restore playing state
 	return(TRUE);
 }
 
@@ -1272,7 +1401,7 @@ void CEngine::GetHarmony(const CSong::CChord& Chord, CHarmony& Harm) const
 {
 	Harm.m_Type = Chord.m_Type;
 	CNote	root(CNote(Chord.m_Root + m_Patch.m_Transpose).Normal());
-	if (Chord.m_Bass != Chord.m_Root)	// if slash chord
+	if (Chord.m_Bass >= 0)	// if slash chord
 		Harm.m_Bass = CNote(Chord.m_Bass + m_Patch.m_Transpose).Normal();
 	else	// not slash chord
 		Harm.m_Bass = -1;	// bass note unspecified
@@ -1799,6 +1928,12 @@ inline int CEngine::GetChordIndex(int Tick) const
 	return(m_Song.GetChordIndex(iBeat));	// convert beat to chord index
 }
 
+int CEngine::GetCurChordIndex() const
+{
+	int	iChord = GetChordIndex(m_Tick);	// get current chord index
+	return(max(iChord, 0));	// keep it positive
+}
+
 int CEngine::WrapBeat(int Beat) const
 {
 	// assume beat outside current section; only call from GetChordIndex
@@ -1828,8 +1963,7 @@ void CEngine::MakeHarmony()
 		if (!m_Song.GetChordTypeCount())	// if no chord types defined
 			m_Song.CreateDefaultChordDictionary();	// avoid access violation
 		SetHarmonyCount(1);
-		CSong::CChord	Chord(1, C, C, 0);	// arbitrarily use first chord type
-		GetHarmony(Chord, m_Harmony[0]);
+		GetHarmony(m_DefaultChord, m_Harmony[0]);
 	} else {	// song not empty
 		int	chords = m_Song.GetChordCount();
 		SetHarmonyCount(chords);

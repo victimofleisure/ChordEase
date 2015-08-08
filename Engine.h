@@ -17,6 +17,10 @@
 		07		21mar15	add tap tempo
         08      04apr15	add chord dictionary set and write methods
 		09		28may15	in CNoteMap ctors, use initialization list
+		10		10jun15	add SetChordRoot, SetChordType and similar methods
+		11		11jun15	add GetSafeChord and GetCurChordIndex
+		12		11jun15	make default chord a member variable
+		13		11jun15	remove ReloadSong and song path member var
  
 		engine
  
@@ -109,7 +113,9 @@ public:
 	const CSong&	GetSong() const;
 	CNote	GetSongKey() const;
 	const CSong::CChord&	GetChord(int ChordIdx) const;
+	const CSong::CChord&	GetSafeChord(int ChordIdx) const;
 	bool	SetChord(int ChordIdx, const CSong::CChord& Chord);
+	int		GetCurChordIndex() const;
 	int		GetTick() const;
 	void	SetTick(int Tick);
 	int		GetBeat() const;
@@ -134,6 +140,7 @@ public:
 	CNote	GetBassNote(CNote Note, int PartIdx) const;
 	int		GetHarmonyCount() const;
 	const CHarmony&	GetHarmony(int HarmIdx) const;
+	const CHarmony&	GetCurHarmony() const;
 	int		GetHarmonyIndex() const;
 	int		GetPartHarmonyIndex(int PartIdx) const;
 	void	GetNoteMap(CNoteMapArray& NoteMap);
@@ -143,7 +150,15 @@ public:
 	bool	SetSongProperties(const CSong::CProperties& Props);
 	void	SetBassApproachTarget(int PartIdx);
 	bool	IsTagging() const;
-	bool	SetChordDictionary(const CSong::CChordDictionary& Dictionary);
+	const CSong::CChordDictionary&	GetChordDictionary() const;
+	bool	SetChordDictionary(const CSong::CChordDictionary& Dictionary, int& UndefTypeIdx);
+	void	SetCompatibleChordDictionary(const CSong::CChordDictionary& Dictionary);
+	bool	SetChordRoot(int ChordIdx, CNote Root);
+	bool	SetChordBass(int ChordIdx, CNote Bass);
+	bool	SetChordType(int ChordIdx, int Type);
+	void	SetChordType(int TypeIdx, const CSong::CChordType& Type);
+	bool	SetChordScale(int TypeIdx, int Scale);
+	bool	SetChordMode(int TypeIdx, int Mode);
 
 // Operations
 	bool	ReadChordDictionary(LPCTSTR Path);
@@ -153,7 +168,6 @@ public:
 	bool	ReadSong(LPCTSTR Path);
 	bool	WriteSong(LPCTSTR Path);
 	bool	ResetSong();
-	bool	ReloadSong();
 	virtual	bool	Run(bool Enable);
 	bool	Play(bool Enable);
 	void	Pause(bool Enable);
@@ -260,7 +274,6 @@ protected:
 
 // Member data
 	CMySong	m_Song;				// song container
-	CString	m_SongPath;			// path of current song
 	CBoundNoteMapArray	m_NoteMap;	// note map array
 	WCritSec	m_NoteMapCritSec;	// note map critical section
 	CWorkerThread	m_TimerThread;	// timer thread
@@ -290,6 +303,7 @@ protected:
 	PATCH_TRIGGER	m_PatchTrigger;	// patch one-shot trigger states
 	double	m_TapTempoPrevTime;	// tap tempo previous timestamp
 	CRingBuf<double>	m_TapTempoHistory;	// tap tempo time sample ring buffer
+	CSong::CChord	m_DefaultChord;	// default chord when no song is loaded
 #if SHOW_ENGINE_STATS
 	CBenchmark	m_TimerBench;	// timer benchmark
 	CStatistics	m_TimerStats;	// timer benchmark statistics
@@ -581,9 +595,9 @@ inline const CEngine::CHarmony& CEngine::GetHarmony(int HarmIdx) const
 	return(m_Harmony[HarmIdx]);
 }
 
-inline int CEngine::GetHarmonyIndex() const
+inline const CEngine::CHarmony& CEngine::GetCurHarmony() const
 {
-	return(m_HarmIdx);
+	return(m_Harmony[GetCurChordIndex()]);
 }
 
 inline int CEngine::GetPartHarmonyIndex(int PartIdx) const
@@ -609,6 +623,11 @@ inline void CEngine::SetSection(const CSong::CSection& Section)
 inline bool CEngine::IsTagging() const
 {
 	return((m_Section.m_Flags & CSong::CSection::F_DYNAMIC) != 0);
+}
+
+inline const CSong::CChordDictionary& CEngine::GetChordDictionary() const
+{
+	return(m_Song.GetChordDictionary());
 }
 
 #define STOP_ENGINE(Engine)							\

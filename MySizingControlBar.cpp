@@ -16,6 +16,7 @@
 		06      14mar14	post hide notification to main window
 		07      20mar14	derive from variable base class
 		08		29apr15	add OnShowChanged overridable
+		09		24jul15	in OnShowChanging, avoid hidden control with focus
 
         wrapper for Cristi Posea's sizable control bar
  
@@ -84,10 +85,12 @@ void CMySizingControlBar::OnWindowPosChanging(WINDOWPOS FAR* lpwndpos)
 
 LRESULT CMySizingControlBar::OnShowChanging(WPARAM wParam, LPARAM lParam)
 {
+	m_IsShowChanging = FALSE;	// reset message pending flag
 	BOOL	bShow = IsWindowVisible();
 	if (!bShow || (bShow && !wParam))	// if hiding, or showing and previously hidden
 		OnShowChanged(bShow);	// notify derived class
-	m_IsShowChanging = FALSE;	// reset pending flag
+	if (!bShow && ::IsChild(m_hWnd, ::GetFocus()))	// if hiding and our child has focus
+		AfxGetMainWnd()->SetFocus();	// avoid hidden control with focus
 	return 0;
 }
 

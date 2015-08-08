@@ -9,6 +9,7 @@
 		rev		date	comments
         00      12may14	initial version
 		01		09sep14	move enable flag to Globals.h
+		02		10jun15	in MakeRandomChord, handle negative bass note
 
 		automated undo test for chart editing
  
@@ -93,13 +94,13 @@ void CChartUndoTest::MakeRandomChord(CSong::CChord& Chord) const
 		POWER_2_DURS = 1,	// true if durations should be powers of 2
 		MIN_DUR_EXP = 2,	// minimum base 2 exponent of random duration 
 		MAX_DUR_EXP = 4,	// maximum base 2 exponent of random duration 
-		RAND_BASS = 0,		// true if bass note should be random also
+		RAND_BASS = 1,		// true if bass note should be random also
 	};
 	Chord.m_Root = Random(NOTES);
 	if (RAND_BASS)
-		Chord.m_Bass = Random(NOTES);
+		Chord.m_Bass = Random(NOTES + 1) - 1;
 	else
-		Chord.m_Bass = Chord.m_Root;
+		Chord.m_Bass = -1;
 	Chord.m_Type = Random(gEngine.GetSong().GetChordTypeCount());
 	if (POWER_2_DURS)
 		Chord.m_Duration = 1 << RandomRange(CIntRange(MIN_DUR_EXP, MAX_DUR_EXP));

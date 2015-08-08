@@ -11,6 +11,7 @@
 		01		10jan05	add ownership
 		02		23oct05	in ctor, don't zero window handle
 		03		23nov07	support Unicode
+		04		15jun15	add Empty method
 
 		generic read/write interface for windows clipboard
  
@@ -21,15 +22,18 @@
 
 const DWORD	CClipboard::HDRSIZE = sizeof(DWORD) + sizeof(GUID);
 
-CClipboard::CClipboard(HWND hWnd, LPCTSTR Format) :
-	m_hWnd(hWnd)
+CClipboard::CClipboard()
 {
-	SetFormat(Format);
+	m_hWnd = 0;
+	m_Format = 0;
 	memset(&m_Owner, 0, sizeof(GUID));
 }
 
-CClipboard::~CClipboard()
+CClipboard::CClipboard(HWND hWnd, LPCTSTR Format)
 {
+	m_hWnd = hWnd;
+	SetFormat(Format);
+	memset(&m_Owner, 0, sizeof(GUID));
 }
 
 void CClipboard::SetFormat(LPCTSTR Format)
@@ -97,4 +101,13 @@ LPVOID CClipboard::Read(DWORD& Length, LPGUID Owner) const
 bool CClipboard::HasData() const
 {
 	return(IsClipboardFormatAvailable(m_Format) != 0);
+}
+
+bool CClipboard::Empty()
+{
+	if (!OpenClipboard(m_hWnd))
+		return(FALSE);
+	bool	retc = EmptyClipboard() != 0;
+	CloseClipboard();
+	return(retc);
 }

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		12sep13	initial version
+		01		10jun15	add chord bar
  
 		main frame pane definitions
 
@@ -21,5 +22,6 @@ MAINPANEDEF(	PART_PAGE,		MAKEBARID(CBI_PARTS))
 MAINPANEDEF(	DEVICE,			MAKEBARID(CBI_DEVICE))
 MAINPANEDEF(	MIDI_INPUT,		MAKEBARID(CBI_MIDI_INPUT))
 MAINPANEDEF(	MIDI_OUTPUT,	MAKEBARID(CBI_MIDI_OUTPUT))
+MAINPANEDEF(	SCALE,			MAKEBARID(CBI_CHORD))
 
 #undef MAINPANEDEF

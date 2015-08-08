@@ -11,6 +11,7 @@
 		01		15may14	in UpdateKeyLabels, add non-diatonic rules
 		02		09sep14	in OnShowWindow, reference note map instead of copying
         03      06may15	add piano size submenu
+		04		12jun15	in UpdateKeyLabels, reverse IntervalName usage
 
 		piano dialog
 
@@ -207,8 +208,8 @@ void CPianoDlg::UpdateKeyLabels()
 							label = OutNote.Name(harm.m_Key);
 						break;
 					case KL_INTERVALS:
-						label = harm.m_ChordScale[0].IntervalName(
-							OutNote, harm.m_ChordScale.GetTonality());
+						label = OutNote.IntervalName(harm.m_ChordScale[0],
+							harm.m_ChordScale.GetTonality());
 						break;
 					case KL_SCALE_TONES:
 						{

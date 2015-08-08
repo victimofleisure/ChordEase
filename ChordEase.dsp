@@ -160,6 +160,18 @@ SOURCE=.\ChildDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ChordBar.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChordBar.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChordBarCtrlDef.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ChordDictDlgColDef.h
 # End Source File
 # Begin Source File
@@ -452,6 +464,14 @@ SOURCE=.\Midi.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\MidiAssignPropsDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\MidiAssignPropsDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\MidiAssignsDlg.cpp
 # End Source File
 # Begin Source File
@@ -620,6 +640,14 @@ SOURCE=.\MySizingControlBar.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\MyToolbar.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\MyToolbar.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Note.cpp
 # End Source File
 # Begin Source File
@@ -633,6 +661,14 @@ SOURCE=.\NoteEdit.cpp
 # Begin Source File
 
 SOURCE=.\NoteEdit.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\NoteMapPropsDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\NoteMapPropsDlg.h
 # End Source File
 # Begin Source File
 
@@ -953,6 +989,14 @@ SOURCE=.\PatchUndoTest.cpp
 # Begin Source File
 
 SOURCE=.\PatchUndoTest.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PathListDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\PathListDlg.h
 # End Source File
 # Begin Source File
 
@@ -1377,6 +1421,10 @@ SOURCE=.\Wrapx64.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\res\ChordBar.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\ChordEase.ico
 # End Source File
 # Begin Source File
@@ -1414,6 +1462,10 @@ SOURCE=.\res\RecPlayPlay.ico
 # Begin Source File
 
 SOURCE=.\res\RecPlayStop.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\scale_ba.bmp
 # End Source File
 # Begin Source File
 

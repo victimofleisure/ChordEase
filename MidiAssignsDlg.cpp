@@ -14,6 +14,7 @@
 		04		23mar15	add value column
 		05		23mar15	allow header drag/drop
  		06		06apr15	CMidiAssign no longer has device name; add lookups
+ 		07		17jun15	add properties dialog
 
 		MIDI assignments dialog
 
@@ -26,6 +27,7 @@
 #include "ChordEase.h"
 #include "MidiAssignsDlg.h"
 #include "MainFrm.h"
+#include "MidiAssignPropsDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -45,10 +47,17 @@ const CReportCtrl::RES_COL CMidiAssignsDlg::m_ColInfo[COLUMNS] = {
 #define RK_LIST_HDR_STATE _T("MidiAssignsHdrState")
 
 CMidiAssignsDlg::CMidiAssignsDlg(CWnd* pParent /*=NULL*/)
-	: CPersistDlg(IDD, 0, _T("MidiAssignsDlg"), pParent)
+	: CPersistDlg(IDD, IDR_MIDI_ASSIGNS, _T("MidiAssignsDlg"), pParent)
 {
 	//{{AFX_DATA_INIT(CMidiAssignsDlg)
 	//}}AFX_DATA_INIT
+	m_UndoNotified = FALSE;
+}
+
+CMidiAssign& CMidiAssignsDlg::GetAssign(int ItemIdx)
+{
+	int	iSort = INT64TO32(m_List.GetItemData(ItemIdx));
+	return(m_Assign[iSort]);
 }
 
 void CMidiAssignsDlg::UpdateView(bool SortRows)
@@ -142,6 +151,14 @@ int	CALLBACK CMidiAssignsDlg::SortCompare(LPARAM p1, LPARAM p2, LPARAM This)
 	return(pDlg->SortCompare(INT64TO32(p1), INT64TO32(p2)));
 }
 
+void CMidiAssignsDlg::NotifyUndo()
+{
+	if (!m_UndoNotified) {	// only notify undo manager once per instance
+		theApp.GetMain()->NotifyEdit(0, UCODE_MIDI_TARGETS);
+		m_UndoNotified = TRUE;
+	}
+}
+
 void CMidiAssignsDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CPersistDlg::DoDataExchange(pDX);
@@ -158,8 +175,14 @@ BEGIN_MESSAGE_MAP(CMidiAssignsDlg, CPersistDlg)
 	ON_NOTIFY(LVN_GETDISPINFO, IDC_MIDI_ASSIGNS_LIST, OnGetdispinfo)
 	ON_WM_SIZE()
 	ON_WM_CONTEXTMENU()
-	ON_COMMAND(ID_MIDIASS_DELETE, OnDeleteSelectedItems)
+	ON_COMMAND(ID_EDIT_DELETE, OnEditDelete)
 	ON_WM_DESTROY()
+	ON_COMMAND(ID_EDIT_PROPERTIES, OnEditProperties)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditDelete)
+	ON_WM_SYSCOMMAND()
+	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, OnUpdateEditSelectAll)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PROPERTIES, OnUpdateEditDelete)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -184,12 +207,24 @@ BOOL CMidiAssignsDlg::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
+void CMidiAssignsDlg::OnDestroy() 
+{
+	CPersistDlg::OnDestroy();
+	m_List.StoreHeaderState(REG_SETTINGS, RK_LIST_HDR_STATE);
+}
+
+void CMidiAssignsDlg::OnSize(UINT nType, int cx, int cy) 
+{
+	CPersistDlg::OnSize(nType, cx, cy);
+	if (m_List.m_hWnd)	// if list created
+		m_List.MoveWindow(0, 0, cx, cy);
+}
+
 void CMidiAssignsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	LV_DISPINFO* pDispInfo = (LV_DISPINFO*)pNMHDR;
 	LVITEM&	item = pDispInfo->item;
-	int	iSort = INT64TO32(m_List.GetItemData(item.iItem));
-	const CMidiAssign&	ass = m_Assign[iSort];
+	const CMidiAssign&	ass = GetAssign(item.iItem);
 	if (item.mask & LVIF_TEXT) {
 		switch (item.iSubItem) {
 		case COL_DEVICE:
@@ -236,47 +271,75 @@ void CMidiAssignsDlg::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-void CMidiAssignsDlg::OnSize(UINT nType, int cx, int cy) 
-{
-	CPersistDlg::OnSize(nType, cx, cy);
-	if (m_List.m_hWnd)	// if list created
-		m_List.MoveWindow(0, 0, cx, cy);
-}
-
 void CMidiAssignsDlg::OnContextMenu(CWnd* pWnd, CPoint point) 
 {
-	if (point.x >= 0 && point.y >= 0) {
-		CMenu	menu;
-		menu.LoadMenu(IDM_MIDI_ASSIGNS_CTX);
-		CMenu	*mp = menu.GetSubMenu(0);
-		mp->TrackPopupMenu(0, point.x, point.y, this);
-	}
+	m_List.FixContextMenuPoint(point);
+	CMenu	menu;
+	menu.LoadMenu(IDM_MIDI_ASSIGNS_CTX);
+	CMenu	*mp = menu.GetSubMenu(0);
+	UpdateMenu(this, mp);
+	mp->TrackPopupMenu(0, point.x, point.y, this);
 }
 
-void CMidiAssignsDlg::OnDeleteSelectedItems()
+void CMidiAssignsDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if (m_List.GetSelectedCount()) {	// if selection exists
-		theApp.GetMain()->NotifyEdit(0, UCODE_MIDI_TARGETS);
-		POSITION	pos = m_List.GetFirstSelectedItemPosition();
-		while (pos != NULL) {	// for each selected item
-			int	iItem = m_List.GetNextSelectedItem(pos);
-			int	iSort = INT64TO32(m_List.GetItemData(iItem));
-			const CMidiAssign&	ass = m_Assign[iSort];
-			theApp.GetMain()->ResetMidiTarget(ass.m_PartIdx, ass.m_TargetIdx);
+	if (nID == SC_KEYMENU && lParam == VK_RETURN)
+		OnEditProperties();
+	else
+		CPersistDlg::OnSysCommand(nID, lParam);
+}
+
+void CMidiAssignsDlg::OnEditSelectAll() 
+{
+	m_List.SelectAll();
+}
+
+void CMidiAssignsDlg::OnUpdateEditSelectAll(CCmdUI *pCmdUI)
+{
+	// this handler must exist else command is disabled
+}
+
+void CMidiAssignsDlg::OnEditDelete()
+{
+	CIntArrayEx	sel;
+	m_List.GetSelection(sel);
+	int	nSels = sel.GetSize();
+	if (!nSels)	// if no selection
+		return;		// nothing to do
+	NotifyUndo();
+	for (int iSel = 0; iSel < nSels; iSel++) {	// for selected items
+		const CMidiAssign&	ass = GetAssign(sel[iSel]);
+		theApp.GetMain()->ResetMidiTarget(ass.m_PartIdx, ass.m_TargetIdx);
+	}
+	UpdateView();	// number of items changed
+}
+
+void CMidiAssignsDlg::OnUpdateEditDelete(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_List.GetSelectedCount());
+}
+
+void CMidiAssignsDlg::OnEditProperties()
+{
+	CIntArrayEx	sel;
+	m_List.GetSelection(sel);
+	int	nSels = sel.GetSize();
+	if (!nSels)	// if no selection
+		return;		// nothing to do
+	CMidiAssignPropsDlg	dlg;
+	for (int iSel = 0; iSel < nSels; iSel++)	// for selected assignments
+		dlg.SetAssign(GetAssign(sel[iSel]));	// add assignment to dialog
+	if (dlg.DoModal() == IDOK) {	// if changes were saved
+		for (int iSel = 0; iSel < nSels; iSel++) {	// for selected assignments
+			CMidiAssign&	ass = GetAssign(sel[iSel]);	// reference assignment
+			CMidiAssign	NewAss(ass);	// copy assignment to buffer
+			dlg.GetAssign(NewAss);	// update buffer from dialog
+			if (NewAss != ass) {	// if assignment changed
+				ass = NewAss;	// update assignment from buffer
+				NotifyUndo();	// notify undo before setting target
+				theApp.GetMain()->SetMidiTarget(ass.m_PartIdx, ass.m_TargetIdx, ass);
+			}
 		}
-		UpdateView();
+		m_List.Invalidate();
 	}
-}
-
-BOOL CMidiAssignsDlg::PreTranslateMessage(MSG* pMsg) 
-{
-	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_DELETE)
-		OnDeleteSelectedItems();
-	return CPersistDlg::PreTranslateMessage(pMsg);
-}
-
-void CMidiAssignsDlg::OnDestroy() 
-{
-	CPersistDlg::OnDestroy();
-	m_List.StoreHeaderState(REG_SETTINGS, RK_LIST_HDR_STATE);
 }

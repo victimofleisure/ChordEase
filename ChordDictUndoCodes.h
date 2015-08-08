@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      13may15	initial version
+        01      12jun15	add external scale and mode
 
 		chord dictionary undo codes
  
@@ -25,6 +26,7 @@ UCODE_DEF(DELETE)
 UCODE_DEF(INSERT)
 UCODE_DEF(REORDER)
 UCODE_DEF(OPEN)
-UCODE_DEF(CANCEL)
+UCODE_DEF(SET_SCALE)
+UCODE_DEF(SET_MODE)
 
 #undef UCODE_DEF

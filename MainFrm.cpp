@@ -34,6 +34,11 @@
 		24		25apr15	in OnModelessDestroy, fix piano unhook
 		25		29apr15	remove OnHideSizingBar
 		26		13may15	add chord dictionary undo manager
+		27		10jun15	add chord bar
+		28		12jun15	make chord dictionary dialog a permanent member
+		29		27jun15	add chord dictionary MIDI target
+		30		11jul15	support repeated sections and tagging while stopped
+		31		25jul15	add undo code for saving/restoring entire patch
 
 		ChordEase main frame
  
@@ -122,15 +127,16 @@ CMainFrame::CMainFrame() :
 	m_OptionsPage = 0;
 	m_MidiLearn = FALSE;
 	m_MidiChaseEvents = FALSE;
-	m_ChordDictModFlag = FALSE;
 	m_MidiAssignsDlg = NULL;
 }
 
 CMainFrame::~CMainFrame()
 {
-	m_Options.Store();
-	theApp.WriteProfileInt(REG_SETTINGS, RK_SONG_REPEAT, gEngine.IsRepeating());
-	theApp.WriteProfileInt(REG_SETTINGS, RK_AUTO_REWIND, gEngine.GetAutoRewind());
+	if (m_WasShown) {	// if frame was successfully created and shown
+		m_Options.Store();
+		theApp.WriteProfileInt(REG_SETTINGS, RK_SONG_REPEAT, gEngine.IsRepeating());
+		theApp.WriteProfileInt(REG_SETTINGS, RK_AUTO_REWIND, gEngine.GetAutoRewind());
+	}
 }
 
 CMainFrame::CStatusCache::CStatusCache() : m_Meter(INT_MAX, INT_MAX)
@@ -166,13 +172,21 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		| CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC)
 		|| !m_ToolBar.LoadToolBar(IDR_MAINFRAME))
 	{
-		TRACE0("Failed to create toolbar\n");
+		AfxMessageBox(IDS_MAIN_ERR_CREATE_TOOLBAR);
+		return -1;      // fail to create
+	}
+	if (!m_ChordBar.CreateEx(this, 0, WS_CHILD | CBRS_TOP
+		| CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC,
+		CRect(0, 0, 0, 0), MAKEBARID(CBI_CHORD))
+		|| !m_ChordBar.LoadToolBar(IDR_CHORD_BAR))
+	{
+		AfxMessageBox(IDS_MAIN_ERR_CREATE_CHORD_BAR);
 		return -1;      // fail to create
 	}
 	if (!m_StatusBar.Create(this) 
 		|| !m_StatusBar.SetIndicators(m_Indicators, _countof(m_Indicators)))
 	{
-		TRACE0("Failed to create status bar\n");
+		AfxMessageBox(IDS_MAIN_ERR_CREATE_STATUS_BAR);
 		return -1;      // fail to create
 	}
 	// double-buffer status bar to avoid ugly flicker when updating song position 
@@ -182,9 +196,11 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// set custom dock frame AFTER EnableDocking; order matters
 	m_pFloatingFrameClass = RUNTIME_CLASS(CSCBMiniDockFrameWnd);	// custom dock frame
 	m_ToolBar.EnableDocking(CBRS_ALIGN_ANY);
+	m_ChordBar.EnableDocking(CBRS_ALIGN_ANY);
 	DockControlBar(&m_ToolBar);
+	CWinAppCK::DockControlBarLeftOf(this, &m_ChordBar, &m_ToolBar);
 	if (!CreateSizingBars()) {
-		TRACE0("Failed to create sizing control bar\n");
+		AfxMessageBox(IDS_MAIN_ERR_CREATE_SIZING_BAR);
 		return -1;      // fail to create
 	}
 	if (VerifyBarState(REG_SETTINGS)) {
@@ -194,6 +210,10 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 			pBar->LoadState(REG_SETTINGS);
 		}
 		LoadBarState(REG_SETTINGS);
+	}
+	if (!m_ChordDictDlg.Create(IDD_CHORD_DICTIONARY, this)) {
+		AfxMessageBox(IDS_MAIN_ERR_CREATE_CHORD_DICT);
+		return -1;      // fail to create
 	}
 #if WRITE_MIDI_TARGETS_TABLE	// after creating part's page view
 	WriteMidiTargetsTable(_T("MidiTargets.html"));	// write HTML table of MIDI targets
@@ -531,12 +551,12 @@ int CMainFrame::GetCtrlMidiTarget(CWnd *pWnd, int& PartIdx) const
 		pWnd = pParent;
 	UINT	nID = pWnd->GetDlgCtrlID();
 	int	iTarget;
-	if (m_PatchBar.IsChild(pWnd)) {
-		iTarget = m_PatchBar.GetMidiTargetDlg().FindTargetByCtrlID(nID);
-		PartIdx = -1;
-	} else {
+	if (m_PartsBar.IsChild(pWnd)) {	// if control is child of parts bar
 		iTarget = m_PartsBar.GetMidiTargetDlg().FindTargetByCtrlID(nID);
 		PartIdx = m_PartsBar.GetCurPart();
+	} else {	// assume child of patch bar or chord bar
+		iTarget = m_PatchBar.GetMidiTargetDlg().FindTargetByCtrlID(nID);
+		PartIdx = -1;
 	}
 	return(iTarget);
 }
@@ -619,6 +639,7 @@ void CMainFrame::EnableAppToolTips(bool Enable)
 	m_PatchBar.GetMidiTargetDlg().EnableToolTips(Enable);
 	m_PartsBar.GetMidiTargetDlg().EnableToolTips(Enable);
 	m_PartsBar.GetListCtrl().EnableToolTips(Enable);
+	m_ChordBar.EnableToolTips(Enable);
 }
 
 bool CMainFrame::CheckForUpdates(bool Explicit)
@@ -711,6 +732,14 @@ void CMainFrame::SaveUndoState(CUndoState& State)
 			State.SetObj(uip);
 		}
 		break;
+	case UCODE_PATCH:
+		{
+			CRefPtr<CPatchUndoInfo>	uip;
+			uip.CreateObj();
+			uip->m_Patch = gEngine.GetPatch();
+			State.SetObj(uip);
+		}
+		break;
 	case UCODE_PART:
 		{
 			CRefPtr<CPartUndoInfo>	uip;
@@ -798,6 +827,13 @@ void CMainFrame::RestoreUndoState(const CUndoState& State)
 				static_cast<CBasePatchUndoInfo *>(State.GetObj());
 			SetBasePatch(uip->m_Patch);
 			m_PatchBar.FocusControl(State.GetCtrlID());
+		}
+		break;
+	case UCODE_PATCH:
+		{
+			const CPatchUndoInfo	*uip = 
+				static_cast<CPatchUndoInfo *>(State.GetObj());
+			SetPatch(uip->m_Patch);
 		}
 		break;
 	case UCODE_PART:
@@ -913,6 +949,19 @@ void CMainFrame::CMyUndoManager::OnModify(bool Modified)
 	theApp.GetMain()->SetPatchModify(Modified);
 }
 
+CUndoManager *CMainFrame::GetFocusedUndoManager()
+{
+	CWnd	*pFocusWnd = GetFocus();
+	if (m_ChordBar.IsChild(pFocusWnd)) {	// if child of chord bar has focus
+		int	nID = pFocusWnd->GetDlgCtrlID();	// get focused control's ID
+		if (nID == ID_CHORD_BAR_SCALE || nID == ID_CHORD_BAR_MODE)	// if chord scale or mode
+			return(m_ChordDictDlg.GetUndoManager());	// return chord dictionary undo manager
+		else	// chord root, type, or bass
+			return(m_View->GetUndoManager());	// return view undo manager
+	} else	// normal case
+		return(&m_UndoMgr);	// return main undo manager
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame diagnostics
 
@@ -1005,12 +1054,14 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_REWIND, OnUpdateTransportRewind)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_START_TAG, OnUpdateTransportStartTag)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPORT_TAP_TEMPO, OnUpdateTransportTapTempo)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_CHORD_BAR, OnUpdateViewChordBar)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_CHORD_DICTIONARY, OnUpdateViewChordDictionary)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_OUTPUT_NOTES, OnUpdateViewOutputNotes)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PARTS, OnUpdateViewParts)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PATCH, OnUpdateViewPatch)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PIANO, OnUpdateViewPiano)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_THREADS, OnUpdateViewThreads)
+	ON_COMMAND(ID_VIEW_CHORD_BAR, OnViewChordBar)
 	ON_COMMAND(ID_VIEW_CHORD_DICTIONARY, OnViewChordDictionary)
 	ON_COMMAND(ID_VIEW_OUTPUT_NOTES, OnViewOutputNotes)
 	ON_COMMAND(ID_VIEW_PARTS, OnViewParts)
@@ -1035,7 +1086,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_MESSAGE(UWM_DEVICENODECHANGE, OnDeviceNodeChange)
 	ON_MESSAGE(UWM_MODELESSDESTROY, OnModelessDestroy)
 	ON_MESSAGE(UWM_COLORSTATUSBARPANE, OnColorStatusBarPane)
-	ON_MESSAGE(UWM_CHORDDICTCHANGE, OnChordDictChange)
 	ON_WM_DEVICECHANGE()
 	ON_COMMAND_RANGE(ID_PATCH_MRU_FILE1, ID_PATCH_MRU_FILE4, OnPatchMru)
 	ON_UPDATE_COMMAND_UI(ID_PATCH_MRU_FILE1, OnUpdatePatchMru)
@@ -1083,17 +1133,8 @@ void CMainFrame::OnClose()
 		if (!m_PatchDoc.CanCloseFrame(this))	// if save check fails
 			return;	// cancel close
 	}
-	if (m_ChordDictModFlag) {
-		CString	s;
-		AfxFormatString1(s, IDS_SAVE_CHANGES, CHORD_DICTIONARY_FILE_NAME);
-		int	retc = AfxMessageBox(s, MB_YESNOCANCEL);
-		if (retc == IDCANCEL)
-			return;
-		if (retc == IDYES) {
-			CString	ChordDictPath(theApp.MakeDataFolderPath(CHORD_DICTIONARY_FILE_NAME));
-			gEngine.WriteChordDictionary(ChordDictPath);
-		}
-	}
+	if (!m_ChordDictDlg.SaveCheck())
+		return;	// cancel close
 	CFrameWnd::OnClose();
 }
 
@@ -1221,17 +1262,6 @@ LRESULT	CMainFrame::OnColorStatusBarPane(WPARAM wParam, LPARAM lParam)
 		BkColor = 0;
 	}
 	return (LRESULT)BkColor;
-}
-
-LRESULT CMainFrame::OnChordDictChange(WPARAM wParam, LPARAM lParam)
-{
-	ASSERT(!m_ChordDictDlg.IsEmpty());
-	m_ChordDictModFlag = TRUE;
-	if (!gEngine.SetChordDictionary(m_ChordDictDlg->GetDictionary())) {
-		m_View->UpdateChart();	// reloading song failed so update chart
-		m_View->GetDocument()->m_UndoMgr.DiscardAllEdits();	// avoids bad stuff
-	}
-	return 0;
 }
 
 LRESULT CMainFrame::OnSetMessageString(WPARAM wParam, LPARAM lParam)
@@ -1363,8 +1393,27 @@ LRESULT	CMainFrame::OnMidiTargetChange(WPARAM wParam, LPARAM lParam)
 		if (bChanged) {	// if target parameter changed
 			const CPatch&	patch = gEngine.GetPatch();
 			m_PatchBar.UpdatePage(iPage, patch);	// update page
-			if (iTarget == CPatch::MIDI_TARGET_TRANSPOSE)	// if target is transpose
+			switch (iTarget) {
+			case CPatch::MIDI_TARGET_TRANSPOSE:
+			case CPatch::MIDI_TARGET_CHORD_ROOT:
+			case CPatch::MIDI_TARGET_CHORD_TYPE:
+			case CPatch::MIDI_TARGET_CHORD_BASS:
 				m_View->UpdateChart();	// update chart view
+				break;
+			case CPatch::MIDI_TARGET_CHORD_SCALE:
+			case CPatch::MIDI_TARGET_CHORD_MODE:
+				m_ChordBar.UpdateChordIfVisible();
+				if (m_ChordDictDlg.IsWindowVisible())
+					m_ChordDictDlg.UpdateDictionary();
+				break;
+			case CPatch::MIDI_TARGET_CHORD_DICTIONARY:
+				if (m_ChordDictDlg.GetSubDictionaryCount()) {
+					int	val = gEngine.GetPatch().m_MidiShadow[CPatch::MIDI_TARGET_CHORD_DICTIONARY];
+					int	iSub = val * m_ChordDictDlg.GetSubDictionaryCount() / MIDI_NOTES;
+					m_ChordDictDlg.SelectSubDictionary(iSub);
+				}
+				break;
+			}
 		}
 	}
 	return(0);
@@ -1521,28 +1570,30 @@ void CMainFrame::OnAppDemo()
 
 void CMainFrame::OnEditUndo() 
 {
-	m_UndoMgr.Undo();
+	GetFocusedUndoManager()->Undo();
 }
 
 void CMainFrame::OnUpdateEditUndo(CCmdUI* pCmdUI) 
 {
+	CUndoManager	*pUndoMgr = GetFocusedUndoManager();
 	CString	Text;
-	Text.Format(LDS(IDS_EDIT_UNDO_FMT), m_UndoMgr.GetUndoTitle());
+	Text.Format(LDS(IDS_EDIT_UNDO_FMT), pUndoMgr->GetUndoTitle());
 	pCmdUI->SetText(Text);
-	pCmdUI->Enable(m_UndoMgr.CanUndo());
+	pCmdUI->Enable(pUndoMgr->CanUndo());
 }
 
 void CMainFrame::OnEditRedo() 
 {
-	m_UndoMgr.Redo();
+	GetFocusedUndoManager()->Redo();
 }
 
 void CMainFrame::OnUpdateEditRedo(CCmdUI* pCmdUI) 
 {
+	CUndoManager	*pUndoMgr = GetFocusedUndoManager();
 	CString	Text;
-	Text.Format(LDS(IDS_EDIT_REDO_FMT), m_UndoMgr.GetRedoTitle());
+	Text.Format(LDS(IDS_EDIT_REDO_FMT), pUndoMgr->GetRedoTitle());
 	pCmdUI->SetText(Text);
-	pCmdUI->Enable(m_UndoMgr.CanRedo());
+	pCmdUI->Enable(pUndoMgr->CanRedo());
 }
 
 void CMainFrame::OnEditCopy() 
@@ -1759,7 +1810,7 @@ void CMainFrame::OnTransportNextSection()
 void CMainFrame::OnUpdateTransportNextSection(CCmdUI* pCmdUI) 
 {
 	bool	HasSections = gEngine.GetSong().GetSectionCount() > 1 || gEngine.IsTagging();
-	pCmdUI->Enable(gEngine.IsPlaying() && HasSections);
+	pCmdUI->Enable(HasSections);
 	pCmdUI->SetCheck(gEngine.SectionLastPass() && HasSections 
 		&& gEngine.GetCurSection().Explicit());
 }
@@ -1771,7 +1822,7 @@ void CMainFrame::OnTransportStartTag()
 
 void CMainFrame::OnUpdateTransportStartTag(CCmdUI* pCmdUI) 
 {
-	pCmdUI->Enable(gEngine.IsPlaying() && !gEngine.GetSong().IsEmpty());
+	pCmdUI->Enable(!gEngine.GetSong().IsEmpty());
 	pCmdUI->SetCheck(gEngine.IsTagging());
 }
 
@@ -1829,7 +1880,7 @@ void CMainFrame::OnUpdateTransportAutoRewind(CCmdUI* pCmdUI)
 void CMainFrame::OnTransportTapTempo() 
 {
 	if (gEngine.TapTempo())	// if tempo changed
-		NotifyEdit(0, UCODE_TAP_TEMPO, CUndoable::UE_COALESCE);
+		NotifyEdit(0, UCODE_TAP_TEMPO, UE_COALESCE);
 }
 
 void CMainFrame::OnUpdateTransportTapTempo(CCmdUI* pCmdUI) 
@@ -1851,6 +1902,16 @@ void CMainFrame::OnMidiNoteMappings()
 {
 	CMidiNoteMapDlg	dlg;
 	dlg.DoModal();
+}
+
+void CMainFrame::OnMidiDevices() 
+{
+	ShowControlBar(&m_DeviceBar, !m_DeviceBar.IsWindowVisible(), 0);
+}
+
+void CMainFrame::OnUpdateMidiDevices(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_DeviceBar.IsWindowVisible());
 }
 
 void CMainFrame::OnMidiInput() 
@@ -1947,14 +2008,14 @@ void CMainFrame::OnUpdateViewParts(CCmdUI* pCmdUI)
 	pCmdUI->SetCheck(m_PartsBar.IsWindowVisible());
 }
 
-void CMainFrame::OnMidiDevices() 
+void CMainFrame::OnViewChordBar() 
 {
-	ShowControlBar(&m_DeviceBar, !m_DeviceBar.IsWindowVisible(), 0);
+	ShowControlBar(&m_ChordBar, !m_ChordBar.IsWindowVisible(), 0);
 }
 
-void CMainFrame::OnUpdateMidiDevices(CCmdUI* pCmdUI) 
+void CMainFrame::OnUpdateViewChordBar(CCmdUI* pCmdUI) 
 {
-	pCmdUI->SetCheck(m_DeviceBar.IsWindowVisible());
+	pCmdUI->SetCheck(m_ChordBar.IsWindowVisible());
 }
 
 void CMainFrame::OnViewThreads() 
@@ -2004,22 +2065,10 @@ void CMainFrame::OnViewRecordPlayer()
 
 void CMainFrame::OnViewChordDictionary() 
 {
-	if (m_ChordDictDlg.IsEmpty()) {	// if dialog doesn't exist
-		if (!m_ChordDictDlg.Create(IDD_CHORD_DICTIONARY))
-			AfxThrowResourceException();
-		m_ChordDictDlg->SetUndoManager(&m_ChordDictUndoMgr);
-		m_ChordDictUndoMgr.SetRoot(m_ChordDictDlg);
-		m_ChordDictDlg->SetDictionary(gEngine.GetSong().GetChordDictionary());
-		if (!gEngine.GetSong().IsEmpty()) {	// if song is loaded
-			int	iHarm = gEngine.GetHarmonyIndex();
-			int	iType = gEngine.GetHarmony(iHarm).m_Type;
-			m_ChordDictDlg->SetCurType(iType);	// select song's current chord type
-		}
-	} else	// dialog exists
-		m_ChordDictDlg.Destroy();
+	m_ChordDictDlg.ShowWindow(!m_ChordDictDlg.IsWindowVisible() ? SW_SHOW : SW_HIDE);
 }
 
 void CMainFrame::OnUpdateViewChordDictionary(CCmdUI* pCmdUI) 
 {
-	pCmdUI->SetCheck(!m_ChordDictDlg.IsEmpty());
+	pCmdUI->SetCheck(m_ChordDictDlg.IsWindowVisible());
 }

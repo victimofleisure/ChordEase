@@ -17,6 +17,10 @@
 		07		22dec14	add CloseHtmlHelp
 		08		21mar15	in HandleDlgKeyMsg, add Enter and Backspace keys
 		09		01apr15	in OnEndRecording, add fix duplicate notes
+		10		08jun15	in OnEndRecording, handle empty record folder path
+		11		13jun15	in combo init methods, rename local var for clarity
+		12		27jun15	add load/store string array methods
+		13		24jul15	in HandleDlgKeyMsg, make system key handling conditional
 
 		ChordEase application
  
@@ -117,7 +121,8 @@ void CChordEaseApp::CAppEngine::OnEndRecording()
 	const COptionsInfo&	opts = pMain->GetOptions();
 	CPathStr	path;
 	// if always recording, or not prompting for filename
-	if (opts.m_Record.AlwaysRecord || !opts.m_Record.PromptFilename) {
+	if (opts.m_Record.AlwaysRecord || !opts.m_Record.PromptFilename
+	|| pMain->GetRecordFilePath().IsEmpty()) {	// or empty record folder path
 		if (!opts.m_RecordFolderPath.IsEmpty())	// if custom output folder
 			path = opts.m_RecordFolderPath;
 		else	// default output folder
@@ -379,11 +384,16 @@ bool CChordEaseApp::HandleDlgKeyMsg(MSG* pMsg)
 		}
 		break;
 	case WM_SYSKEYDOWN:
-		if (GetKeyState(VK_SHIFT) & GKS_DOWN)	// if context menu
-			return(FALSE);	// keep dispatching
-		Main->SetFocus();	// main frame must have focus to display menus
-		Main->SendMessage(pMsg->message, pMsg->wParam, pMsg->lParam);	// enter menu mode
-		return(TRUE);	// message was translated, stop dispatching
+		// if focused window isn't descendant of main frame (e.g. floating bar's controls
+		// are descendants of miniframe) main frame must steal focus else main menus fail
+		if (!IsChild(Main->m_hWnd, GetFocus())) {	// avoid stealing focus needlessly
+			if (GetKeyState(VK_SHIFT) & GKS_DOWN)	// if context menu
+				return(FALSE);	// keep dispatching (false alarm)
+			Main->SetFocus();	// main frame must have focus to display menus
+			Main->SendMessage(pMsg->message, pMsg->wParam, pMsg->lParam);	// enter menu mode
+			return(TRUE);	// message was translated, stop dispatching
+		}
+		break;
 	}
 	return(FALSE);	// continue dispatching
 }
@@ -526,26 +536,26 @@ CString CChordEaseApp::GetFileTitle(const CString& Path)
 void CChordEaseApp::InitNoteCombo(CComboBox& Combo, CIntRange Range, int SelIdx)
 {
 	CString	s;
-	int	iSel = -1;
+	int	iCurSel = -1;
 	for (CNote iNote = Range.Start; iNote <= Range.End; iNote++) {
 		Combo.AddString(iNote.MidiName());
 		if (iNote == SelIdx)
-			iSel = iNote - Range.Start;
+			iCurSel = iNote - Range.Start;
 	}
-	Combo.SetCurSel(iSel);
+	Combo.SetCurSel(iCurSel);
 }
 
 void CChordEaseApp::InitNumericCombo(CComboBox& Combo, CIntRange Range, int SelIdx)
 {
 	CString	s;
-	int	iSel = -1;
+	int	iCurSel = -1;
 	for (int iItem = Range.Start; iItem <= Range.End; iItem++) {
 		s.Format(_T("%d"), iItem);
 		Combo.AddString(s);
 		if (iItem == SelIdx)
-			iSel = iItem - Range.Start;
+			iCurSel = iItem - Range.Start;
 	}
-	Combo.SetCurSel(iSel);
+	Combo.SetCurSel(iCurSel);
 }
 
 bool CChordEaseApp::BoostThreads()
@@ -569,6 +579,28 @@ bool CChordEaseApp::BoostThreads()
 		AfxMessageBox(msg);
 	}
 	return(TRUE);
+}
+
+void CChordEaseApp::StoreStringArray(LPCTSTR Section, const CStringArrayEx& Arr)
+{
+	int	nItems = INT64TO32(Arr.GetSize());
+	theApp.WriteProfileInt(Section, _T("Count"), nItems);
+	for (int iItem = 0; iItem < nItems; iItem++) {
+		CString	sKey;
+		sKey.Format(_T("%d"), iItem);
+		theApp.WriteProfileString(Section, sKey, Arr[iItem]);
+	}
+}
+
+void CChordEaseApp::LoadStringArray(LPCTSTR Section, CStringArrayEx& Arr)
+{
+	int	nItems = theApp.GetProfileInt(Section, _T("Count"), 0);
+	Arr.SetSize(nItems);
+	for (int iItem = 0; iItem < nItems; iItem++) {
+		CString	sKey;
+		sKey.Format(_T("%d"), iItem);
+		Arr[iItem] = theApp.GetProfileString(Section, sKey);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////

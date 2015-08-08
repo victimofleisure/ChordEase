@@ -29,9 +29,8 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CPianoSizeDlg dialog
 
-
 CPianoSizeDlg::CPianoSizeDlg(int StartNote, int Keys, CWnd* pParent /*=NULL*/)
-	: CDialog(CPianoSizeDlg::IDD, pParent), m_KeysEdit(OCTAVE, MIDI_NOTES)
+	: CDialog(IDD, pParent), m_KeysEdit(OCTAVE, MIDI_NOTES)
 {
 	//{{AFX_DATA_INIT(CPianoSizeDlg)
 	//}}AFX_DATA_INIT

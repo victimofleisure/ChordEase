@@ -24,6 +24,12 @@
 		14		19oct14	in ApplyMeter, ChangeLength now modifies selection arg
 		15		08mar15	move measure/beat conversions into engine
 		16		04apr15	in MakeChordPopups, rename chord type accessor
+		17		10jun15	in UpdateChart and TimerHook, update chord bar
+		18		10jun15	handle negative bass note in song chord
+		19		11jun15	in OnKeyDown, handle Tab and Shift+Tab
+		20		15jun15	add OnChordDictionaryChange
+		21		18jun15	override OnPrepareDC to select font into attribute DC for print preview
+		22		18jun15	add grid line width, scaled proportionately for printing
 
 		ChordEase view
  
@@ -98,7 +104,7 @@ CChordEaseView::CChordEaseView() :
 	m_MeasureSize = CSize(0, 0);
 	m_PtUnused = CSize(0, 0);
 	m_ChartRect.SetRectEmpty();
-	m_FontScale = 0;
+	m_FontScale = 1;
 	m_LinesPerPage = 0;
 	m_EditChordIdx = -1;
 	m_HasFocus = FALSE;
@@ -111,6 +117,7 @@ CChordEaseView::CChordEaseView() :
 	m_InContextMenu = FALSE;
 	m_PrevTranspose = 0;
 	m_PrevLengthChange = 100;
+	m_GridLineWidth = GRID_LINE_WIDTH;
 }
 
 CChordEaseView::~CChordEaseView()
@@ -194,6 +201,7 @@ inline CPoint CChordEaseView::CalcPos(int Beat) const
 void CChordEaseView::UpdateChart()
 {
 //	_tprintf(_T("CChordEaseView::UpdateChart\n"));
+	theApp.GetMain()->GetChordBar().UpdateChordIfVisible();
 	m_ChordSymbol.RemoveAll();
 	m_SectionSymbol.RemoveAll();
 	m_Selection = NULL_SELECTION;
@@ -232,11 +240,10 @@ void CChordEaseView::UpdateChart()
 		m_ChartFont.DeleteObject();
 		m_ChartLogFont = OptFont;
 		if (m_ChartLogFont.lfHeight) {	// if valid font
-			if (m_FontScale)	// if scaling font
-				m_ChartLogFont.lfHeight = round(m_ChartLogFont.lfHeight * m_FontScale);
-			if (!m_ChartFont.CreateFontIndirect(&m_ChartLogFont))	// create font
+			m_ChartLogFont.lfHeight = round(m_ChartLogFont.lfHeight * m_FontScale);
+			if (!m_ChartFont.CreateFontIndirect(&m_ChartLogFont))	// create scaled font
 				AfxThrowResourceException();
-			m_ChartLogFont.lfHeight = OptFont.lfHeight;	// in case we scaled font
+			m_ChartLogFont.lfHeight = OptFont.lfHeight;	// restore unscaled font
 		}
 	}
 	CClientDC	dc(this);
@@ -301,8 +308,8 @@ void CChordEaseView::UpdateChart()
 	m_ChartLines = (measures - 1) / m_MeasuresPerLine + 1;
 	int	SafeMeasuresPerLine = min(m_MeasuresPerLine, measures);
 	m_ChartRect = CRect(CPoint(m_Margin), 
-		CSize(szMeasure.cx * SafeMeasuresPerLine + 1,
-		szMeasure.cy * m_ChartLines + 1));
+		CSize(szMeasure.cx * SafeMeasuresPerLine + m_GridLineWidth,
+		szMeasure.cy * m_ChartLines + m_GridLineWidth));
 	SetScrollSizes(MM_TEXT, m_ChartRect.Size() + m_Margin + m_Margin);
 	int	TrailingMeasures = measures % SafeMeasuresPerLine;
 	if (TrailingMeasures) {
@@ -405,6 +412,7 @@ void CChordEaseView::TimerHook()
 		m_CurChord = iChord;	// update current chord; order matters
 		EnsureVisible(m_ChordSymbol[iChord].m_Rect, m_MeasureSize);
 		UpdateWindow();	// update window after updating current chord
+		theApp.GetMain()->GetChordBar().UpdateChordIfVisible();
 	}
 }
 
@@ -900,7 +908,8 @@ bool CChordEaseView::MakeChordPopups(CMenu& Menu, int ChordIdx)
 	if (!MakePopup(*pPopup, CSMID_ROOT_START, item, chord.m_Root))
 		return(FALSE);
 	pPopup = Menu.GetSubMenu(CSM_BASS);	// make bass popup
-	if (!MakePopup(*pPopup, CSMID_BASS_START, item, chord.m_Bass))
+	item.InsertAt(0, LDS(IDS_INSCH_BASS_ROOT));	// insert root item
+	if (!MakePopup(*pPopup, CSMID_BASS_START, item, chord.m_Bass + 1))
 		return(FALSE);
 	CMenu	ChordType;
 	int	nChordTypes = gEngine.GetSong().GetChordTypeCount();
@@ -1127,6 +1136,78 @@ CString	CChordEaseView::GetUndoTitle(const CUndoState& State)
 	return(s);
 }
 
+bool CChordEaseView::UpdateChordTypes(const CUndoState& State, const CIntArrayEx& TranTbl, int& UndefTypeIdx)
+{
+	switch (State.GetCode()) {
+	case CHART_UCODE_CHORD_EDIT:
+		{
+			CChordEditUndoInfo	*uip = 
+				static_cast<CChordEditUndoInfo *>(State.GetObj());
+			if (!uip->m_Chord.TranslateType(TranTbl)) {
+				UndefTypeIdx = uip->m_Chord.m_Type;
+				return(FALSE);
+			}
+		}
+		break;
+	case CHART_UCODE_CUT:
+	case CHART_UCODE_PASTE:
+	case CHART_UCODE_INSERT:
+	case CHART_UCODE_DELETE:
+	case CHART_UCODE_REORDER:
+	case CHART_UCODE_SECTION_CREATE:
+	case CHART_UCODE_SECTION_DELETE:
+	case CHART_UCODE_SECTION_PROPS:
+	case CHART_UCODE_MULTI_CHORD_EDIT:
+	case CHART_UCODE_TRANSPOSE:
+	case CHART_UCODE_CHANGE_LENGTH:
+		{
+			CClipboardEditUndoInfo	*uip = 
+				static_cast<CClipboardEditUndoInfo *>(State.GetObj());
+			if (!uip->m_State.TranslateChordTypes(TranTbl, UndefTypeIdx))
+				return(FALSE);
+		}
+		break;
+	case CHART_UCODE_SONG_PROPS:
+		{
+			CSongPropertiesUndoInfo	*uip = 
+				static_cast<CSongPropertiesUndoInfo *>(State.GetObj());
+			if (!uip->m_pState.IsEmpty()) {
+				if (!uip->m_pState->TranslateChordTypes(TranTbl, UndefTypeIdx))
+					return(FALSE);
+			}
+		}
+		break;
+	}
+	return(TRUE);
+}
+
+bool CChordEaseView::OnChordDictionaryChange(const CSong::CChordDictionary& OldDict, const CSong::CChordDictionary& NewDict, int& UndefTypeIdx)
+{
+	CUndoManager	*pUndoMgr = GetUndoManager();
+	int	nStates = pUndoMgr->GetSize();
+	if (!nStates)	// if no undo history
+		return(TRUE);	// nothing to do
+	CIntArrayEx	TranTbl;
+	OldDict.MakeTranslationTable(NewDict, TranTbl);	// translate from old to new dictionary
+	for (int iState = 0; iState < nStates; iState++) {	// for each state in undo history
+		if (!UpdateChordTypes(pUndoMgr->GetState(iState), TranTbl, UndefTypeIdx)) {	// if update fails
+			if (iState) {	// if one or more states were already updated
+				// unwind incomplete transaction by reversing undo history updates
+				NewDict.MakeTranslationTable(OldDict, TranTbl);	// translate from new to old
+				int	tmp;	// to receive irrelevant undefined type index
+				for (int iUS = 0; iUS < iState; iUS++)	// for each updated state
+					UpdateChordTypes(pUndoMgr->GetState(iUS), TranTbl, tmp);	// reverse update
+			}
+			return(FALSE);
+		}
+	}
+	if (m_Clipboard.HasData()) {	// if clipboard contains chord array
+		if (!m_Clipboard.Empty())	// chord types may be invalid, so empty clipboard
+			return(FALSE);
+	}
+	return(TRUE);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CChordEaseView drawing
 
@@ -1145,21 +1226,22 @@ void CChordEaseView::OnDraw(CDC* pDC)
 		pDC->ExcludeClipRect(CRect(m_PtUnused, m_ChartRect.BottomRight()));
 	int	chords = GetChordCount();
 	if (chords) {
+		int	LineWidth = m_GridLineWidth;
 		int	cx = m_MeasureSize.cx;
-		int	x1 = cb.left + cx - 1;
+		int	x1 = cb.left + cx - LineWidth;
 		x1 = x1 - (x1 - m_Margin.cx) % cx;
 		for (int x = x1; x <= cb.right; x += cx)
-			pDC->FillSolidRect(x, cb.top, 1, cb.Height(), GridColor);
+			pDC->FillSolidRect(x, cb.top, LineWidth, cb.Height(), GridColor);
 		int	cy = m_MeasureSize.cy;
-		int	y1 = cb.top + cy - 1;
+		int	y1 = cb.top + cy - LineWidth;
 		y1 = y1 - (y1 - m_Margin.cy) % cy;
 		for (int y = y1; y <= cb.bottom; y += cy)
-			pDC->FillSolidRect(cb.left, y, cb.Width(), 1, GridColor);
+			pDC->FillSolidRect(cb.left, y, cb.Width(), LineWidth, GridColor);
 		pDC->SetBkColor(BkColor);	// restore background color
 	}
 	SelectFont(pDC);
 	COLORREF	CurChordTextColor, CurChordBkColor;
-	if (HasFocus()) {	// if we have focus
+	if (m_HasFocus) {	// if we have focus
 		CurChordTextColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
 		CurChordBkColor = GetSysColor(COLOR_HIGHLIGHT);
 	} else {
@@ -1215,6 +1297,7 @@ void CChordEaseView::OnBeginPrinting(CDC* pDC, CPrintInfo *pInfo)
 	CClientDC	dc(this);
 	m_FontScale = float(pDC->GetDeviceCaps(LOGPIXELSY)) / dc.GetDeviceCaps(LOGPIXELSY);
 	m_ChartLogFont.lfHeight = INT_MAX;	// spoof no-op test to force font creation
+	m_GridLineWidth = round(GRID_LINE_WIDTH * m_FontScale);	// scale grid line width
 	UpdateChart();	// create chart suitable for printing
 	if (m_ChartLines) {	// avoid divide by zero
 		int	UsablePageHeight = pDC->GetDeviceCaps(VERTRES) - margin.cy * 2;
@@ -1227,8 +1310,9 @@ void CChordEaseView::OnBeginPrinting(CDC* pDC, CPrintInfo *pInfo)
 void CChordEaseView::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
 	m_Margin = m_ScreenMargin;	// restore screen margins
-	m_FontScale = 0;	// disable font scaling
+	m_FontScale = 1;	// disable font scaling
 	m_ChartLogFont.lfHeight = INT_MAX;	// spoof no-op test to force font creation
+	m_GridLineWidth = GRID_LINE_WIDTH;	// restore screen grid line width
 	UpdateChart();	// recreate screen chart
 }
 
@@ -1238,12 +1322,23 @@ void CChordEaseView::OnPrint(CDC* pDC, CPrintInfo* pInfo)
 	pDC->GetClipBox(cb);
 	COLORREF	BkColor = GetSysColor(COLOR_WINDOW);
 	pDC->FillSolidRect(cb, BkColor);	// erase background before excluding margins
-	pDC->ExcludeClipRect(cb.left, cb.top, cb.right, m_Margin.cy);
+	pDC->ExcludeClipRect(cb.left, cb.top, cb.right, m_Margin.cy);	// exclude top margin
 	int	PageHeight = m_LinesPerPage * m_MeasureSize.cy;
-	pDC->ExcludeClipRect(cb.left, m_Margin.cy + PageHeight, cb.right, cb.bottom);
+	pDC->ExcludeClipRect(cb.left, m_Margin.cy + PageHeight + m_GridLineWidth, cb.right, cb.bottom);	// exclude bottom margin
 	int	PageTop = PageHeight * (pInfo->m_nCurPage - 1);
-	pDC->SetViewportOrg(CPoint(0, -PageTop));	// scroll vertically to top of page
+	int	HorzOfs = (pDC->GetDeviceCaps(HORZRES) - m_Margin.cx * 2 - m_ChartRect.Width()) / 2;
+	HorzOfs = max(HorzOfs, 0);	// center chart horizontally if it fits within margins
+	pDC->SetViewportOrg(CPoint(HorzOfs, -PageTop));	// scroll vertically to top of page
 	CScrollView::OnPrint(pDC, pInfo);	// print page
+}
+
+void CChordEaseView::OnPrepareDC(CDC* pDC, CPrintInfo* pInfo) 
+{
+	// during print preview, attribute DC differs from output DC, so font must also
+	// be selected into attribute DC, else character spacing is squashed in preview
+	if (pDC->IsPrinting() && pInfo->m_bPreview)	// if print preview
+		SelectObject(pDC->m_hAttribDC, GetChartFont());	// select font into attribute DC
+	CScrollView::OnPrepareDC(pDC, pInfo);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1534,34 +1629,37 @@ void CChordEaseView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			CancelDrag();
 	} else {	// not dragging
 		if (GetChordCount()) {	// if at least one chord
-			bool	bSelect = (GetKeyState(VK_SHIFT) & GKS_DOWN) != 0;
+			bool	bShift = (GetKeyState(VK_SHIFT) & GKS_DOWN) != 0;
 			switch (nChar) {
 			case VK_UP:
-				SkipLines(-1, bSelect);
+				SkipLines(-1, bShift);
 				break;
 			case VK_DOWN:
-				SkipLines(1, bSelect);
+				SkipLines(1, bShift);
 				break;
 			case VK_LEFT:
-				SkipChords(-1, bSelect);
+				SkipChords(-1, bShift);
 				break;
 			case VK_RIGHT:
-				SkipChords(1, bSelect);
+				SkipChords(1, bShift);
 				break;
 			case VK_PRIOR:
-				SkipLines(-PAGE_LINES, bSelect);
+				SkipLines(-PAGE_LINES, bShift);
 				break;
 			case VK_NEXT:
-				SkipLines(PAGE_LINES, bSelect);
+				SkipLines(PAGE_LINES, bShift);
 				break;
 			case VK_HOME:
-				SkipToPos(0, bSelect);
+				SkipToPos(0, bShift);
 				break;
 			case VK_END:
-				SkipToPos(GetChordCount() - 1, bSelect);
+				SkipToPos(GetChordCount() - 1, bShift);
 				break;
 			case VK_RETURN:
 				OnEditChordProps();
+				break;
+			case VK_TAB:
+				SkipChords(bShift ? -1 : 1, FALSE);
 				break;
 			}
 		}
@@ -1646,7 +1744,6 @@ void CChordEaseView::OnChordRoot(UINT nID)
 	CSong::CChord	ch = gEngine.GetChord(iSongChord);
 	if (note != ch.m_Root) {	// if selection changed
 		ch.m_Root = note;
-		ch.m_Bass = note;	// reset bass note to root
 		SetChord(m_EditChordIdx, ch);
 	}
 }
@@ -1666,7 +1763,8 @@ void CChordEaseView::OnChordType(UINT nID)
 void CChordEaseView::OnChordBass(UINT nID)
 {
 	CNote	note = nID - CSMID_BASS_START;
-	ASSERT(note.IsNormal());
+	ASSERT(note >= 0 && note <= NOTES);	// allow for root item
+	note--;	// compensate for root item
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
 	CSong::CChord	ch = gEngine.GetChord(iSongChord);
 	if (note != ch.m_Bass) {	// if selection changed

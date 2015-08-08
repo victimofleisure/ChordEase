@@ -10,6 +10,7 @@
         00      20sep13	initial version
 		01		15may14	remove chromatic checkbox
 		02		07aug14	add approach trigger button
+		03		11jun15	rename lowest note member for clarity
 
 		part bass dialog
  
@@ -44,7 +45,7 @@ CPartBassDlg::CPartBassDlg(CWnd* pParent /*=NULL*/)
 
 void CPartBassDlg::GetPart(CPart& Part) const
 {
-	Part.m_Bass.LowestNote = m_BassLowest.GetIntVal();
+	Part.m_Bass.LowestNote = m_BassLowestNote.GetIntVal();
 	Part.m_Bass.SlashChords = m_SlashChords.GetCheck() != 0;
 	Part.m_Bass.ApproachLength = m_ApproachLength.GetVal();
 	Part.m_Bass.TargetAlignment = m_TargetAlignment.GetCurSel() + CPart::BASS::TARGET_ALIGN_MIN;
@@ -52,7 +53,7 @@ void CPartBassDlg::GetPart(CPart& Part) const
 
 void CPartBassDlg::SetPart(const CPart& Part)
 {
-	m_BassLowest.SetVal(Part.m_Bass.LowestNote);
+	m_BassLowestNote.SetVal(Part.m_Bass.LowestNote);
 	m_SlashChords.SetCheck(Part.m_Bass.SlashChords);
 	m_ApproachLength.SetVal(Part.m_Bass.ApproachLength);
 	m_TargetAlignment.SetCurSel(Part.m_Bass.TargetAlignment - CPart::BASS::TARGET_ALIGN_MIN);
@@ -91,7 +92,7 @@ void CPartBassDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_PART_BASS_TARGET_ALIGNMENT, m_TargetAlignment);
 	DDX_Control(pDX, IDC_PART_BASS_SLASH_CHORDS, m_SlashChords);
 	DDX_Control(pDX, IDC_PART_BASS_APPROACH_LENGTH, m_ApproachLength);
-	DDX_Control(pDX, IDC_PART_BASS_LOWEST, m_BassLowest);
+	DDX_Control(pDX, IDC_PART_BASS_LOWEST_NOTE, m_BassLowestNote);
 	//}}AFX_DATA_MAP
 }
 

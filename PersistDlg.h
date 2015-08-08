@@ -10,6 +10,7 @@
         00      22apr05	initial version
 		01		23nov07	support Unicode
 		02		24mar09	add member for accelerator resource ID
+		03		24jul15	override DoModal to save and restore focus
 
         dialog that saves and restores its position
  
@@ -42,6 +43,7 @@ public:
 	//{{AFX_VIRTUAL(CPersistDlg)
 	public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	virtual W64INT DoModal();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL

@@ -782,6 +782,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ChordBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ChordBar.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ChordBarCtrlDef.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ChordDictDlgColDef.h"
 				>
 			</File>
@@ -1654,6 +1666,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MidiAssignPropsDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MidiAssignPropsDlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MidiAssignsDlg.cpp"
 				>
 			</File>
@@ -1966,6 +1986,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MyToolBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MyToolBar.h"
+				>
+			</File>
+			<File
 				RelativePath="Note.cpp"
 				>
 				<FileConfiguration
@@ -2075,6 +2103,14 @@
 			</File>
 			<File
 				RelativePath="NoteEdit.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NoteMapPropsDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\NoteMapPropsDlg.h"
 				>
 			</File>
 			<File
@@ -2491,6 +2527,14 @@
 			</File>
 			<File
 				RelativePath=".\PatchUndoTest.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PathListDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PathListDlg.h"
 				>
 			</File>
 			<File

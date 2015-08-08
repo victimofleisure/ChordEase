@@ -9,12 +9,14 @@
 		rev		date	comments
         00      07oct13	initial version
 		01		21mar15	add tap tempo
+		02		25jul15	add patch
 
 		undo code data
  
 */
 
 UCODE_DEF(BASE_PATCH)
+UCODE_DEF(PATCH)
 UCODE_DEF(PART)
 UCODE_DEF(SELECT_PATCH_PAGE)
 UCODE_DEF(SELECT_PART_PAGE)

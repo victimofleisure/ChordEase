@@ -15,6 +15,7 @@
 		05		16mar15	remove target change message
 		06		23mar15	in UpdateShadowVal, move subitem redraw into base class
 		07		24mar15	add registry key; make column widths persistent
+		08		17jun15	add InitEventTypeCombo
 
 		MIDI target dialog
  
@@ -80,6 +81,7 @@ public:
 	int		GetToolTipText(const LVHITTESTINFO* pHTI, CString& Text);
 	void	UpdateTarget(const CMidiTarget& Target, int PartIdx, int RowIdx, int ColIdx, int ShareCode);
 	static	int		CheckSharers(const CMidiTarget& Target);
+	static	void	InitEventTypeCombo(CComboBox& Combo, int SelIdx);
 
 // Overrideables
 	virtual	void	OnTargetChange(const CMidiTarget& Target, int RowIdx, int ColIdx, int ShareCode = 0);

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		29apr14	initial version
+		01		25jul15	add properties dialog
  
 		MIDI note mappings dialog
 
@@ -56,6 +57,10 @@ protected:
 	afx_msg void OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnDestroy();
+	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnEditProperties();
+	afx_msg void OnUpdateEditProperties(CCmdUI *pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -70,10 +75,12 @@ protected:
 	static const CReportCtrl::RES_COL	m_ColInfo[COLUMNS];
 
 // Data members
+	bool	m_UndoNotified;			// true if undo was notified
 
 // Helpers
 	void	UpdateView();
 	int		SortCompare(int p1, int p2);
+	void	NotifyUndo();
 	static	int	CALLBACK SortCompare(LPARAM p1, LPARAM p2, LPARAM This);
 };
 

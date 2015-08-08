@@ -15,6 +15,7 @@
 		05		15mar15	remove 16-bit asserts for undo args
 		06		15mar15	in OnListItemchanged, select when item is focused
 		07		15mar15	in OnListClick, add select part undo notification
+		08		24jul15	hook keys so main menus work when parent bar is floating
 
 		parts list view
  
@@ -44,7 +45,7 @@ const CPartsListCtrl::COL_INFO	CPartsListView::m_ColInfo[COLUMNS] = {
 	#include "PartsListColDef.h"
 };
 
-const LPCTSTR CPartsListView::m_FunctionName[FUNCTIONS] = {
+const LPCTSTR CPartsListView::m_FunctionName[CPart::FUNCTIONS] = {
 	#define PARTFUNCTIONDEF(name) _T(#name),
 	#include "PartFunctionDef.h"
 };
@@ -114,9 +115,9 @@ void CPartsListView::SetSubitems(int PartIdx, const CPart& Part)
 
 CString CPartsListView::GetFunctionName(int FuncIdx)
 {
-	ASSERT(FuncIdx >= 0 && FuncIdx < FUNCTIONS);
+	ASSERT(FuncIdx >= 0 && FuncIdx < CPart::FUNCTIONS);
 	// prevent crash in case later version specifies unknown function
-	if (FuncIdx >= FUNCTIONS)	// if function out of range
+	if (FuncIdx >= CPart::FUNCTIONS)	// if function out of range
 		return(_T(""));
 	CString	s(m_FunctionName[FuncIdx]);
 	theApp.MakeStartCase(s);
@@ -200,6 +201,15 @@ void CPartsListView::OnSize(UINT nType, int cx, int cy)
 int CPartsListView::OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message)
 {
 	return MA_ACTIVATE;	// don't call base class, else main frame caption changes
+}
+
+BOOL CPartsListView::PreTranslateMessage(MSG* pMsg) 
+{
+	if (pMsg->message >= WM_KEYFIRST && pMsg->message <= WM_KEYLAST) {
+		if (AfxGetMainWnd()->SendMessage(UWM_HANDLEDLGKEY, (WPARAM)pMsg))
+			return(TRUE);
+	}
+	return CView::PreTranslateMessage(pMsg);
 }
 
 void CPartsListView::OnListClick(NMHDR* pNMHDR, LRESULT* pResult) 

@@ -11,6 +11,7 @@
 		01		15may14	remove chromatic checkbox
 		02		07aug14	add approach trigger button
 		03		11jun15	rename lowest note member for clarity
+		04		21dec15	use extended string array
 
 		part bass dialog
  
@@ -44,7 +45,7 @@ public:
 	void	SetPart(const CPart& Part);
 
 // Operations
-	static	void	GetPowerOfTwoStrings(CStringArray& Str, int LowerExp, int UpperExp);
+	static	void	GetPowerOfTwoStrings(CStringArrayEx& Str, int LowerExp, int UpperExp);
 	static	void	InitPowerOfTwoCombo(CComboBox& Combo, int LowerExp, int UpperExp);
 
 // Overrides

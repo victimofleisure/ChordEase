@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		09jun15	initial version
+		01		02mar16	remove conditional update
  
 		chord toolbar
  
@@ -41,7 +42,6 @@ public:
 public:
 	BOOL	LoadToolBar(UINT nIDResource);
 	void	UpdateChord();
-	void	UpdateChordIfVisible();
 	void	OnChordDictionaryChange(bool Compatible);
 
 // Overrides
@@ -108,12 +108,6 @@ protected:
 // Overrides
 	virtual	void	OnShowChanged(BOOL bShow);
 };
-
-inline void	CChordBar::UpdateChordIfVisible()
-{
-	if (IsWindowVisible())
-		UpdateChord();
-}
 
 /////////////////////////////////////////////////////////////////////////////
 

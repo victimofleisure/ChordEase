@@ -19,6 +19,7 @@
 		09		15jun15	add OnChordDictionaryChange
 		10		18jun15	override OnPrepareDC to select font into attribute DC for print preview
 		11		18jun15	add grid line width, scaled proportionately for printing
+		12		21dec15	use extended string array
 
 		ChordEase view
  
@@ -106,7 +107,7 @@ public:
 	bool	OnChordDictionaryChange(const CSong::CChordDictionary& OldDict, const CSong::CChordDictionary& NewDict, int& UndefTypeIdx);
 	static	int		DurationToPreset(int Duration);
 	static	int		PresetToDuration(int PresetIdx);
-	static	bool	MakePopup(CMenu& Menu, int StartID, CStringArray& Item, int SelIdx);
+	static	bool	MakePopup(CMenu& Menu, int StartID, CStringArrayEx& Item, int SelIdx);
 
 // Constants
 	enum {	// duration presets
@@ -155,6 +156,7 @@ protected:
 	afx_msg void OnEditCut();
 	afx_msg void OnEditDelete();
 	afx_msg void OnEditInsert();
+	afx_msg void OnEditLength();
 	afx_msg void OnEditPaste();
 	afx_msg void OnEditRedo();
 	afx_msg void OnEditRename();
@@ -163,6 +165,7 @@ protected:
 	afx_msg void OnEditSectionList();
 	afx_msg void OnEditSectionProps();
 	afx_msg void OnEditSelectAll();
+	afx_msg void OnEditTranspose();
 	afx_msg void OnEditUndo();
 	afx_msg void OnFileEdit();
 	afx_msg void OnFileProperties();
@@ -183,6 +186,7 @@ protected:
 	afx_msg void OnUpdateEditCut(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditDelete(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditInsert(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditLength(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditPaste(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditRedo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditRename(CCmdUI* pCmdUI);
@@ -190,13 +194,10 @@ protected:
 	afx_msg void OnUpdateEditSectionDelete(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditSectionProps(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditSelectAll(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditTranspose(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditUndo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFilePrint(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateNextPane(CCmdUI* pCmdUI);
-	afx_msg void OnEditTranspose();
-	afx_msg void OnUpdateEditTranspose(CCmdUI* pCmdUI);
-	afx_msg void OnEditLength();
-	afx_msg void OnUpdateEditLength(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	afx_msg void OnChordDuration(UINT nID);
 	afx_msg void OnChordRoot(UINT nID);

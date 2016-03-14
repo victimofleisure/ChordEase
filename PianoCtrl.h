@@ -9,6 +9,8 @@
 		rev		date	comments
         00      22apr14	initial version
 		01		18may14	add m_PrevStartNote
+		02		24aug15	add per-key colors
+		03		21dec15	use extended string array
 
 		piano control
 
@@ -45,7 +47,10 @@ public:
 		PS_USE_SHORTCUTS	= 0x0004,	// enable use of shortcut keys
 		PS_SHOW_SHORTCUTS	= 0x0008,	// display shortcut assignments
 		PS_ROTATE_LABELS	= 0x0010,	// rotate labels 90 degrees counter-clockwise;
-										// supported in horizontal orientation only
+										// only supported in horizontal orientation
+		PS_PER_KEY_COLORS	= 0x0020,	// enable per-key color customization
+		PS_INVERT_LABELS	= 0x0040,	// invert labels on pressed keys;
+										// only supported on custom-colored keys
 	};
 	enum {	// key sources
 		KS_INTERNAL			= 0x01,		// key triggered internally
@@ -67,17 +72,23 @@ public:
 	void	SetPressed(int KeyIdx, bool Enable, bool External = FALSE);
 	CSize	GetBlackKeySize() const;
 	int		GetKeyLabelCount() const;
-	void	SetKeyLabels(const CStringArray& Label);
-	void	GetKeyLabels(CStringArray& Label) const;
+	CString	GetKeyLabel(int KeyIdx) const;
+	void	SetKeyLabel(int KeyIdx, const CString& Label);
+	void	GetKeyLabels(CStringArrayEx& Label) const;
+	void	SetKeyLabels(const CStringArrayEx& Label);
 	bool	IsShorcutScanCode(int ScanCode) const;
+	int		GetKeyColor(int KeyIdx) const;
+	void	SetKeyColor(int KeyIdx, int Color, bool Repaint = TRUE);
 
 // Operations
 public:
+	void	InvalidateKey(int KeyIdx);
 	int		FindKey(CPoint pt) const;
 	void	Update(CSize Size);
 	void	Update();
 	void	ReleaseKeys(UINT KeySourceMask);
 	void	RemoveKeyLabels();
+	void	RemoveKeyColors();
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -111,10 +122,13 @@ protected:
 	};
 	class CKey : public WObject {
 	public:
+		CKey();
+		CKey&	CKey::operator=(const CKey& Key);
 		CRgn	m_Rgn;			// key's polygonal area
 		bool	m_IsBlack;		// true if key is black
 		bool	m_IsPressed;	// true if key is pressed
 		bool	m_IsExternal;	// true if external key press
+		int		m_Color;		// per-key color as RGB, or -1 if none
 	};
 	typedef CArrayEx<CKey, CKey&> CKeyArray;
 
@@ -159,12 +173,13 @@ protected:
 	CKeyArray	m_Key;			// dynamic information about each key
 	CBrush	m_KeyBrush[KEY_TYPES][KEY_STATES];	// brush for each key type and state
 	CBrush	m_OutlineBrush;		// brush for outlining keys
-	CStringArray	m_KeyLabel;	// labels to be displayed on keys
+	CStringArrayEx	m_KeyLabel;	// labels to be displayed on keys
 	char	m_ScanCodeToKey[0x80];	// map scan codes to keys
 
 // Helpers
 	void	OnKeyChange(UINT nKeyFlags, bool IsDown);
 	void	UpdateKeyLabelFont(CSize Size, DWORD dwStyle);
+	void	UpdateKeyLabelFont();
 };
 
 inline int CPianoCtrl::GetStartNote() const
@@ -199,12 +214,34 @@ inline CSize CPianoCtrl::GetBlackKeySize() const
 
 inline int CPianoCtrl::GetKeyLabelCount() const
 {
-	return(INT64TO32(m_KeyLabel.GetSize()));
+	return(m_KeyLabel.GetSize());
 }
 
-inline void CPianoCtrl::GetKeyLabels(CStringArray& Label) const
+inline void CPianoCtrl::GetKeyLabels(CStringArrayEx& Label) const
 {
 	Label.Copy(m_KeyLabel);
+}
+
+inline CString CPianoCtrl::GetKeyLabel(int KeyIdx) const
+{
+	return(m_KeyLabel[KeyIdx]);
+}
+
+inline int CPianoCtrl::GetKeyColor(int KeyIdx) const
+{
+	return(m_Key[KeyIdx].m_Color);
+}
+
+inline void CPianoCtrl::SetKeyColor(int KeyIdx, int Color, bool Repaint)
+{
+	m_Key[KeyIdx].m_Color = Color;
+	if (Repaint)
+		InvalidateKey(KeyIdx);
+}
+
+inline void CPianoCtrl::InvalidateKey(int KeyIdx)
+{
+	InvalidateRgn(&m_Key[KeyIdx].m_Rgn);
 }
 
 /////////////////////////////////////////////////////////////////////////////

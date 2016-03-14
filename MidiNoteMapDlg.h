@@ -9,6 +9,7 @@
 		rev		date	comments
 		00		29apr14	initial version
 		01		25jul15	add properties dialog
+		02		10aug15	move properties dialog to main frame
  
 		MIDI note mappings dialog
 
@@ -80,7 +81,6 @@ protected:
 // Helpers
 	void	UpdateView();
 	int		SortCompare(int p1, int p2);
-	void	NotifyUndo();
 	static	int	CALLBACK SortCompare(LPARAM p1, LPARAM p2, LPARAM This);
 };
 

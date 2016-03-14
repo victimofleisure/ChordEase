@@ -12,7 +12,10 @@
 		02		19mar15	in FindNearest and FindLeastInterval, assert if empty
 		03		04apr15	add interval names
 		04		12jun15	in IntervalNames, reverse difference
- 
+		05		31aug15	overload HarmonizeNote to constrain to chord tones
+		06		03dec15	in HarmonizeNote, for harmony below, reverse cycle
+		07		17dec15	in HarmonizeNote, if interval is octave, allow octaves
+
 		scale container
 
 */
@@ -165,6 +168,28 @@ int CScale::FindLeastInterval(CNote Note) const
 	return(iNearest);
 }
 
+int CScale::FindLeastInterval(CNote Note, CNote Exclude) const
+{
+	ASSERT(!IsEmpty());	// scale can't be empty
+	Note.Normalize();
+	int	iNearest = 0;
+	int	MinDelta = INT_MAX;
+	int	notes = m_Size;
+	for (int iNote = 0; iNote < notes; iNote++) {
+		CNote	TryNote(GetAt(iNote).Normal());
+		if (TryNote == Exclude)	// if candidate is excluded
+			continue;	// skip it
+		int	delta = abs(TryNote.LeastInterval(Note));
+		if (!delta)	// if exact match
+			return(iNote);
+		if (delta < MinDelta) {	// if nearer than previous candidate
+			iNearest = iNote;
+			MinDelta = delta;
+		}
+	}
+	return(iNearest);
+}
+
 int CScale::FindNearestSmooth(CNote Note) const
 {
 	int	deviation;
@@ -227,6 +252,40 @@ CNote CScale::HarmonizeNote(CNote Note, int Interval) const
 {
 	int	iNote = FindNearest(Note.Normal());
 	return(Note + HarmonizeDegree(iNote, Interval));
+}
+
+CNote CScale::HarmonizeNote(CNote Note, int Interval, int ChordInfo) const
+{
+	// This method optionally constrains the harmony to a chord. The low word of
+	// ChordInfo is the chord's size, in notes; if it's zero, the harmony isn't
+	// constrained. The high word of ChordInfo is the chord's diatonic degree,
+	// in cycle of thirds steps from the root: 0=1, 1=3, 2=5, 3=7, 4=2, 5=4, 6=6.
+	CNote	InNote(Note.Normal());
+	int	iNote = FindNearest(InNote);
+	CNote	HarmNote(Note + HarmonizeDegree(iNote, Interval));
+	int	ChordSize = LOWORD(ChordInfo);
+	if (!ChordSize)	// if unconstrained
+		return(HarmNote);
+	int	ChordDegree = HIWORD(ChordInfo);
+	CScale	ch;
+	ch.SetSize(ChordSize);
+	int	nSize = GetSize();
+	if (Interval >= 0) {	// if harmony above melody
+		for (int i = 0; i < ChordSize; i++)	// for each chord tone
+			ch[i] = GetAt(CNote::Mod((ChordDegree + i) * 2, nSize));	// cycle of thirds
+	} else {	// harmony below melody
+		// reverse cycle so ties resolve upward; prevents most crossovers
+		for (int i = 0; i < ChordSize; i++)	// for each chord tone
+			ch[ChordSize - 1 - i] = GetAt(CNote::Mod((ChordDegree + i) * 2, nSize));	// cycle of thirds
+	}
+	int	iNearest;
+	if (!(Interval % 7))	// if nominal interval is octave or multiple of one
+		iNearest = ch.FindLeastInterval(HarmNote);	// allow octave harmony
+	else	// nominal interval isn't octave
+		iNearest = ch.FindLeastInterval(HarmNote, InNote);	// exclude input note
+	CNote	NearestNote(ch[iNearest]);
+	NearestNote.ShiftToNearestOctave(HarmNote);
+	return(NearestNote);
 }
 
 void CScale::Randomize()

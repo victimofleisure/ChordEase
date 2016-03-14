@@ -9,6 +9,8 @@
 		rev		date	comments
         00      22apr14	initial version
 		01		18may14	in Update, preserve key states
+		02		24aug15	add per-key colors
+		03		21dec15	use extended string array
 
 		piano control
 
@@ -124,27 +126,50 @@ int CPianoCtrl::FindKey(CPoint pt) const
 	return(-1);	// key not found
 }
 
+CPianoCtrl::CKey::CKey()
+{
+	m_IsBlack = FALSE;
+	m_IsPressed = FALSE;
+	m_IsExternal = FALSE;
+	m_Color = -1;	// no per-key color
+}
+
+CPianoCtrl::CKey& CPianoCtrl::CKey::operator=(const CKey& Key)
+{
+	if (&Key != this) {	// if not self-assignment
+		// no need to copy regions because update recreates them all anyway
+		m_IsBlack = Key.m_IsBlack;
+		m_IsPressed = Key.m_IsPressed;
+		m_IsExternal = Key.m_IsExternal;
+		m_Color = Key.m_Color;
+	}
+	return(*this);
+}
+
 void CPianoCtrl::Update(CSize Size)
 {
 	// compute number of white keys
 	int	nWhites = 0;
 	int	iKey;
-	int	nKeys = m_Key.GetSize();
+	int	nKeys = m_Key.GetSize();	// get existing key count
 	for (iKey = 0; iKey < nKeys; iKey++)	// for each key array element
 		m_Key[iKey].m_Rgn.DeleteObject();	// delete key's polygonal area
-	nKeys = GetKeyCount();
+	int	StartDelta = m_StartNote - m_PrevStartNote;
+	if (StartDelta) {	// if start note changed
+		if (StartDelta > 0)	// if start note increased
+			m_Key.RemoveAt(0, min(StartDelta, nKeys));
+		else {	// start note decreased
+			CKey	key;
+			m_Key.InsertAt(0, key, min(-StartDelta, nKeys));
+		}
+		m_PrevStartNote = m_StartNote;
+	}
+	nKeys = GetKeyCount();	// get new key count
 	m_Key.SetSize(nKeys);	// resize key array, possibly reallocating it
 	for (iKey = 0; iKey < nKeys; iKey++) {	// for each key
 		int	iKeyInfo = (m_StartNote + iKey) % NOTES;	// account for start note
 		if (!m_KeyInfo[iKeyInfo].BlackOffset)	// if key is black
 			nWhites++;
-	}
-	if (m_StartNote != m_PrevStartNote) {	// if start note changed
-		for (iKey = 0; iKey < nKeys; iKey++) {	// for each key
-			m_Key[iKey].m_IsPressed = FALSE;	// reset key states
-			m_Key[iKey].m_IsExternal = FALSE;
-		}
-		m_PrevStartNote = m_StartNote;
 	}
 	// build array of key regions, one per key
 	double	WhiteWidth;
@@ -206,7 +231,7 @@ void CPianoCtrl::Update(CSize Size)
 	m_BlackKeySize = BlackSize;
 	if (dwStyle & PS_SHOW_SHORTCUTS) {	// if showing shortcuts
 		m_KeyLabel.RemoveAll();	// delete any existing labels
-		m_KeyLabel.SetSize(GetKeyCount());	// allocate labels
+		m_KeyLabel.SetSize(nKeys);	// allocate labels
 	}
 	// if using or showing shortcuts
 	if (dwStyle & (PS_SHOW_SHORTCUTS | PS_USE_SHORTCUTS)) {
@@ -247,7 +272,7 @@ void CPianoCtrl::UpdateKeyLabelFont(CSize Size, DWORD dwStyle)
 	if (!ExtFont.CreateFontIndirect(&lf))	// create text extent font
 		AfxThrowResourceException();
 	HGDIOBJ	hPrevFont = dc.SelectObject(ExtFont);	// select font
-	int	nLabels = INT64TO32(m_KeyLabel.GetSize());
+	int	nLabels = m_KeyLabel.GetSize();
 	for (int iLabel = 0; iLabel < nLabels; iLabel++) {	// for each label
 		CSize	sz = dc.GetTextExtent(m_KeyLabel[iLabel]);
 		if (sz.cx > MaxLabel.cx)	// if label width exceeds maximum
@@ -288,6 +313,14 @@ void CPianoCtrl::UpdateKeyLabelFont(CSize Size, DWORD dwStyle)
 		AfxThrowResourceException();
 }
 
+inline void CPianoCtrl::UpdateKeyLabelFont()
+{
+	CRect	rc;
+	GetClientRect(rc);
+	UpdateKeyLabelFont(rc.Size(), GetStyle());
+	Invalidate();
+}
+
 void CPianoCtrl::Update()
 {
 	CRect	rc;
@@ -298,11 +331,13 @@ void CPianoCtrl::Update()
 
 void CPianoCtrl::SetStyle(DWORD dwStyle, bool Enable)
 {
+	BOOL	retc;
 	if (Enable)
-		ModifyStyle(0, dwStyle);
+		retc = ModifyStyle(0, dwStyle);
 	else
-		ModifyStyle(dwStyle, 0);
-	Update();
+		retc = ModifyStyle(dwStyle, 0);
+	if (retc)	// if style actually changed
+		Update();
 }
 
 void CPianoCtrl::SetRange(int StartNote, int Keys)
@@ -332,18 +367,29 @@ void CPianoCtrl::SetPressed(int KeyIdx, bool Enable, bool External)
 	}
 }
 
-void CPianoCtrl::SetKeyLabels(const CStringArray& Label)
+void CPianoCtrl::SetKeyLabel(int KeyIdx, const CString& Label)
+{
+	m_KeyLabel[KeyIdx] = Label;
+	UpdateKeyLabelFont();
+}
+
+void CPianoCtrl::SetKeyLabels(const CStringArrayEx& Label)
 {
 	m_KeyLabel.Copy(Label);
-	CRect	rc;
-	GetClientRect(rc);
-	UpdateKeyLabelFont(rc.Size(), GetStyle());
-	Invalidate();
+	UpdateKeyLabelFont();
 }
 
 void CPianoCtrl::RemoveKeyLabels()
 {
 	m_KeyLabel.RemoveAll();
+	Invalidate();
+}
+
+void CPianoCtrl::RemoveKeyColors()
+{
+	int	nKeys = GetKeyCount();
+	for (int iKey = 0; iKey < nKeys; iKey++)	// for each key
+		m_Key[iKey].m_Color = -1;	// restore default color scheme
 	Invalidate();
 }
 
@@ -387,7 +433,6 @@ void CPianoCtrl::OnPaint()
 	CRect	cb;
 	dc.GetClipBox(cb);
 //printf("OnPaint cb %d %d %d %d\n", cb.left, cb.top, cb.right, cb.bottom);
-	dc.SetBkMode(TRANSPARENT);
 	HFONT	hFont;
 	if (m_Font != NULL)	// if user specified font
 		hFont = m_Font;
@@ -408,17 +453,51 @@ void CPianoCtrl::OnPaint()
 	dc.SetTextAlign(nAlign);
 	TEXTMETRIC	TextMetric;
 	dc.GetTextMetrics(&TextMetric);
+	dc.SetBkMode(TRANSPARENT);
 	int	nKeys = GetKeyCount();
 	for (int iKey = 0; iKey < nKeys; iKey++) {	// for each key
 		CKey&	key = m_Key[iKey];
 		if (key.m_Rgn.RectInRegion(cb)) {	// if key's region intersects clip box
 			// fill key's region with appropriate brush for key color and state
 			bool	IsPressed = key.m_IsPressed & ShowPressed;
-			dc.FillRgn(&key.m_Rgn, &m_KeyBrush[key.m_IsBlack][IsPressed]);
+			if ((dwStyle & PS_PER_KEY_COLORS) && key.m_Color >= 0) {
+				SetDCBrushColor(dc, key.m_Color);
+				FillRgn(dc, key.m_Rgn, (HBRUSH)GetStockObject(DC_BRUSH));
+			} else	// default color scheme
+				dc.FillRgn(&key.m_Rgn, &m_KeyBrush[key.m_IsBlack][IsPressed]);
 			// outline key's region; this flickers slightly because it overlaps fill
 			dc.FrameRgn(&key.m_Rgn, &m_OutlineBrush, OUTLINE_WIDTH, OUTLINE_WIDTH);
 			if (iKey < m_KeyLabel.GetSize() && !m_KeyLabel[iKey].IsEmpty()) {
-				dc.SetTextColor(m_KeyColor[!key.m_IsBlack][0]);
+				COLORREF	TextColor;
+				if (dwStyle & PS_PER_KEY_COLORS) {	// if per-key colors
+					COLORREF	BkColor;
+					int	BkMode = TRANSPARENT;
+					if (key.m_Color >= 0) {	// if key has custom color
+						// compute lightness, compensating for our sensitivity to green
+						int	lightness = GetRValue(key.m_Color) 
+							+ GetGValue(key.m_Color) * 2 + GetBValue(key.m_Color);
+						if (lightness < 255 * 2)	// if lightness below threshold
+							TextColor = RGB(255, 255, 255);	// white text
+						else	// key is light enough
+							TextColor = RGB(0, 0, 0);	// black text
+						if (dwStyle & PS_INVERT_LABELS) {	// if inverting labels
+							if (key.m_IsPressed) {	// if key pressed
+								BkColor = TextColor;	// set background to text color
+								TextColor ^= 0xffffff;	// invert text color
+								BkMode = OPAQUE;
+							} else	// key not pressed
+								BkColor = key.m_Color;	// make background same as key
+						} else	// not highlighting pressed keys
+							BkColor = key.m_Color;	// make background same as key
+					} else {	// default color scheme
+						TextColor = m_KeyColor[!key.m_IsBlack][0];
+						BkColor = m_KeyColor[key.m_IsBlack][key.m_IsPressed];
+					}
+					dc.SetBkColor(BkColor);	// set background color
+					dc.SetBkMode(BkMode);	// set background mode
+				} else	// default color scheme
+					TextColor = m_KeyColor[!key.m_IsBlack][0];
+				dc.SetTextColor(TextColor);	// set text color
 				CRect	rKey;
 				key.m_Rgn.GetRgnBox(rKey);
 				CPoint	pt;

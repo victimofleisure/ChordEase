@@ -11,6 +11,7 @@
 		01		28aug14	add SetChord and ability to edit existing chord
 		02		04apr15	in OnInitDialog, rename chord type accessor
         03      10jun15	in OnInitDialog and OnOK, handle negative bass note
+		04		21dec15	use extended string array
 
         insert chord dialog
  
@@ -172,7 +173,7 @@ BOOL CInsertChordDlg::OnInitDialog()
 		m_Type.AddString(gEngine.GetSong().GetChordType(iType).m_Name);
 	m_Type.SetCurSel(min(m_Chord.m_Type, nTypes - 1));
 	// init measures combo
-	CStringArray	item;
+	CStringArrayEx	item;
 	CPartBassDlg::GetPowerOfTwoStrings(item, 
 		-CChordEaseView::FRAC_DUR_PRESETS, CChordEaseView::WHOLE_DUR_PRESETS - 1);
 	int	nPresets = INT64TO32(item.GetSize());

@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		23aug13	initial version
+		01		21dec15	use extended string array
  
 		engine MIDI support
  
@@ -132,7 +133,7 @@ bool CEngineMidi::CloseOutputDevice(int OutDevIdx)
 
 void CEngineMidi::ShowDevices() const
 {
-	CStringArray	DevName;
+	CStringArrayEx	DevName;
 	_tprintf(_T("input devices\n"));
 	CMidiIn::GetDeviceNames(DevName);
 	int	iDev;
@@ -151,12 +152,12 @@ bool CEngineMidi::OpenDevices()
 //	CBenchmark b;	// debug only
 	CMidiIn::GetDeviceNames(m_MidiInName);
 	CMidiOut::GetDeviceNames(m_MidiOutName);
-	int	nIns = INT64TO32(m_MidiInName.GetSize());
+	int	nIns = m_MidiInName.GetSize();
 	m_MidiIn.SetSize(nIns);
 	m_MidiInCookie.SetSize(nIns);
 	m_MidiAssign.SetSize(nIns);	
 	UpdateMidiAssigns();
-	int	nOuts = INT64TO32(m_MidiOutName.GetSize());
+	int	nOuts = m_MidiOutName.GetSize();
 	m_MidiOut.SetSize(nOuts);
 	CIntArrayEx	InRefs, OutRefs;
 	m_Patch.GetDeviceRefs(nIns, nOuts, InRefs, OutRefs);

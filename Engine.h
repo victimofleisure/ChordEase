@@ -21,6 +21,11 @@
 		11		11jun15	add GetSafeChord and GetCurChordIndex
 		12		11jun15	make default chord a member variable
 		13		11jun15	remove ReloadSong and song path member var
+		14		21aug15	add harmony groups
+		15		23dec15	add OnMissingMidiDevices
+		16		03jan16	add GetHarmonyGroupNotes
+		17		17jan16	add GetTransposedInputNote
+		18		02feb16	move previous harmony note test to function
  
 		engine
  
@@ -77,6 +82,7 @@ public:
 		CNoteMap(CNote InNote, int InVel, int PartIdx, CNote OutNote);
 		CNoteMap(CNote InNote, int InVel, int PartIdx, const CScale& OutNote);
 		void	ResetArp();
+		CNote	GetTransposedInputNote(const CPart& Part) const;
 		CNote	m_InNote;		// input note
 		int		m_InVel;		// input velocity
 		int		m_PartIdx;		// part index
@@ -177,7 +183,7 @@ public:
 	void	PrevChord();
 	void	SkipChords(int ChordDelta);
 	void	Panic();
-	bool	OnDeviceChange();
+	bool	OnDeviceChange(bool& Changed);
 	void	InputMidi(int Port, MIDI_MSG Msg);
 	bool	StartTag();
 	bool	TapTempo();
@@ -211,18 +217,20 @@ protected:
 		CPartState();
 		int		m_Anticipation;		// harmony anticipation in ticks
 		int		m_HarmIdx;			// harmony index
-		bool	m_AltComp;			// true if alternate comp
 		int		m_CompPrevHarmIdx;	// comp previous harmony index
 		int		m_ArpPeriod;		// time interval between arpeggio notes, in ticks
-		bool	m_ArpDescending;	// true if descending arpeggio, in alternate mode
 		CNote	m_AutoPrevNote;		// previous auto-accompaniment note, or 0 if none
 		CNote	m_LeadPrevHarmNote;	// previous lead harmony note
 		int		m_BassApproachLength;	// bass approach length, in ticks
-		bool	m_BassApproachTrigger;	// true if triggered bass approach in progress
 		volatile	int		m_BassTargetChord;	// triggered bass approach target chord index
 		volatile	int		m_BassTargetTime;	// triggered bass approach target time, in elapsed ticks
-		CNote	m_InputCCNote;	// note input via continuous controller
+		CNote	m_InputCCNote;		// note input via continuous controller
 		int		m_InputCCNoteVel;	// velocity of continuous controller input note
+		int		m_HarmonySubparts;	// number of subparts in this part's harmony group
+		int		m_HarmonyLeader;	// part index of harmony group's leader, or -1 if none
+		bool	m_AltComp;			// true if alternate comp
+		bool	m_ArpDescending;	// true if descending arpeggio, in alternate mode
+		bool	m_BassApproachTrigger;	// true if triggered bass approach in progress
 		void	Reset();
 		void	OnTimeChange(const CPart& Part, int PPQ);
 		static	int		DurationToTicks(double Duration, int PPQ);
@@ -270,6 +278,7 @@ protected:
 		TIMER_PRIORITY = THREAD_PRIORITY_HIGHEST,
 		TAP_TEMPO_HISTORY_SIZE = 4,	// tap tempo history size, in samples
 		TAP_TEMPO_MIN_BPM = 30,	// minimum tap tempo, in beats per minute
+		MAX_HARMONY_GROUP_SIZE = 8,	// maximum number of parts in a harmony group
 	};
 
 // Member data
@@ -314,6 +323,7 @@ protected:
 	virtual	void	OnMidiTargetChange(int PartIdx, int TargetIdx);
 	virtual	void	OnMidiInputData(int DeviceIdx, W64UINT MidiMessage, W64UINT TimeStamp);
 	virtual	void	OnEndRecording();
+	virtual	bool	OnMissingMidiDevices(const CMidiPortIDArray& Missing);
 
 // Overrides
 	virtual	void	EmptyNoteMap();
@@ -330,6 +340,7 @@ protected:
 	void	UpdatePatch(const CBasePatch& Patch, const CBasePatch *PrevPatch = NULL);
 	void	UpdatePartPatch(const CPart& Part, const CPart *PrevPart = NULL);
 	void	UpdatePatches();
+	void	UpdateHarmonyGroups();
 	void	GetHarmony(const CSong::CChord& Chord, CHarmony& Harm) const;
 	void	GetCompChord(const CHarmony& Harmony, CNote WindowNote, int Voicing, bool Alt, CScale& Chord);
 	void	FixHeldNotes();
@@ -355,6 +366,9 @@ protected:
 	int		WrapBeat(int Beat) const;
 	void	SetHarmonyCount(int Count);
 	void	MakeHarmony();
+	static	bool	PreviousHarmonyUsable(const CPart& Part, CNote OutNote, CNote PrevHarmNote);
+	void	OutputHarmonyGroup(int FirstPart, CNote InNote, CNote OutNote, int Vel);
+	void	GetHarmonyGroupNotes(CNote InNote, int LeaderPartIdx, CFixedArray<bool, MIDI_NOTES>& Used) const;
 	void	OnNewSong();
 	void	OnSongEdit();
 	void	OnMidiIn(int Port, MIDI_MSG Msg);
@@ -417,6 +431,14 @@ inline void CEngine::CNoteMap::ResetArp()
 	m_ArpIdx = 0;
 	m_ArpTimer = 0;
 	m_ArpLoops = 0;
+}
+
+inline CNote CEngine::CNoteMap::GetTransposedInputNote(const CPart& Part) const
+{
+	CNote	TransNote(m_InNote + Part.m_In.Transpose);
+	if (Part.m_In.NonDiatonic != CPart::INPUT::NDR_ALLOW)
+		ApplyNonDiatonicRule(Part.m_In.NonDiatonic, TransNote);
+	return(TransNote);
 }
 
 inline bool CEngine::IsCreated() const

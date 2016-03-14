@@ -15,6 +15,7 @@
 		05		16mar15	consolidate MIDI target's fixed info
 		06		23mar15	add MIDI shadow accessor
 		07		06apr15	in CMidiAssign, remove device name
+		08		23dec15	in UpdatePorts, return missing devices
 		
 		patch container
 
@@ -140,15 +141,20 @@ public:
 	bool	Read(LPCTSTR Path);
 	bool	Write(LPCTSTR Path) const;
 	void	CreatePortIDs();
-	bool	UpdatePorts(const CMidiDeviceID& OldDevID, const CMidiDeviceID& NewDevID);
-	bool	UpdatePorts(const CMidiDeviceID& NewDevID);
+	bool	UpdatePorts(const CMidiDeviceID& OldDevID, const CMidiDeviceID& NewDevID, CMidiPortIDArray& Missing);
+	bool	UpdatePorts(const CMidiDeviceID& NewDevID, CMidiPortIDArray& Missing);
 	void	ResetMidiTargets();
 	void	Serialize(CArchive& ar);
+
+// Public data
+	int		m_FileVersion;		// file version
 
 protected:
 // Helpers
 	static	void	ReferencePort(int Port, CIntArrayEx& Refs, bool Enable = TRUE);
 	static	bool	UpdatePort(int& Port, const CIntArrayEx& DevMap, bool Enable = TRUE);
+	static	void	GetMissingMidiDevices(const CMidiDeviceID::CDevInfo& DevInfo, CString DevType, 
+		const CIntArrayEx& DevRefs, const CIntArrayEx& DevMap, CMidiPortIDArray& Missing);
 };
 
 inline CMidiAssign::CMidiAssign()

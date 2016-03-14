@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		09jun15	initial version
+		01		02mar16	add harmony change handler
 
 		chord toolbar
  
@@ -165,7 +166,7 @@ void CChordBar::PostChordEdit()
 		CChordEaseView	*pView = theApp.GetMain()->GetView();
 		pView->UpdateChart();
 	} else	// song is empty
-		UpdateChord();
+		theApp.GetMain()->OnHarmonyChange();
 }
 
 void CChordBar::OnShowChanged(BOOL bShow)
@@ -256,7 +257,6 @@ void CChordBar::OnSelchangeScale()
 		int	iChord = gEngine.GetCurChordIndex();
 		m_Cache.Scale = iScale;
 		theApp.GetMain()->GetChordDictionaryDlg().SetScale(iChord, iScale);
-		UpdateChord();	// order matters: update key AFTER updating dictionary
 	}
 }
 
@@ -267,6 +267,5 @@ void CChordBar::OnSelchangeMode()
 		int	iChord = gEngine.GetCurChordIndex();
 		m_Cache.Mode = iMode;
 		theApp.GetMain()->GetChordDictionaryDlg().SetMode(iChord, iMode);
-		UpdateChord();	// order matters: update key AFTER updating dictionary
 	}
 }

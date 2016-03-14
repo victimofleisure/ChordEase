@@ -8,6 +8,9 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		21aug15	add harmony subpart
+		02		31aug15	add harmonizer chord tone constraint
+		03		19dec15	add harmonizer crossing enable
 
 		part lead dialog
  
@@ -54,12 +57,17 @@ protected:
 	CMidiValEdit	m_HarmStaticMax;
 	CMidiValEdit	m_HarmStaticMin;
 	CButton	m_HarmOmitMelody;
+	CButton	m_HarmSubpart;
+	CButton	m_HarmCrossing;
 	CMidiOffsetEdit	m_HarmInterval;
+	CComboBox	m_HarmChordDegree;
+	CComboBox	m_HarmChordSize;
 	//}}AFX_DATA
 
 // Generated message map functions
 	//{{AFX_MSG(CPartLeadDlg)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnHarmSubpart();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

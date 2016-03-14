@@ -11,6 +11,7 @@
 		01		28apr14	add state column; refactor to use callbacks
 		02		21mar15	in OnGetdispinfo, check device index range
 		03		07may15	in OnGetdispinfo, copy device state safely
+		04		21dec15	in UpdateView, no need to cast device count
 
         device dialog
  
@@ -70,7 +71,7 @@ void CDeviceDlg::UpdateView()
 	for (int iType = 0; iType < DEVICE_TYPES; iType++) {	// for each device type
 		CReportCtrl&	List = m_List[iType];	// device type's list
 		List.DeleteAllItems();
-		int	nDevs = INT64TO32(m_DeviceName[iType].GetSize());
+		int	nDevs = m_DeviceName[iType].GetSize();
 		for (int iDev = 0; iDev < nDevs; iDev++)	// for each device
 			List.InsertCallbackRow(iDev, iDev);	// insert callback row
 	}

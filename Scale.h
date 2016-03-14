@@ -10,6 +10,7 @@
 		00		23aug13	initial version
 		01		18mar15	move find into base class
 		02		04apr15	add interval names
+		03		31aug15	overload HarmonizeNote to constrain to chord tones
  
 		scale container
  
@@ -52,12 +53,14 @@ public:
 	int		FindNearest(CNote Note) const;
 	int		FindNearest(CNote Note, int& Deviation) const;
 	int		FindLeastInterval(CNote Note) const;
+	int		FindLeastInterval(CNote Note, CNote Exclude) const;
 	int		FindNearestSmooth(CNote Note) const;
 	void	Intersection(const CScale& Scale);
 	void	Difference(const CScale& Scale);
 	void	Drop(int iNote);
 	int		HarmonizeDegree(int Degree, int Interval) const;
 	CNote	HarmonizeNote(CNote Note, int Interval) const;
+	CNote	HarmonizeNote(CNote Note, int Interval, int ChordInfo) const;
 	void	Randomize();
 	bool	Correct(CNote& Note) const;
 	

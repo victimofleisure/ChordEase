@@ -13,6 +13,7 @@
 		03		09oct13	add BYTE array with attach/detach/swap
 		04		21feb14	add GetData to CIntArrayEx
 		05		09sep14	add CStringArrayEx
+		06		23dec15	in CStringArrayEx, add GetSize
 
 		enhanced array with copy ctor, assignment, and fast const access
  
@@ -365,6 +366,8 @@ public:
 	CStringArrayEx();
 	CStringArrayEx(const CStringArrayEx& arr);
 	CStringArrayEx& operator=(const CStringArrayEx& arr);
+	int		GetSize() const;
+	W64INT	GetSize64() const;
 };
 
 AFX_INLINE CStringArrayEx::CStringArrayEx()
@@ -381,6 +384,16 @@ AFX_INLINE CStringArrayEx& CStringArrayEx::operator=(const CStringArrayEx& arr)
 	if (this != &arr)
 		Copy(arr);
 	return *this;
+}
+
+AFX_INLINE int CStringArrayEx::GetSize() const
+{
+	return(INT64TO32(m_nSize));	// W64: force to 32-bit
+}
+
+AFX_INLINE W64INT CStringArrayEx::GetSize64() const
+{
+	return(m_nSize);
 }
 
 #endif

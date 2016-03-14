@@ -10,6 +10,7 @@
 		00		29apr14	initial version
 		01		23mar15	allow header drag/drop
  		02		25jul15	add properties dialog
+		03		10aug15	move properties dialog to main frame
 
 		MIDI note mappings dialog
 
@@ -116,14 +117,6 @@ int	CALLBACK CMidiNoteMapDlg::SortCompare(LPARAM p1, LPARAM p2, LPARAM This)
 {
 	CMidiNoteMapDlg	*pDlg = (CMidiNoteMapDlg *)This;
 	return(pDlg->SortCompare(INT64TO32(p1), INT64TO32(p2)));
-}
-
-void CMidiNoteMapDlg::NotifyUndo()
-{
-	if (!m_UndoNotified) {	// only notify undo manager once per instance
-		theApp.GetMain()->NotifyEdit(0, UCODE_PATCH);
-		m_UndoNotified = TRUE;
-	}
 }
 
 void CMidiNoteMapDlg::DoDataExchange(CDataExchange* pDX)
@@ -263,25 +256,7 @@ void CMidiNoteMapDlg::OnUpdateEditProperties(CCmdUI *pCmdUI)
 
 void CMidiNoteMapDlg::OnEditProperties()
 {
-	CIntArrayEx	sel;
-	m_List.GetSelection(sel);
-	int	nSels = sel.GetSize();
-	if (!nSels)	// if no selection
-		return;		// nothing to do
-	CNoteMapPropsDlg	dlg;
-	for (int iSel = 0; iSel < nSels; iSel++) {	// for selected parts
-		int	iPart = INT64TO32(m_List.GetItemData(sel[iSel]));	// dereference sort
-		sel[iSel] = iPart;	// convert selection index to part index
-		dlg.SetPart(gEngine.GetPart(iPart));	// add part to dialog
-	}
-	if (dlg.DoModal() == IDOK) {	// if changes were saved
-		for (int iSel = 0; iSel < nSels; iSel++) {	// for selected parts
-			int	iPart = sel[iSel];	// load part index, accounting for sort
-			CPart	part(gEngine.GetPart(iPart));	// copy engine part to buffer
-			dlg.GetPart(part);	// update buffered part from dialog
-			NotifyUndo();
-			theApp.GetMain()->SetPart(iPart, part);	// update engine part
-		}
-		m_List.Invalidate();
-	}
+	// list is sorted; notify undo manager only once per dialog instance
+	if (theApp.GetMain()->EditPartProperties(m_List, TRUE, !m_UndoNotified))
+		m_UndoNotified = TRUE;
 }

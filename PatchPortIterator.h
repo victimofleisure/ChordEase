@@ -19,12 +19,14 @@
 // that the PORT_ITERATOR and PORT_ITER_CONST macros must be defined before
 // including this header file, otherwise it won't compile.
 //
-// PORT_ITERATOR is a macro that must expand to a function with two arguments.
+// PORT_ITERATOR is a macro that must expand to a function with three arguments.
 // port:	The current port variable; can be used as a value or a reference.
 // dir:		The symbol InRefs or OutRefs, depending on the port's direction.
+// enable:	True if the port is enabled; this argument must default to true.
 //
 // PORT_ITER_CONST must be defined as const if the calling function is const,
 // otherwise it must be defined as empty.
+//
 
 {	// enclose in scope
 	#define PATCHPORTDEF(port, dir, enable) PORT_ITERATOR(port, dir##Refs, enable);

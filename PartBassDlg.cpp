@@ -11,6 +11,7 @@
 		01		15may14	remove chromatic checkbox
 		02		07aug14	add approach trigger button
 		03		11jun15	rename lowest note member for clarity
+		04		21dec15	use extended string array
 
 		part bass dialog
  
@@ -59,7 +60,7 @@ void CPartBassDlg::SetPart(const CPart& Part)
 	m_TargetAlignment.SetCurSel(Part.m_Bass.TargetAlignment - CPart::BASS::TARGET_ALIGN_MIN);
 }
 
-void CPartBassDlg::GetPowerOfTwoStrings(CStringArray& Str, int LowerExp, int UpperExp)
+void CPartBassDlg::GetPowerOfTwoStrings(CStringArrayEx& Str, int LowerExp, int UpperExp)
 {
 	int	nItems = UpperExp - LowerExp + 1;
 	Str.SetSize(nItems);
@@ -78,9 +79,9 @@ void CPartBassDlg::GetPowerOfTwoStrings(CStringArray& Str, int LowerExp, int Upp
 
 void CPartBassDlg::InitPowerOfTwoCombo(CComboBox& Combo, int LowerExp, int UpperExp)
 {
-	CStringArray	str;
+	CStringArrayEx	str;
 	GetPowerOfTwoStrings(str, LowerExp, UpperExp);
-	int	nItems = INT64TO32(str.GetSize());
+	int	nItems = str.GetSize();
 	for (int iItem = 0; iItem < nItems; iItem++)
 		Combo.AddString(str[iItem]);
 }

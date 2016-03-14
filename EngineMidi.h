@@ -11,6 +11,9 @@
 		01		07oct14	add OutputSystem and transport change notification
 		02		10mar15	add tag exit notification
 		03		21mar15	add tap tempo notification
+		04		21aug15	add subpart change notification
+		05		23dec15	remove missing device notification
+		06		02mar16	add chord change notification
  
 		engine MIDI support
  
@@ -34,7 +37,6 @@ public:
 // Constants
 	enum {	// notification codes
 		NC_END_OF_SONG,
-		NC_MISSING_DEVICE,
 		NC_DEVICE_STATE_CHANGE,
 		NC_MIDI_PLAY,
 		NC_MIDI_STOP,
@@ -45,6 +47,8 @@ public:
 		NC_TRANSPORT_CHANGE,
 		NC_TAG_EXIT,
 		NC_TAP_TEMPO,
+		NC_SUBPART_CHANGE,
+		NC_CHORD_CHANGE,
 		NOTIFICATION_CODES
 	};
 
@@ -110,8 +114,8 @@ protected:
 // Member data
 	CMidiInArray	m_MidiIn;	// array of MIDI input devices
 	CMidiOutArray	m_MidiOut;	// array of MIDI output devices
-	CStringArray	m_MidiInName;	// array of MIDI input device names
-	CStringArray	m_MidiOutName;	// array of MIDI output device names
+	CStringArrayEx	m_MidiInName;	// array of MIDI input device names
+	CStringArrayEx	m_MidiOutName;	// array of MIDI output device names
 	CMidiDeviceID	m_MidiDevID;	// MIDI input and output device identifiers
 	CMidiInCookieArray	m_MidiInCookie;	// array of MIDI input device cookies
 	CMidiAssignArray	m_MidiAssign;	// array of MIDI assignments for each device

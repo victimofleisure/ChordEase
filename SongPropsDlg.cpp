@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      14may14	initial version
+		01		21dec15	use extended string array
 
         song properties dialog
  
@@ -76,10 +77,10 @@ BOOL CSongPropsDlg::OnInitDialog()
 	CPatchGeneralDlg::InitNoteCombo(m_KeySig);
 	m_KeySig.SetCurSel(m_Props.m_Key);
 	m_TimeSigNumer.SetVal(m_Props.m_Meter.m_Numerator);
-	CStringArray	sUnit;
+	CStringArrayEx	sUnit;
 	CPartBassDlg::GetPowerOfTwoStrings(sUnit, 
 		CSong::CMeter::MIN_UNIT_EXP, CSong::CMeter::MAX_UNIT_EXP);
-	int	nUnits = INT64TO32(sUnit.GetSize());
+	int	nUnits = sUnit.GetSize();
 	for (int iUnit = 0; iUnit < nUnits; iUnit++)
 		m_TimeSigDenom.AddString(sUnit[iUnit]);
 	DWORD	iSelUnit;

@@ -11,6 +11,7 @@
         01      22apr14	add tooltip support
         02      10jun14	add MIDI learn
 		03		05aug14	add OnCommandHelp
+		04		21aug15	add EnableControls
 
         patch page dialog
  
@@ -45,6 +46,7 @@ public:
 
 // Operations
 	void	UpdateMidiLearn();
+	void	EnableControls(bool Enable);
 
 // ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPatchPageDlg)

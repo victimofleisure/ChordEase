@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      27jun15	initial version
+		01		21dec15	use extended string array
 
 		path list dialog
  
@@ -84,7 +85,7 @@ BOOL CPathListDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	
-	int	nItems = INT64TO32(m_Path.GetSize());
+	int	nItems = m_Path.GetSize();
 	for (int iItem = 0; iItem < nItems; iItem++)
 		m_List.AddString(m_Path[iItem]);	
 	UpdateHorzExtent(m_List);

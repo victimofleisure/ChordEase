@@ -12,6 +12,8 @@
 		02		10jun15	add check for empty dictionary
 		03		13jun15	refactor undo; remove apply button
 		04		21jun15	add status bar hints and recent file list
+		05		21dec15	use extended string array
+		06		02mar16	add harmony change handler
 
 		chord dictionary editing dialog
 
@@ -264,6 +266,7 @@ void CChordDictionaryDlg::SetScale(int ChordIdx, int Scale)
 	} else {	// we're hidden, so our dictionary may be out of date
 		NotifyUndoableEdit(iType, UCODE_SET_SCALE, UE_COALESCE);
 		gEngine.SetChordScale(iType, Scale);
+		theApp.GetMain()->OnHarmonyChange();
 	}
 }
 
@@ -276,6 +279,7 @@ void CChordDictionaryDlg::SetMode(int ChordIdx, int Mode)
 	} else {	// we're hidden, so our dictionary may be out of date
 		NotifyUndoableEdit(iType, UCODE_SET_MODE, UE_COALESCE);
 		gEngine.SetChordMode(iType, Mode);
+		theApp.GetMain()->OnHarmonyChange();
 	}
 }
 
@@ -303,7 +307,7 @@ void CChordDictionaryDlg::UpdateType(int TargetType, const CSong::CChordType& Ne
 	m_Dict[TargetType] = NewType;	// update target type
 	gEngine.SetChordType(TargetType, NewType);
 	UpdateSpelling(TargetType);
-	theApp.GetMain()->GetChordBar().UpdateChordIfVisible();
+	theApp.GetMain()->OnHarmonyChange();
 }
 
 void CChordDictionaryDlg::UpdateScale(int TypeIdx, int Scale)
@@ -401,6 +405,7 @@ bool CChordDictionaryDlg::ApplyChanges(int UndoCode)
 		}
 	}
 	theApp.GetMain()->GetChordBar().OnChordDictionaryChange(Compatible);
+	theApp.GetMain()->OnHarmonyChange();	// order matters, update chord bar first
 	return(TRUE);
 }
 
@@ -776,7 +781,7 @@ void CChordDictionaryDlg::OnRestoreExternalUndoState(const CUndoState& State)
 {
 	if (IsWindowVisible())	// if we're showing
 		UpdateDictionary(State.GetCtrlID());
-	theApp.GetMain()->GetChordBar().UpdateChordIfVisible();
+	theApp.GetMain()->OnHarmonyChange();
 }
 
 CString CChordDictionaryDlg::GetUndoTitle(const CUndoState& State)
@@ -1003,7 +1008,7 @@ void CChordDictionaryDlg::OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL b
 		int	nItems = pPopupMenu->GetMenuItemCount();
 		for (int iItem = 1; iItem < nItems; iItem++)
 			pPopupMenu->RemoveMenu(1, MF_BYPOSITION);
-		int	nSubs = INT64TO32(m_SubDictPath.GetSize());
+		int	nSubs = m_SubDictPath.GetSize();
 		if (nSubs) {
 			pPopupMenu->CMenu::AppendMenu(MF_SEPARATOR);
 			for (int iSub = 0; iSub < nSubs; iSub++) {
@@ -1344,7 +1349,7 @@ void CChordDictionaryDlg::OnSubsEdit()
 	dlg.SetCaption(LDS(IDS_SUB_CHORD_DICTS_CAP));
 	if (dlg.DoModal() == IDOK) {
 		CChordDictionaryArray	arrDict;
-		int	nPaths = INT64TO32(arrPath.GetSize());
+		int	nPaths = arrPath.GetSize();
 		arrDict.SetSize(nPaths);
 		int	iSel = -1;
 		bool	bReadError = FALSE;

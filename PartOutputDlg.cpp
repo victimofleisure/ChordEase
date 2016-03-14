@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		25aug15	add bank select
 
 		part output dialog
  
@@ -44,6 +45,8 @@ void CPartOutputDlg::GetPart(CPart& Part) const
 	Part.m_Out.Inst.Chan = m_Chan.GetIntVal() - 1;
 	Part.m_Out.Patch = m_Patch.GetIntVal();
 	Part.m_Out.Volume = m_Volume.GetIntVal();
+	Part.m_Out.BankSelectMSB = m_BankSelectMSB.GetIntVal();
+	Part.m_Out.BankSelectLSB = m_BankSelectLSB.GetIntVal();
 	Part.m_Out.Anticipation = m_Anticipation.GetVal();
 	Part.m_Out.ControlsThru = m_ControlsThru.GetCheck() != 0;
 	Part.m_Out.LocalControl = m_LocalControl.GetCheck() != 0;
@@ -56,6 +59,8 @@ void CPartOutputDlg::SetPart(const CPart& Part)
 	m_Chan.SetVal(Part.m_Out.Inst.Chan + 1);
 	m_Patch.SetVal(Part.m_Out.Patch);
 	m_Volume.SetVal(Part.m_Out.Volume);
+	m_BankSelectMSB.SetVal(Part.m_Out.BankSelectMSB);
+	m_BankSelectLSB.SetVal(Part.m_Out.BankSelectLSB);
 	m_Anticipation.SetVal(Part.m_Out.Anticipation);
 	m_ControlsThru.SetCheck(Part.m_Out.ControlsThru);
 	m_LocalControl.SetCheck(Part.m_Out.LocalControl);
@@ -81,6 +86,8 @@ void CPartOutputDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_PART_OUT_CHAN, m_Chan);
 	DDX_Control(pDX, IDC_PART_OUT_PATCH, m_Patch);
 	DDX_Control(pDX, IDC_PART_OUT_VOLUME, m_Volume);
+	DDX_Control(pDX, IDC_PART_OUT_BANK_SELECT_MSB, m_BankSelectMSB);
+	DDX_Control(pDX, IDC_PART_OUT_BANK_SELECT_LSB, m_BankSelectLSB);
 	//}}AFX_DATA_MAP
 }
 

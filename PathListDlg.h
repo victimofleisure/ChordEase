@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      27jun15	initial version
+		01		21dec15	use extended string array
 
 		path list dialog
  

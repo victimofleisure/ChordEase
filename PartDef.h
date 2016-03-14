@@ -10,6 +10,10 @@
 		00		14sep13	initial version
 		01		15may14	replace bass chromatic with non-diatonic rules
 		02		20mar15	add arpeggio adapt
+		03		21aug15	add harmony subpart
+		04		25aug15	add bank select
+		05		31aug15	add harmonizer chord tone constraint
+		06		19dec15	add harmonizer crossing enable
 
 		part definitions
 
@@ -30,6 +34,8 @@ PARTDEF(	Out.Inst.Port,				0)
 PARTDEF(	Out.Inst.Chan,				0)
 PARTDEF(	Out.Patch,					-1)
 PARTDEF(	Out.Volume,					-1)
+PARTDEF(	Out.BankSelectMSB,			-1)
+PARTDEF(	Out.BankSelectLSB,			-1)
 PARTDEF(	Out.Anticipation,			0)
 PARTDEF(	Out.ControlsThru,			TRUE)
 PARTDEF(	Out.LocalControl,			FALSE)
@@ -39,8 +45,12 @@ PARTDEF(	Auto.Window,				48 + F)	// F3
 PARTDEF(	Auto.Velocity,				100)
 PARTDEF(	Lead.Harm.Interval,			0)
 PARTDEF(	Lead.Harm.OmitMelody,		FALSE)
+PARTDEF(	Lead.Harm.Subpart,			FALSE)
+PARTDEF(	Lead.Harm.Crossing,			TRUE)
 PARTDEF(	Lead.Harm.StaticMin,		0)
 PARTDEF(	Lead.Harm.StaticMax,		0)
+PARTDEF(	Lead.Harm.Chord.Size,		0)
+PARTDEF(	Lead.Harm.Chord.Degree,		0)
 PARTDEF(	Comp.Voicing,				0)
 PARTDEF(	Comp.Variation,				CPart::COMP::VAR_ALT_A_B)
 PARTDEF(	Comp.Arp.Period,			0)

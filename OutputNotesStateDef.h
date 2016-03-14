@@ -9,19 +9,22 @@
 		rev		date	comments
         00      18may14	initial version
 		01		15nov14	add custom piano size
+		02		24aug15	add type and color velocity
+		03		29feb16	repurpose ShowKeyLabels for multiple label types
 
 		output notes bar state definitions
 
 */
 
-//					name				default
-OUTNOTESSTATEDEF(	PianoSize,			PS_128			)
-OUTNOTESSTATEDEF(	ShowKeyLabels,		TRUE			)
-OUTNOTESSTATEDEF(	RotateLabels,		TRUE			)
-OUTNOTESSTATEDEF(	ShowMetronome,		FALSE			)
-OUTNOTESSTATEDEF(	UseCustomSize,		FALSE			)
-OUTNOTESSTATEDEF(	CustomStartNote,	48				)
-OUTNOTESSTATEDEF(	CustomKeyCount,		37				)
+//					type	name				default
+OUTNOTESSTATEDEF(	int,	PianoSize,			PS_128		)	// index of current piano size
+OUTNOTESSTATEDEF(	int,	ShowKeyLabels,		KL_OUTPUT_NOTES	)	// index of key label type
+OUTNOTESSTATEDEF(	bool,	RotateLabels,		TRUE		)	// if true, rotate labels sideways
+OUTNOTESSTATEDEF(	bool,	ShowMetronome,		FALSE		)	// true if showing metronome notes
+OUTNOTESSTATEDEF(	bool,	UseCustomSize,		FALSE		)	// true if using custom piano size
+OUTNOTESSTATEDEF(	bool,	ColorVelocity,		FALSE		)	// if true, color keys to show note velocities
+OUTNOTESSTATEDEF(	int,	CustomStartNote,	48			)	// custom piano size start note
+OUTNOTESSTATEDEF(	int,	CustomKeyCount,		37			)	// custom piano size key count
 
 #undef OUTNOTESSTATEDEF
 

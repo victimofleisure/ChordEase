@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
         00      20sep13	initial version
+		01		25aug15	add bank select
 
 		part output dialog
  
@@ -61,6 +62,8 @@ protected:
 	CChannelEdit	m_Chan;
 	CPatchEdit	m_Patch;
 	CPatchEdit	m_Volume;
+	CPatchEdit	m_BankSelectMSB;
+	CPatchEdit	m_BankSelectLSB;
 	//}}AFX_DATA
 
 // Generated message map functions

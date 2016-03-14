@@ -11,6 +11,7 @@
 		01		13may15	add undo
 		02		13jun15	refactor undo; remove apply button
 		03		21jun15	add status bar hints and recent file list
+		04		21dec15	use extended string array
 
 		chord dictionary editing dialog
 
@@ -215,8 +216,8 @@ protected:
 	CString	m_DocPath;				// path of currently loaded dictionary
 	CSong::CChordDictionary	m_Dict;	// chord dictionary; one element per chord type
 	CIntArrayEx	m_AliasOf;			// array of alias indices, one per chord type
-	CStringArray	m_ScaleName;	// table of scale names for display in drop list
-	CStringArray	m_ModeName;		// table of mode names for display in drop list
+	CStringArrayEx	m_ScaleName;	// table of scale names for display in drop list
+	CStringArrayEx	m_ModeName;		// table of mode names for display in drop list
 	CDictGridCtrl	m_List;			// grid control
 	CString	m_CanonicalStr;			// string that indicates chord type isn't an alias
 	CClipboard	m_Clipboard;		// clipboard interface

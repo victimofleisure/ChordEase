@@ -30,6 +30,8 @@
 		20		15jun15	add OnChordDictionaryChange
 		21		18jun15	override OnPrepareDC to select font into attribute DC for print preview
 		22		18jun15	add grid line width, scaled proportionately for printing
+		23		21dec15	use extended string array
+		24		02mar16	add harmony change handler
 
 		ChordEase view
  
@@ -201,7 +203,7 @@ inline CPoint CChordEaseView::CalcPos(int Beat) const
 void CChordEaseView::UpdateChart()
 {
 //	_tprintf(_T("CChordEaseView::UpdateChart\n"));
-	theApp.GetMain()->GetChordBar().UpdateChordIfVisible();
+	theApp.GetMain()->OnHarmonyChange();
 	m_ChordSymbol.RemoveAll();
 	m_SectionSymbol.RemoveAll();
 	m_Selection = NULL_SELECTION;
@@ -412,7 +414,6 @@ void CChordEaseView::TimerHook()
 		m_CurChord = iChord;	// update current chord; order matters
 		EnsureVisible(m_ChordSymbol[iChord].m_Rect, m_MeasureSize);
 		UpdateWindow();	// update window after updating current chord
-		theApp.GetMain()->GetChordBar().UpdateChordIfVisible();
 	}
 }
 
@@ -840,7 +841,7 @@ int CChordEaseView::GetSongChordIndex(int ChordIdx) const
 	return(gEngine.GetSong().GetChordIndex(iBeat));
 }
 
-bool CChordEaseView::MakePopup(CMenu& Menu, int StartID, CStringArray& Item, int SelIdx)
+bool CChordEaseView::MakePopup(CMenu& Menu, int StartID, CStringArrayEx& Item, int SelIdx)
 {
 	if (!Menu.DeleteMenu(0, MF_BYPOSITION))	// delete placeholder item
 		return(FALSE);
@@ -900,7 +901,7 @@ bool CChordEaseView::MakeChordPopups(CMenu& Menu, int ChordIdx)
 	int	iSongChord = GetSongChordIndex(ChordIdx);
 	const CSong::CChord&	chord = gEngine.GetChord(iSongChord);
 	CMenu	*pPopup;
-	CStringArray	item;
+	CStringArrayEx	item;
 	item.SetSize(OCTAVE);
 	for (CNote iNote = 0; iNote < OCTAVE; iNote++)	// for each chromatic note
 		item[iNote] = iNote.Name();
@@ -1376,6 +1377,7 @@ BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	ON_COMMAND(ID_EDIT_CUT, OnEditCut)
 	ON_COMMAND(ID_EDIT_DELETE, OnEditDelete)
 	ON_COMMAND(ID_EDIT_INSERT, OnEditInsert)
+	ON_COMMAND(ID_EDIT_LENGTH, OnEditLength)
 	ON_COMMAND(ID_EDIT_PASTE, OnEditPaste)
 	ON_COMMAND(ID_EDIT_REDO, OnEditRedo)
 	ON_COMMAND(ID_EDIT_RENAME, OnEditRename)
@@ -1384,6 +1386,7 @@ BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	ON_COMMAND(ID_EDIT_SECTION_LIST, OnEditSectionList)
 	ON_COMMAND(ID_EDIT_SECTION_PROPS, OnEditSectionProps)
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
+	ON_COMMAND(ID_EDIT_TRANSPOSE, OnEditTranspose)
 	ON_COMMAND(ID_EDIT_UNDO, OnEditUndo)
 	ON_COMMAND(ID_FILE_EDIT, OnFileEdit)
 	ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
@@ -1404,6 +1407,7 @@ BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateEditCut)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditDelete)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_INSERT, OnUpdateEditInsert)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_LENGTH, OnUpdateEditLength)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdateEditPaste)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_RENAME, OnUpdateEditRename)
@@ -1411,16 +1415,13 @@ BEGIN_MESSAGE_MAP(CChordEaseView, CScrollView)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SECTION_DELETE, OnUpdateEditSectionDelete)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SECTION_PROPS, OnUpdateEditSectionProps)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, OnUpdateEditSelectAll)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
-	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT_SETUP, OnUpdateFilePrint)
-	ON_UPDATE_COMMAND_UI(ID_PREV_PANE, OnUpdateNextPane)
-	ON_COMMAND(ID_EDIT_TRANSPOSE, OnEditTranspose)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_TRANSPOSE, OnUpdateEditTranspose)
-	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT_PREVIEW, OnUpdateFilePrint)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
+	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT_SETUP, OnUpdateFilePrint)
+	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT_PREVIEW, OnUpdateFilePrint)
 	ON_UPDATE_COMMAND_UI(ID_NEXT_PANE, OnUpdateNextPane)
-	ON_COMMAND(ID_EDIT_LENGTH, OnEditLength)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_LENGTH, OnUpdateEditLength)
+	ON_UPDATE_COMMAND_UI(ID_PREV_PANE, OnUpdateNextPane)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CScrollView::OnFilePrint)

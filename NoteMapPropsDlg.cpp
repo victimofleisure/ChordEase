@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		17jun15	initial version
+		01		10aug15	add part enable
  
 		note mapping properties dialog
 
@@ -40,6 +41,7 @@ CNoteMapPropsDlg::CNoteMapPropsDlg(CWnd* pParent /*=NULL*/)
 	m_Items = 0;
 	m_CurPort[0] = -1;
 	m_CurPort[1] = -1;
+	m_PartEnable = -1;
 }
 
 inline void CNoteMapPropsDlg::Add(CString& Dest, CString Src)
@@ -65,7 +67,9 @@ void CNoteMapPropsDlg::SetPart(const CPart& Part)
 	if (!m_Items) {	// if first assignment
 		CPart&	MyPart = *this;	// upcast this to base class
 		MyPart = Part;	// copy assignment to our member
+		m_PartEnable = Part.m_Enable;
 	} else {	// additional assignment
+		Add(m_PartEnable,		Part.m_Enable);
 		Add(m_Name,				Part.m_Name);
 		Add(m_Function,			Part.m_Function);
 		Add(m_In.Inst.Port,		Part.m_In.Inst.Port);
@@ -80,6 +84,8 @@ void CNoteMapPropsDlg::SetPart(const CPart& Part)
 
 void CNoteMapPropsDlg::GetPart(CPart& Part) const
 {
+	if (m_PartEnable >= 0)		// if enable is determinate
+		Part.m_Enable = m_PartEnable != 0;	// update enable
 	Save(Part.m_Function,		m_Function);
 	Save(Part.m_In.Inst.Port,	m_In.Inst.Port);
 	Save(Part.m_In.Inst.Chan,	m_In.Inst.Chan);
@@ -122,6 +128,7 @@ void CNoteMapPropsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_NOTE_MAP_PROPS_ZONE_LOW, m_ZoneLowCombo);
 	DDX_Control(pDX, IDC_NOTE_MAP_PROPS_ZONE_HIGH, m_ZoneHighCombo);
 	DDX_Text(pDX, IDC_NOTE_MAP_PROPS_PART_NAME, m_Name);
+	DDX_Control(pDX, IDC_NOTE_MAP_PROPS_ITEM_COUNT, m_ItemCountStat);
 	//}}AFX_DATA_MAP
 	DDX_CBIndex(pDX, IDC_NOTE_MAP_PROPS_FUNCTION, m_Function);
 	DDX_Control(pDX, IDC_NOTE_MAP_PROPS_IN_PORT, m_PortEdit[INPUT]);
@@ -143,6 +150,7 @@ void CNoteMapPropsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_CBIndex(pDX, IDC_NOTE_MAP_PROPS_OUT_CHANNEL, m_Out.Inst.Chan);
 	DDX_CBIndex(pDX, IDC_NOTE_MAP_PROPS_ZONE_HIGH, m_In.ZoneHigh);
 	DDX_CBIndex(pDX, IDC_NOTE_MAP_PROPS_ZONE_LOW, m_In.ZoneLow);
+	DDX_CBIndex(pDX, IDC_NOTE_MAP_PROPS_ENABLE, m_PartEnable);
 }
 
 BEGIN_MESSAGE_MAP(CNoteMapPropsDlg, CDialog)
@@ -161,6 +169,10 @@ BOOL CNoteMapPropsDlg::OnInitDialog()
 	
 	m_InPortSpin.SetRange32(0, INT_MAX);
 	m_OutPortSpin.SetRange32(0, INT_MAX);
+	if (m_In.Inst.Port < 0)	// if input port is indeterminate
+		m_PortEdit[INPUT].SetWindowText(_T(""));	// override spin control's init
+	if (m_Out.Inst.Port < 0)	// if output port is indeterminate
+		m_PortEdit[OUTPUT].SetWindowText(_T(""));	// override spin control's init
 	for (int iFunc = 0; iFunc < CPart::FUNCTIONS; iFunc++)
 		m_FunctionCombo.AddString(CPartsListView::GetFunctionName(iFunc));
 	m_FunctionCombo.SetCurSel(m_Function);
@@ -170,6 +182,11 @@ BOOL CNoteMapPropsDlg::OnInitDialog()
 	CChordEaseApp::InitNoteCombo(m_ZoneHighCombo, CIntRange(0, MIDI_NOTE_MAX), m_In.ZoneHigh);
 	UpdateDeviceName(INPUT);
 	UpdateDeviceName(OUTPUT);
+	if (m_Items > 1) {	// if multiple items
+		CString	s;
+		s.Format(IDS_MIDI_ASS_PROPS_ITEM_COUNT, m_Items);
+		m_ItemCountStat.SetWindowText(s);
+	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE

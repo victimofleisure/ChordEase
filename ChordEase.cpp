@@ -21,6 +21,7 @@
 		11		13jun15	in combo init methods, rename local var for clarity
 		12		27jun15	add load/store string array methods
 		13		24jul15	in HandleDlgKeyMsg, make system key handling conditional
+		14		23dec15	add OnMissingMidiDevices
 
 		ChordEase application
  
@@ -145,6 +146,11 @@ void CChordEaseApp::CAppEngine::OnEndRecording()
 	m_Record.ExportMidiFile(path, m_Patch, opts.m_Record.MidiFilePPQ, opts.m_Record.FixDupNotes != 0);
 	path.RenameExtension(MIDI_RECORD_EXT);
 	m_Record.Write(path, m_Patch);
+}
+
+bool CChordEaseApp::CAppEngine::OnMissingMidiDevices(const CMidiPortIDArray& Missing)
+{
+	return(theApp.GetMain()->OnMissingMidiDevices(Missing, this));
 }
 
 BOOL CChordEaseApp::InitInstance()
@@ -583,7 +589,7 @@ bool CChordEaseApp::BoostThreads()
 
 void CChordEaseApp::StoreStringArray(LPCTSTR Section, const CStringArrayEx& Arr)
 {
-	int	nItems = INT64TO32(Arr.GetSize());
+	int	nItems = Arr.GetSize();
 	theApp.WriteProfileInt(Section, _T("Count"), nItems);
 	for (int iItem = 0; iItem < nItems; iItem++) {
 		CString	sKey;

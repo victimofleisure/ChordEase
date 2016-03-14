@@ -13,6 +13,7 @@
 		03		22apr14	add context menu
 		04		23may14	add controller names
 		05		07jul14	add reset filters
+		06		21dec15	use extended string array
 
         device dialog
  
@@ -141,7 +142,7 @@ void CMidiEventDlg::InitFilter(int ColIdx)
 		break;
 	case COL_DEVICE:
 		{
-			int	nDevs = INT64TO32(m_DeviceName.GetSize());
+			int	nDevs = m_DeviceName.GetSize();
 			for (int iDev = 0; iDev < nDevs; iDev++)
 				filter.AddString(m_DeviceName[iDev]);
 		}
@@ -149,7 +150,7 @@ void CMidiEventDlg::InitFilter(int ColIdx)
 	case COL_PORT:
 		{
 			CString	s;
-			int	nDevs = INT64TO32(m_DeviceName.GetSize());
+			int	nDevs = m_DeviceName.GetSize();
 			for (int iDev = 0; iDev < nDevs; iDev++) {
 				s.Format(_T("%d"), iDev);
 				filter.AddString(s);

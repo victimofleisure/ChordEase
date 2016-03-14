@@ -14,6 +14,10 @@
 		04		11nov14	use fixed array for MIDI targets
 		05		16mar15	consolidate MIDI target's fixed info
 		06		20mar15	add arpeggio adapt
+		07		21aug15	add harmony subpart
+		08		25aug15	add bank select
+		09		31aug15	add harmonizer chord tone constraint
+		10		19dec15	add harmonizer crossing enable
 
 		part container
 
@@ -47,8 +51,18 @@ public:
 		struct HARM {
 			int		Interval;	// generic interval, in diatonic steps
 			bool	OmitMelody;	// true if harmonizer should omit melody note
+			bool	Subpart;	// true if part is subordinate to a harmony group
+			bool	Crossing;	// true if static harmony can cross melody
 			int		StaticMin;	// minimum static harmony interval, in semitones
 			int		StaticMax;	// maximum static harmony interval, in semitones
+			union {
+				struct CHORD {
+					short	Size;	// chord size in notes, of zero for unconstrained
+					short	Degree;	// degree of chord, in cycle of thirds steps
+				};
+				CHORD	Chord;		// chord to constrain harmony to
+				int		ChordInt;	// alias chord info to an integer
+			};
 		};
 		HARM	Harm;			// harmonizer settings
 	};
@@ -116,6 +130,8 @@ public:
 		MIDI_INST	Inst;		// MIDI instrument
 		int		Patch;			// patch number, or -1 if unspecified
 		int		Volume;			// volume, or -1 if unspecified
+		int		BankSelectMSB;	// bank select MSB, or -1 if unspecified
+		int		BankSelectLSB;	// bank select LSB, or -1 if unspecified
 		double	Anticipation;	// harmonic anticipation, as fraction of whole note
 		bool	ControlsThru;	// true if passing controllers through
 		bool	LocalControl;	// true if local control is enabled

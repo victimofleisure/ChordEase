@@ -3302,6 +3302,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VelocityPalette.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Version.h"
 				>
 			</File>

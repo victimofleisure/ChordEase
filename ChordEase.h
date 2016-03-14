@@ -15,6 +15,7 @@
 		05		29sep14	add ThreadBoost DLL
 		06		22dec14	add CloseHtmlHelp
 		07		27jun15	add load/store string array methods
+		08		23dec15	add OnMissingMidiDevices
 
 		ChordEase application
  
@@ -70,6 +71,7 @@ public:
 		virtual	void	OnMidiInputData(int DeviceIdx, W64UINT MidiMessage, W64UINT TimeStamp);
 		virtual	void	OnMidiOutputData(int DeviceIdx, W64UINT MidiMessage, W64UINT TimeStamp);
 		virtual	void	OnEndRecording();
+		virtual	bool	OnMissingMidiDevices(const CMidiPortIDArray& Missing);
 	};
 
 // Public data

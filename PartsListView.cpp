@@ -16,6 +16,7 @@
 		06		15mar15	in OnListItemchanged, select when item is focused
 		07		15mar15	in OnListClick, add select part undo notification
 		08		24jul15	hook keys so main menus work when parent bar is floating
+		09		21aug15	convert mapping function names to string resources
 
 		parts list view
  
@@ -45,8 +46,8 @@ const CPartsListCtrl::COL_INFO	CPartsListView::m_ColInfo[COLUMNS] = {
 	#include "PartsListColDef.h"
 };
 
-const LPCTSTR CPartsListView::m_FunctionName[CPart::FUNCTIONS] = {
-	#define PARTFUNCTIONDEF(name) _T(#name),
+const int CPartsListView::m_FunctionName[CPart::FUNCTIONS] = {
+	#define PARTFUNCTIONDEF(name) IDS_PART_FUNC_##name,
 	#include "PartFunctionDef.h"
 };
 
@@ -119,7 +120,7 @@ CString CPartsListView::GetFunctionName(int FuncIdx)
 	// prevent crash in case later version specifies unknown function
 	if (FuncIdx >= CPart::FUNCTIONS)	// if function out of range
 		return(_T(""));
-	CString	s(m_FunctionName[FuncIdx]);
+	CString	s((LPCTSTR)m_FunctionName[FuncIdx]);
 	theApp.MakeStartCase(s);
 	return(s);
 }

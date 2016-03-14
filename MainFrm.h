@@ -21,6 +21,9 @@
 		11		13may15	add chord dictionary undo manager
 		12		10jun15	add chord bar
 		13		12jun15	make chord dictionary dialog a permanent member
+		14		10aug15	add edit part properties
+		15		23dec15	add OnMissingMidiDevices
+		16		02mar16	add harmony change handler
 
 		ChordEase main frame
  
@@ -116,9 +119,12 @@ public:
 	bool	OpenPatch(LPCTSTR Path);
 	void	OnUpdateSong();
 	void	OnSongPositionChange();
+	void	OnHarmonyChange();
 	void	UpdateHookMidiInput();
 	void	UpdateHookMidiOutput();
 	bool	CheckForUpdates(bool Explicit);
+	bool	EditPartProperties(CListCtrlExSel& List, bool IsSorted, bool NotifyUndo);
+	bool	OnMissingMidiDevices(const CMidiPortIDArray& Missing, CEngine *pEngine);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -151,6 +157,7 @@ protected:
 	afx_msg void OnEditInsert();
 	afx_msg void OnEditOptions();
 	afx_msg void OnEditPaste();
+	afx_msg void OnEditProperties();
 	afx_msg void OnEditRedo();
 	afx_msg void OnEditRename();
 	afx_msg void OnEditSelectAll();
@@ -189,6 +196,7 @@ protected:
 	afx_msg void OnUpdateEditDelete(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditInsert(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditPaste(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditProperties(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateEditRedo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditRename(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditSelectAll(CCmdUI* pCmdUI);
@@ -301,6 +309,13 @@ protected:
 		bool	m_SectionLastPass;	// true if last pass through current section
 	};
 	typedef UINT (CALLBACK *CKUPDATE_PTR)(HWND hWnd, LPCTSTR TargetAppName, UINT Flags);
+	class CHarmonyCache {
+	public:
+		CHarmonyCache();
+		int		m_Key;		// scale's transposition; normalized
+		int		m_Root;		// scale's first note, for inferring mode
+		int		m_Scale;	// scale's index within scale list
+	};
 
 // Constants
 	enum {	// control bar indices
@@ -364,11 +379,13 @@ protected:
 	CStatusCache	m_StatusCache;	// status bar indicator cached values
 	bool	m_MidiLearn;		// true if learning MIDI assignments
 	bool	m_MidiChaseEvents;	// true if chasing MIDI events
+	bool	m_MissingMidiDevs;	// true if handling missing MIDI devices
 	CModelessDlgPtr<CThreadsDlg>	m_ThreadsDlg;	// pointer to threads dialog
 	CModelessDlgPtr<CPianoDlg>	m_PianoDlg;	// pointer to piano dialog
 	CChordDictionaryDlg	m_ChordDictDlg;	// chord dictionary dialog
 	CString	m_RecordFilePath;	// record output file path
 	CMidiAssignsDlg	*m_MidiAssignsDlg;	// pointer to MIDI assignments dialog
+	CHarmonyCache	m_Harmony;	// cached harmony, for change detection
 
 // Overrides
 	virtual	void	SaveUndoState(CUndoState& State);

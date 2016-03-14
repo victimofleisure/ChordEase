@@ -11,6 +11,7 @@
 		01		18mar15	add search and extraction; copy elements individually
 		02		03apr15	add serialization
 		03		28may15	pass element by const reference
+		04		20dec15	add fast remove for unordered lists
  
 		dynamic array with a fixed maximum size
  
@@ -48,6 +49,7 @@ public:
 	void	InsertAt(int nIndex, const TYPE& Element, int nCount);
 	void	InsertAt(int nIndex, const CBoundArray& arr);
 	void	RemoveAt(int nIndex);
+	void	FastRemoveAt(int nIndex);
 	void	RemoveAll();
 	int		Find(TYPE Target, int iStart = 0) const;
 	int		ReverseFind(TYPE Target) const;
@@ -237,6 +239,15 @@ inline void CBoundArray<TYPE, MAX_SIZE>::RemoveAt(int nIndex)
 	int	nElems = m_Size;
 	for (int iElem = nIndex; iElem < nElems; iElem++)
 		m_Data[iElem] = m_Data[iElem + 1];
+}
+
+template<class TYPE, int MAX_SIZE>
+inline void CBoundArray<TYPE, MAX_SIZE>::FastRemoveAt(int nIndex)
+{
+	ASSERT(nIndex >= 0 && nIndex < m_Size);
+	m_Size--;
+	if (nIndex < m_Size)
+		m_Data[nIndex] = m_Data[m_Size];	// may reorder list
 }
 
 template<class TYPE, int MAX_SIZE>

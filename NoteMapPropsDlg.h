@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		17jun15	initial version
+		01		10aug15	add part enable
  
 		note mapping properties dialog
 
@@ -56,6 +57,7 @@ protected:
 	CComboBox	m_OutChanCombo;
 	CComboBox	m_ZoneLowCombo;
 	CComboBox	m_ZoneHighCombo;
+	CStatic	m_ItemCountStat;
 	//}}AFX_DATA
 
 // Generated message map functions
@@ -78,6 +80,7 @@ protected:
 	int		m_CurPort[PORTS];		// cached value of current port
 	CEdit	m_PortEdit[PORTS];
 	CEdit	m_DeviceEdit[PORTS];
+	int		m_PartEnable;	// part enable as combo selection index
 
 // Helpers
 	void	UpdateDeviceName(bool Out);

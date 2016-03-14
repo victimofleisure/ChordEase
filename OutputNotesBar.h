@@ -10,6 +10,8 @@
         00      18may14	initial version
 		01		15nov14	add custom piano size
 		02		29apr15	override OnShowChanged
+		03		24aug15	add velocity color option
+		04		29feb16	add key label types for intervals and scale tones
 
         output notes bar
  
@@ -44,6 +46,8 @@ public:
 public:
 	void	AddEvent(WPARAM wParam, LPARAM lParam);
 	void	RemoveAllNotes();
+	void	TimerHook();
+	void	UpdateKeyLabels();
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -60,21 +64,26 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
-	afx_msg void OnShowKeyLabels();
-	afx_msg void OnUpdateShowKeyLabels(CCmdUI *pCmdUI);
 	afx_msg void OnShowMetronome();
 	afx_msg void OnUpdateShowMetronome(CCmdUI *pCmdUI);
 	afx_msg void OnRotateLabels();
 	afx_msg void OnUpdateRotateLabels(CCmdUI *pCmdUI);
 	afx_msg void OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu);
+	afx_msg void OnColorVelocity();
+	afx_msg void OnUpdateColorVelocity(CCmdUI *pCmdUI);
 	//}}AFX_MSG
 	afx_msg void OnFilterPort(UINT nID);
 	afx_msg void OnFilterChannel(UINT nID);
 	afx_msg void OnPianoSize(UINT nID);
+	afx_msg void OnKeyLabelType(UINT nID);
 	afx_msg void OnExitMenuLoop(BOOL bIsTrackPopupMenu);
 	DECLARE_MESSAGE_MAP()
 
 // Types
+	struct PIANO_STATE {
+		#define OUTNOTESSTATEDEF(type, name, defval) type name;
+		#include "OutputNotesStateDef.h"	// generate code to define members
+	};
 	struct PIANO_RANGE {
 		int		StartNote;	// MIDI note number of keyboard's first note
 		int		KeyCount;	// total number of keys on keyboard
@@ -102,24 +111,24 @@ protected:
 		#include "OutputNotesSubmenuDef.h"	// generate submenu ID ranges
 		SMID_LAST,	// last command ID of submenus
 	};
+	enum {	//	key label types; must match key label submenu item order
+		KL_NONE,				// no key labels
+		KL_OUTPUT_NOTES,		// show output notes
+		KL_INTERVALS,			// show intervals
+		KL_SCALE_TONES,			// show scale tones
+		KEY_LABEL_TYPES
+	};
 
 // Member data
 	CPianoCtrl	m_Piano;		// piano control
 	int		m_NoteOns[MIDI_NOTES];	// note on count for each MIDI note
 	CMidiInst	m_Filter;		// selected MIDI port and channel, or -1 for all
-	int		m_PianoSize;		// index of current piano size
-	bool	m_ShowKeyLabels;	// true if showing key labels
-	bool	m_RotateLabels;		// if true, rotate labels sideways
-	bool	m_ShowMetronome;	// true if showing metronome notes
-	bool	m_UseCustomSize;	// true if using custom piano size
-	int		m_CustomStartNote;	// custom piano size start note
-	int		m_CustomKeyCount;	// custom piano size key count
+	PIANO_STATE	m_State;		// piano state
 
 // Overrides
 	virtual	void	OnShowChanged(BOOL bShow);
 
 // Helpers
-	void	UpdateKeyLabels();
 	void	UpdatePianoSize();
 	void	UpdateNotes();
 	void	ResetState();

@@ -14,7 +14,9 @@
 		04		16mar15	consolidate MIDI target's fixed info
 		05		23mar15	add MIDI shadow accessor
 		06		06apr15	in GetMidiAssignments, remove engine references
- 
+		07		22dec15	add device names to port ID class; bump file version
+		08		23dec15	in UpdatePorts, return missing devices
+
 		patch container
 
 */
@@ -27,7 +29,7 @@
 #include <math.h>	// for pow
 
 #define FILE_ID			_T("ChordEase")
-#define	FILE_VERSION	2
+#define	FILE_VERSION	3
 
 #define RK_FILE_ID		_T("FileID")
 #define RK_FILE_VERSION	_T("FileVersion")
@@ -47,6 +49,7 @@ CPatch::CPatch()
 	#define PATCHDEF(name, init) m_##name = init;
 	#include "PatchDef.h"	// generate code to initialize members
 	ZeroMemory(m_MidiShadow, sizeof(m_MidiShadow));
+	m_FileVersion = FILE_VERSION;
 }
 
 double CBasePatch::GetTempo() const
@@ -88,8 +91,12 @@ bool CPatch::Read(LPCTSTR Path)
 			AfxMessageBox(msg);
 			return(FALSE);
 		}
-		int	FileVersion = 0;
-		theApp.RdReg(RK_FILE_VERSION, FileVersion);
+		theApp.RdReg(RK_FILE_VERSION, m_FileVersion);
+		if (m_FileVersion > FILE_VERSION) {
+			CString	msg;
+			AfxFormatString1(msg, IDS_PATCH_NEWER_VERSION, Path);
+			AfxMessageBox(msg);
+		}
 		#define PATCHDEF(name, init) \
 			theApp.RdReg(_T(#name), m_##name);
 		#include "PatchDef.h"	// generate code to read members
@@ -158,8 +165,8 @@ void CPatch::Serialize(CArchive &ar)
 
 void CPatch::GetDeviceIDs(CMidiDeviceID& DevID) const
 {
-	m_InPortID.GetDeviceIDs(DevID.m_In);
-	m_OutPortID.GetDeviceIDs(DevID.m_Out);
+	m_InPortID.GetDeviceIDs(DevID.m_In.m_Name, DevID.m_In.m_ID);
+	m_OutPortID.GetDeviceIDs(DevID.m_Out.m_Name, DevID.m_Out.m_ID);
 }
 
 inline void CPatch::ReferencePort(int Port, CIntArrayEx& Refs, bool Enable)
@@ -193,22 +200,57 @@ bool CPatch::UpdatePort(int& Port, const CIntArrayEx& DevMap, bool Enable)
 	return(TRUE);
 }
 
-bool CPatch::UpdatePorts(const CMidiDeviceID& OldDevID, const CMidiDeviceID& NewDevID)
+bool CPatch::UpdatePorts(const CMidiDeviceID& OldDevID, const CMidiDeviceID& NewDevID, CMidiPortIDArray& Missing)
 {
-	CIntArrayEx	InRefs, OutRefs;
-	OldDevID.GetUpdateMaps(NewDevID, InRefs, OutRefs);
+	CPatch	PrevPatch(*this);	// make backup before updating
+	CIntArrayEx	InMap, OutMap;
+	bool	LegacyMode = m_FileVersion < 3;	// legacy port IDs didn't include device name
+	OldDevID.GetUpdateMaps(NewDevID, InMap, OutMap, LegacyMode);
 	int nErrors = 0;
+	#define InRefs InMap	// port iterator requires InRefs and OutRefs
+	#define OutRefs OutMap
+	#define PORT_ITER_DEST Refs
 	#define PORT_ITERATOR nErrors += !UpdatePort
 	#define PORT_ITER_CONST
 	#include "PatchPortIterator.h"	// generate code to iterate ports
+	#undef InRefs
+	#undef OutRefs
+	Missing.RemoveAll();
+	if (nErrors) {	// if missing devices
+		*this = PrevPatch;	// restore backup, reverting any port translations
+		CIntArrayEx	InRefs, OutRefs;
+		GetDeviceRefs(InMap.GetSize(), OutMap.GetSize(), InRefs, OutRefs);
+		GetMissingMidiDevices(OldDevID.m_In, "In", InRefs, InMap, Missing);
+		GetMissingMidiDevices(OldDevID.m_Out, "Out", OutRefs, OutMap, Missing);
+	} else {	// all devices found
+		if (LegacyMode) {	// if port IDs in legacy format
+			CreatePortIDs();	// upgrade port IDs to current format
+			m_FileVersion = FILE_VERSION;	// update file version number
+		}
+	}
 	return(!nErrors);
 }
 
-bool CPatch::UpdatePorts(const CMidiDeviceID& NewDevID)
+bool CPatch::UpdatePorts(const CMidiDeviceID& NewDevID, CMidiPortIDArray& Missing)
 {
 	CMidiDeviceID	OldDevID;
 	GetDeviceIDs(OldDevID);
-	return(UpdatePorts(OldDevID, NewDevID));
+	return(UpdatePorts(OldDevID, NewDevID, Missing));
+}
+
+void CPatch::GetMissingMidiDevices(const CMidiDeviceID::CDevInfo& DevInfo, CString DevType, 
+	const CIntArrayEx& DevRefs, const CIntArrayEx& DevMap, CMidiPortIDArray& Missing)
+{
+	int	nDevs = DevInfo.m_Name.GetSize();
+	for (int iDev = 0; iDev < nDevs; iDev++) {	// for each device
+		// if device name specified, and device not found but referenced
+		if (!DevInfo.m_Name[iDev].IsEmpty() && DevMap[iDev] < 0 && DevRefs[iDev]) {
+			// concatenate device type and device ID, separated by colon
+			CString	DevTypePlusID(DevType + ':' + DevInfo.m_ID[iDev]);
+			CMidiPortID	PortID(iDev, DevInfo.m_Name[iDev], DevTypePlusID);
+			Missing.Add(PortID);	// add to missing list
+		}
+	}
 }
 
 void CPatch::CreatePortIDs()
@@ -216,20 +258,20 @@ void CPatch::CreatePortIDs()
 	CMidiDeviceID	DevID;
 	DevID.Create();	// get current device IDs
 	CIntArrayEx	InRefs, OutRefs;
-	int	nIns = INT64TO32(DevID.m_In.GetSize());
-	int	nOuts = INT64TO32(DevID.m_Out.GetSize());
+	int	nIns = DevID.m_In.m_ID.GetSize();
+	int	nOuts = DevID.m_Out.m_ID.GetSize();
 	GetDeviceRefs(nIns, nOuts, InRefs, OutRefs);	// get device reference counts
 	m_InPortID.RemoveAll();	// empty destination port ID arrays
 	m_OutPortID.RemoveAll();
 	for (int iIn = 0; iIn < nIns; iIn++) {	// for each input device
 		if (InRefs[iIn]) {	// if device has references
-			CMidiPortID	id(iIn, DevID.m_In[iIn]);
+			CMidiPortID	id(iIn, DevID.m_In.m_Name[iIn], DevID.m_In.m_ID[iIn]);
 			m_InPortID.Add(id);
 		}
 	}
 	for (int iOut = 0; iOut < nOuts; iOut++) {	// for each output device
 		if (OutRefs[iOut]) {	// if device has references
-			CMidiPortID	id(iOut, DevID.m_Out[iOut]);
+			CMidiPortID	id(iOut, DevID.m_Out.m_Name[iOut], DevID.m_Out.m_ID[iOut]);
 			m_OutPortID.Add(id);
 		}
 	}

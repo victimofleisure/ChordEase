@@ -1369,6 +1369,10 @@ SOURCE=.\UndoTest.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\VelocityPalette.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Version.h
 # End Source File
 # Begin Source File

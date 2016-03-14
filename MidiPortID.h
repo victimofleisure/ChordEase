@@ -9,6 +9,8 @@
 		rev		date	comments
 		00		08nov13	initial version
  		01		09sep14	use default memberwise copy
+		02		21dec15	use extended string array
+		03		22dec15	add device names
  
 		MIDI port ID container
 
@@ -23,11 +25,12 @@ class CMidiPortID : public WCopyable {
 public:
 // Construction
 	CMidiPortID();
-	CMidiPortID(int Port, const CString& Name);
+	CMidiPortID(int Port, const CString& Name, const CString& ID);
 
 // Public data
 	int		m_Port;			// port index
-	CString	m_Name;			// device identifier
+	CString	m_Name;			// device name
+	CString	m_ID;			// device identifier
 
 // Operations
 	bool	operator==(const CMidiPortID& PortID) const;
@@ -42,7 +45,7 @@ inline bool CMidiPortID::operator!=(const CMidiPortID& PortID) const
 class CMidiPortIDArray : public CArrayEx<CMidiPortID, CMidiPortID&> {
 public:
 // Attributes
-	void	GetDeviceIDs(CStringArray& DevID) const;
+	void	GetDeviceIDs(CStringArrayEx& DevName, CStringArrayEx& DevID) const;
 
 // Operations
 	void	Write(LPCTSTR SectionName) const;

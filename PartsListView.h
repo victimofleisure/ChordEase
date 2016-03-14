@@ -11,6 +11,7 @@
         01      23apr14	add tooltip support
 		02		15jul14	add OnCommandHelp
 		03		25jul15	remove part function enum
+		04		21aug15	convert mapping function names to string resources
 
 		parts list view
  
@@ -100,7 +101,7 @@ protected:
 
 // Constants
 	static const CPartsListCtrl::COL_INFO	m_ColInfo[COLUMNS];
-	static const LPCTSTR	m_FunctionName[CPart::FUNCTIONS];
+	static const int	m_FunctionName[CPart::FUNCTIONS];
 
 // Data members
 	CPartsListCtrl	m_List;		// child list control

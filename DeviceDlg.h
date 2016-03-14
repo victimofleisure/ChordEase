@@ -9,6 +9,7 @@
 		rev		date	comments
         00      13oct13	initial version
 		01		28apr14	add state column; refactor to use callbacks
+		02		21dec15	use extended string array
 
         device dialog
  
@@ -85,7 +86,7 @@ protected:
 	int		m_ListTop;		// top edge of list control in client coords
 	CStatic	m_ListCap[DEVICE_TYPES];		// list caption for each device type
 	CReportCtrl	m_List[DEVICE_TYPES];		// report control for each device type
-	CStringArray	m_DeviceName[DEVICE_TYPES];	// device names for each device type
+	CStringArrayEx	m_DeviceName[DEVICE_TYPES];	// device names for each device type
 	CString	m_DeviceState[DEVICE_STATES];	// device state strings
 
 // Helpers

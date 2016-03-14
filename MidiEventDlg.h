@@ -13,6 +13,7 @@
 		03		22apr14	add context menu
 		04		23may14	add controller names
 		05		07jul14	add reset filters
+		06		21dec15	use extended string array
 
         MIDI event dialog
  
@@ -128,9 +129,9 @@ protected:
 
 // Member data
 	CMidiEventArray	m_Event;		// array of MIDI events
-	CStringArray	m_DeviceName;	// array of MIDI device names
-	CStringArray	m_ChanStatName;	// channel status message names
-	CStringArray	m_SysStatName;	// system status message names
+	CStringArrayEx	m_DeviceName;	// array of MIDI device names
+	CStringArrayEx	m_ChanStatName;	// channel status message names
+	CStringArrayEx	m_SysStatName;	// system status message names
 	CString	m_NullDeviceName;		// device name for out of range port numbers
 	int		m_FilterHeight;			// height of filter drop list, in pixels
 	CComboBox	m_FilterCombo[COLUMNS];	// array of filter combo boxes

@@ -27,6 +27,18 @@
 		17		11jun15	add MIDI targets for lowest note, chord resets alt
 		18		27jun15	add chord dictionary MIDI target
 		19		11jul15	support repeated sections and tagging while stopped
+		20		21aug15	add harmony groups
+		21		25aug15	add bank select
+		22		31aug15	add harmonizer chord tone constraint
+		23		20nov15	in harmonizer, optimize omit melody case
+		24		19dec15	add harmonizer crossing enable
+		25		20dec15	in OnNoteOff, use fast remove
+		26		23dec15	add OnMissingMidiDevices
+		27		03jan16	in FixHeldNotes, add harmony group collision handling
+		28		17jan16	transpose input note before passing to GetCompChord
+		29		19jan16	in Create, add OnTimeChange to fix fast playback bug
+		30		02feb16	move previous harmony note test to function; update inlining
+		31		02mar16	add chord change notification
 
 		engine
  
@@ -77,18 +89,20 @@ CEngine::CPartState::CPartState()
 {
 	m_Anticipation = 0;
 	m_HarmIdx = 0;
-	m_AltComp = FALSE;
 	m_CompPrevHarmIdx = -1;
 	m_ArpPeriod = 0;
-	m_ArpDescending = FALSE;
 	m_AutoPrevNote = -1;
 	m_LeadPrevHarmNote = 0;
 	m_BassApproachLength = 0;
-	m_BassApproachTrigger = FALSE;
 	m_BassTargetChord = 0;
 	m_BassTargetTime = INT_MIN;
 	m_InputCCNote = 0;
 	m_InputCCNoteVel = 100;
+	m_HarmonySubparts = 0;
+	m_AltComp = FALSE;
+	m_ArpDescending = FALSE;
+	m_BassApproachTrigger = FALSE;
+	m_HarmonyLeader = -1;
 }
 
 void CEngine::CPartState::Reset()
@@ -184,6 +198,11 @@ void CEngine::OnEndRecording()
 {
 }
 
+bool CEngine::OnMissingMidiDevices(const CMidiPortIDArray& Missing)
+{
+	return(FALSE);
+}
+
 bool CEngine::Create()
 {
 //	_tprintf(_T("CEngine::Create thread=%d\n"), GetCurrentThreadId());
@@ -205,6 +224,7 @@ bool CEngine::Create()
 	CMidiOut::GetDeviceNames(m_MidiOutName);
 	m_MidiDevID.Create();	// get current device IDs
 	MakeHarmony();	// set default harmony
+	OnTimeChange();	// init time-dependent vars
 	return(TRUE);
 }
 
@@ -362,6 +382,7 @@ void CEngine::RunInit()
 		ps.Reset();
 		ps.OnTimeChange(m_Patch.m_Part[iPart], m_Patch.m_PPQ);
 	}
+	UpdateHarmonyGroups();
 }
 
 void CEngine::PlayInit()
@@ -725,7 +746,6 @@ void CEngine::SetBasePatch(const CBasePatch& Patch)
 bool CEngine::SetPatch(const CPatch& Patch, bool UpdatePorts)
 {
 //	_tprintf(_T("CEngine::SetPatch UpdatePorts=%d\n"), UpdatePorts);
-	CPatch	PrevPatch(m_Patch);
 	{
 		STOP_ENGINE(*this);	// for thread safety
 		const CBasePatch&	BasePatch = Patch;
@@ -733,8 +753,12 @@ bool CEngine::SetPatch(const CPatch& Patch, bool UpdatePorts)
 		m_Patch = Patch;
 		m_PartState.SetSize(Patch.GetPartCount());	// resize part state array
 		if (UpdatePorts) {	// if updating ports
-			if (!m_Patch.UpdatePorts(m_MidiDevID))	// update ports for current devices
-				Notify(NC_MISSING_DEVICE);
+			CMidiPortIDArray	Missing;
+			while (!m_Patch.UpdatePorts(m_MidiDevID, Missing)) {	// update ports for current devices
+				if (!OnMissingMidiDevices(Missing))
+					break;	// canceled
+				m_MidiDevID.Create();	// refresh device IDs before retrying
+			}
 		}
 		m_PatchUpdatePending = TRUE;	// defer updating patches until devices reopen
 	}	// engine may restart
@@ -751,6 +775,46 @@ void CEngine::SetPart(int PartIdx, const CPart& Part)
 	m_PartState[PartIdx].OnTimeChange(Part, m_Patch.m_PPQ);
 	if (!Part.CompareTargets(PrevPart) && IsRunning())	// if MIDI targets changed
 		UpdateMidiAssigns();
+	if (Part.m_Lead.Harm.Subpart != PrevPart.m_Lead.Harm.Subpart	// if subpart changed
+	|| memcmp(&Part.m_In, &PrevPart.m_In, sizeof(Part.m_In)))	// or input settings changed
+		UpdateHarmonyGroups();
+}
+
+void CEngine::UpdateHarmonyGroups()
+{
+	bool	SubpartChange = FALSE;
+	int	nParts = m_Patch.GetPartCount();
+	int	iPart = 0;
+	while (iPart < nParts) {	// while parts remain
+		// if current part is a harmony subpart and preceding part isn't
+		if (m_Patch.m_Part[iPart].m_Lead.Harm.Subpart && iPart > 0 
+		&& !m_Patch.m_Part[iPart - 1].m_Lead.Harm.Subpart) {
+			int	iLeader = iPart - 1;	// preceding part is harmony group leader
+			CMidiInst	LeadInst(m_Patch.m_Part[iLeader].m_In.Inst);
+			do {	// determine harmony group size by skipping over subparts
+				m_PartState[iPart].m_HarmonySubparts = 0;	// subpart can't have subparts
+				m_PartState[iPart].m_HarmonyLeader = iLeader;	// indicate subpart
+				CPart&	part = m_Patch.m_Part[iPart];
+				// subpart must have null zone and same input instrument as leader
+				if (part.m_In.ZoneHigh || LeadInst != part.m_In.Inst) {	// if not so
+					ZeroMemory(&part.m_In, sizeof(part.m_In));	// zero input struct
+					part.m_In.Inst = LeadInst;	// copy leader's instrument
+					SubpartChange = TRUE;	// set change flag
+				}
+				iPart++;	// increment loop variable
+			} while (iPart < nParts && m_Patch.m_Part[iPart].m_Lead.Harm.Subpart);
+			int	nSubparts = iPart - iLeader - 1;	// total number of subparts
+			nSubparts = min(nSubparts, MAX_HARMONY_GROUP_SIZE - 1);
+			m_PartState[iLeader].m_HarmonySubparts = nSubparts;
+			m_PartState[iLeader].m_HarmonyLeader = iLeader;
+		} else {	// not start of harmony group
+			m_PartState[iPart].m_HarmonySubparts = 0;
+			m_PartState[iPart].m_HarmonyLeader = -1;
+			iPart++;	// increment loop variable
+		}
+	}
+	if (SubpartChange)	// if any subparts were modified
+		Notify(NC_SUBPART_CHANGE);
 }
 
 inline int CEngine::NormParamToEnum(double Val, int Enums)
@@ -780,7 +844,7 @@ inline bool CEngine::UpdateTrigger(bool& State, bool Input)
 
 #define UMT(target, val) (TargetChanged = UpdateMidiTarget(target, val))
 
-inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int Val)
+void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int Val)
 {
 	enum {
 		LEAD_IN_ENUMS = 5,		// 0 to 4 measures
@@ -863,17 +927,36 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				case CPart::MIDI_TARGET_OUT_FIX_HELD_NOTES:
 					UMT(part.m_Out.FixHeldNotes, pos > 0);
 					break;
+				case CPart::MIDI_TARGET_OUT_BANK_SELECT_MSB:
+					UMT(part.m_Out.BankSelectMSB, NormParamToMidiVal(pos));
+					OutputControl(part.m_Out.Inst, BANK_SELECT, part.m_Out.BankSelectMSB);
+					break;
+				case CPart::MIDI_TARGET_OUT_BANK_SELECT_LSB:
+					UMT(part.m_Out.BankSelectLSB, NormParamToMidiVal(pos));
+					OutputControl(part.m_Out.Inst, BANK_SELECT_LSB, part.m_Out.BankSelectLSB);
+					break;
 				case CPart::MIDI_TARGET_LEAD_HARM_INTERVAL:
 					UMT(part.m_Lead.Harm.Interval, round(pos * CDiatonic::DEGREES));
 					break;
 				case CPart::MIDI_TARGET_LEAD_HARM_OMIT_MELODY:
 					UMT(part.m_Lead.Harm.OmitMelody, pos > 0);
 					break;
+				case CPart::MIDI_TARGET_LEAD_HARM_CROSSING:
+					UMT(part.m_Lead.Harm.Crossing, pos > 0);
+					break;
 				case CPart::MIDI_TARGET_LEAD_HARM_STATIC_MIN:
 					UMT(part.m_Lead.Harm.StaticMin, round(pos * NOTES));
 					break;
 				case CPart::MIDI_TARGET_LEAD_HARM_STATIC_MAX:
 					UMT(part.m_Lead.Harm.StaticMax, round(pos * NOTES));
+					break;
+				case CPart::MIDI_TARGET_LEAD_HARM_CHORD_DEGREE:
+					UMT(part.m_Lead.Harm.Chord.Degree, static_cast<short>(
+						NormParamToEnum(pos, CDiatonic::DEGREES)));
+					break;
+				case CPart::MIDI_TARGET_LEAD_HARM_CHORD_SIZE:
+					UMT(part.m_Lead.Harm.Chord.Size, static_cast<short>(
+						NormParamToEnum(pos, CDiatonic::DEGREES)));
 					break;
 				case CPart::MIDI_TARGET_COMP_VOICING:
 					UMT(part.m_Comp.Voicing, NormParamToEnum(pos, CHORD_VOICINGS));
@@ -1023,7 +1106,7 @@ inline void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int V
 				TargetChanged = SetChordMode(GetCurHarmony().m_Type, NormParamToEnum(pos, MODES));
 				break;
 			case CPatch::MIDI_TARGET_CHORD_DICTIONARY:
-				TargetChanged = TRUE;	// implemented externally
+				// implemented externally
 				break;
 			default:
 				NODEFAULTCASE;	// missing target handler
@@ -1180,7 +1263,6 @@ void CEngine::OnNewSong()
 
 bool CEngine::ReadSong(LPCTSTR Path)
 {
-	bool	WasRunning = IsRunning();
 	{
 		STOP_ENGINE(*this);	// for thread safety
 		CString	ext(PathFindExtension(Path));
@@ -1198,8 +1280,6 @@ bool CEngine::ReadSong(LPCTSTR Path)
 		m_PatchUpdatePending = TRUE;	// defer updating patches until devices reopen
 	}	// engine may restart
 	OnTimeChange();
-	if (!Run(WasRunning))	// possibly restart engine
-		return(FALSE);
 	return(TRUE);
 }
 
@@ -1212,11 +1292,17 @@ bool CEngine::ResetSong()
 	return(TRUE);
 }
 
+#define PARAM_CHANGED(Cur, Prev, Param) \
+	(Cur.Param >= 0 && (Prev == NULL || Cur.Param != Prev->Param))
+
+#define PATCH_PARAM_CHANGED(Param) PARAM_CHANGED(Inst, PrevInst, Param)
+#define PART_PARAM_CHANGED(Param) PARAM_CHANGED(Part, PrevPart, Param)
+
 void CEngine::UpdatePatch(const AUTO_INST& Inst, const AUTO_INST *PrevInst)
 {
-	if (Inst.Patch >= 0 && (PrevInst == NULL || Inst.Patch != PrevInst->Patch))
+	if (PATCH_PARAM_CHANGED(Patch))
 		OutputPatch(Inst.Inst, Inst.Patch);
-	if (Inst.Volume >= 0 && (PrevInst == NULL || Inst.Volume != PrevInst->Volume))
+	if (PATCH_PARAM_CHANGED(Volume))
 		OutputControl(Inst.Inst, VOLUME, Inst.Volume);
 }
 
@@ -1227,14 +1313,16 @@ void CEngine::UpdatePatch(const CBasePatch& Patch, const CBasePatch *PrevPatch)
 
 void CEngine::UpdatePartPatch(const CPart& Part, const CPart *PrevPart)
 {
-	if (Part.m_Out.Patch >= 0 
-	&& (PrevPart == NULL || Part.m_Out.Patch != PrevPart->m_Out.Patch))
-		OutputPatch(Part.m_Out.Inst, Part.m_Out.Patch);
-	if (Part.m_Out.Volume >= 0 
-	&& (PrevPart == NULL || Part.m_Out.Volume != PrevPart->m_Out.Volume))
+	if (PART_PARAM_CHANGED(m_Out.Volume))
 		OutputControl(Part.m_Out.Inst, VOLUME, Part.m_Out.Volume);
 	if (PrevPart == NULL || Part.m_Out.LocalControl != PrevPart->m_Out.LocalControl)
 		OutputControl(Part.m_Out.Inst, LOCAL_CONTROL, Part.m_Out.LocalControl);
+	if (PART_PARAM_CHANGED(m_Out.BankSelectMSB))
+		OutputControl(Part.m_Out.Inst, BANK_SELECT, Part.m_Out.BankSelectMSB);
+	if (PART_PARAM_CHANGED(m_Out.BankSelectLSB))
+		OutputControl(Part.m_Out.Inst, BANK_SELECT_LSB, Part.m_Out.BankSelectLSB);
+	if (PART_PARAM_CHANGED(m_Out.Patch))
+		OutputPatch(Part.m_Out.Inst, Part.m_Out.Patch);
 }
 
 void CEngine::UpdatePatches()
@@ -1245,18 +1333,26 @@ void CEngine::UpdatePatches()
 		UpdatePartPatch(m_Patch.m_Part[iPart]);
 }
 
-bool CEngine::OnDeviceChange()
+bool CEngine::OnDeviceChange(bool& Changed)
 {
 //	_tprintf(_T("CEngine::OnDeviceChange\n"));
 	CMidiDeviceID	NewDevID;
 	NewDevID.Create();	// get current device IDs
-	if (NewDevID == m_MidiDevID)	// if all device IDs match cached values
-		return(TRUE);	// device change is spurious or non-MIDI
+	if (NewDevID == m_MidiDevID) {	// if all device IDs match cached values
+		Changed = FALSE;	// device change is spurious or non-MIDI
+		return(TRUE);
+	}
+	Changed = TRUE;	// device actually changed
 //	_tprintf(_T("device change\n"));
 	STOP_ENGINE(*this);	// for thread safety
-	if (!m_Patch.UpdatePorts(m_MidiDevID, NewDevID))	// update port indices
-		Notify(NC_MISSING_DEVICE);
+	CMidiPortIDArray	Missing;
+	while (!m_Patch.UpdatePorts(m_MidiDevID, NewDevID, Missing)) {	// update port indices
+		if (!OnMissingMidiDevices(Missing))
+			break;	// canceled
+		NewDevID.Create();	// refresh device IDs before retrying
+	}
 	m_MidiDevID = NewDevID;	// update cached values
+	m_PatchUpdatePending = TRUE;	// defer updating patches until devices reopen
 	return(TRUE);
 }
 
@@ -1338,11 +1434,12 @@ void CEngine::FixHeldNotes()
 		if (part.m_Out.FixHeldNotes) {	// if part wants held notes fixed
 			switch (part.m_Function) {
 			case CPart::FUNC_BYPASS:
-				break;
+				break;	// no operation
 			case CPart::FUNC_COMP:
 				{
 					CScale	NewComp;
-					GetCompChord(harm, map.m_InNote, part.m_Comp.Voicing, 0, NewComp);
+					GetCompChord(harm, map.GetTransposedInputNote(part),
+						part.m_Comp.Voicing, m_PartState[map.m_PartIdx].m_AltComp, NewComp);
 					NewComp.Difference(map.m_OutNote);	// remove common tones
 					int	notes = map.m_OutNote.GetSize();
 					int	nPlayed;
@@ -1358,7 +1455,6 @@ void CEngine::FixHeldNotes()
 								break;
 							int	iNearest = NewComp.FindLeastInterval(note);
 							CNote	NearestNote(NewComp[iNearest]);
-							NearestNote.ShiftToNearestOctave(note);
 							if (iNote < nPlayed) {	// if note has been played
 								OutputNote(part.m_Out.Inst, note, 0);	// reset current note
 								OutputNote(part.m_Out.Inst, NearestNote, map.m_InVel);	// output corrected note
@@ -1382,6 +1478,22 @@ void CEngine::FixHeldNotes()
 						if (NearestNote != NormNote
 						&& (part.m_Function != CPart::FUNC_BASS || NormNote != harm.m_Bass)) {
 							NearestNote += note.CBelow();
+							int	iLeader = m_PartState[map.m_PartIdx].m_HarmonyLeader;
+							if (iLeader >= 0) {	// if part belongs to harmony group
+								CFixedArray<bool, MIDI_NOTES>	Used;	// get group's note usage
+								GetHarmonyGroupNotes(map.m_InNote, iLeader, Used);
+								if (Used[NearestNote]) {	// if nearest note in use, handle collision
+									CScale	scale(harm.m_ChordScale);	// copy chord scale to local var
+									scale.FastRemoveAt(iDegree);	// remove nearest note from scale
+									while (scale.GetSize()) {	// if scale has any notes remaining
+										iDegree = scale.FindNearest(NormNote);	// find nearest note
+										NearestNote = scale[iDegree] + note.CBelow();	// shift octave
+										if (!Used[NearestNote])	// if nearest note unused by group
+											break;	// success, early out
+										scale.FastRemoveAt(iDegree);	// remove nearest note from scale
+									}
+								}
+							}
 							OutputNote(part.m_Out.Inst, note, 0);	// reset current note
 							OutputNote(part.m_Out.Inst, NearestNote, map.m_InVel);	// output corrected note
 //							_tprintf(_T("corrected %s: %s -> %s\n"), CNote(map.m_InNote).MidiName(), note.MidiName(), NearestNote.MidiName());
@@ -1393,6 +1505,25 @@ void CEngine::FixHeldNotes()
 			default:
 				NODEFAULTCASE;
 			}
+		}
+	}
+}
+
+inline void CEngine::GetHarmonyGroupNotes(CNote InNote, int LeaderPartIdx, CFixedArray<bool, MIDI_NOTES>& Used) const
+{
+	// assume caller already entered note map critical section 
+	// entire note map must be iterated, because harmony group's mappings 
+	// aren't necessarily contiguous, due to OnNoteOff's use of FastRemoveAt
+	ZeroMemory(Used, MIDI_NOTES);	// initially no notes are used
+	int	maps = m_NoteMap.GetSize();
+	for (int iMap = 0; iMap < maps; iMap++) {	// for each mapping
+		const CNoteMap&	map = m_NoteMap[iMap];
+		// if mapping's part belongs to specified harmony group
+		if (m_PartState[map.m_PartIdx].m_HarmonyLeader == LeaderPartIdx
+		&& map.m_InNote == InNote) {	// and mapping is for specified input note
+			int	notes = map.m_OutNote.GetSize();
+			for (int iNote = 0; iNote < notes; iNote++)	// for each output note
+				Used[map.m_OutNote[iNote]] = TRUE;	// indicate useage
 		}
 	}
 }
@@ -1629,7 +1760,119 @@ bool CEngine::ApplyNonDiatonicRule(int Rule, CNote& Note)
 	return(TRUE);
 }
 
-inline void CEngine::OnNoteOn(CMidiInst Inst, CNote Note, int Vel)
+__forceinline bool CEngine::PreviousHarmonyUsable(const CPart& Part, CNote OutNote, CNote PrevHarmNote)
+{
+	int	delta;
+	if (Part.m_Lead.Harm.Crossing)	// if crossing allowed
+		delta = abs(OutNote - PrevHarmNote);
+	else {	// no crossing
+		if (Part.m_Lead.Harm.Interval > 0)	// if harmony above
+			delta = PrevHarmNote - OutNote;
+		else	// harmony below
+			delta = OutNote - PrevHarmNote;
+	}
+	return (delta >= Part.m_Lead.Harm.StaticMin	&& delta <= Part.m_Lead.Harm.StaticMax);
+}
+
+void CEngine::OutputHarmonyGroup(int FirstPart, CNote InNote, CNote OutNote, int Vel)
+{
+	CFixedArray<CNote, MAX_HARMONY_GROUP_SIZE>	HarmNoteArr;
+	CFixedArray<bool, MAX_HARMONY_GROUP_SIZE>	IsStatic;
+	ZeroMemory(IsStatic, sizeof(IsStatic));	// initially no parts are static
+	CFixedArray<BYTE, MIDI_NOTES>	Refs;
+	ZeroMemory(Refs, sizeof(Refs));	// initially no notes are referenced
+	int	nSubparts = m_PartState[FirstPart].m_HarmonySubparts;
+	ASSERT(nSubparts > 0);	// else logic error
+	int	iMbr;
+	for (iMbr = 0; iMbr <= nSubparts; iMbr++) {	// for each harmony group member
+		int	iPart = FirstPart + iMbr;	// compute member's part index
+		const CPart&	part = m_Patch.m_Part[iPart];
+		if (part.m_Enable) {	// if part enabled
+			if (part.m_Lead.Harm.Interval) {	// if harmonizing
+				if (!part.m_Lead.Harm.OmitMelody)	// if part outputs melody
+					Refs[OutNote]++;	// add reference to melody note
+				CPartState&	ps = m_PartState[iPart]; 
+				int	iHarmony = ps.m_HarmIdx;
+				const CHarmony&	harm = m_Harmony[iHarmony];
+				CNote	HarmNote;
+				if (part.m_Lead.Harm.StaticMax > 0) {	// if static harmony enabled
+					harm.m_ChordScale.Correct(ps.m_LeadPrevHarmNote);
+					if (PreviousHarmonyUsable(part, OutNote, ps.m_LeadPrevHarmNote)
+					&& !Refs[ps.m_LeadPrevHarmNote]) {	// and note is available
+						HarmNote = ps.m_LeadPrevHarmNote;	// use static harmony
+						IsStatic[iMbr] = TRUE;	// mark voice as static
+					} else {	// static harmony no good
+						HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
+							part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
+						ps.m_LeadPrevHarmNote = HarmNote;	// update static harmony
+						IsStatic[iMbr] = part.m_Lead.Harm.ChordInt >= 0;
+					}
+				} else {	// static harmony disabled
+					HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
+						part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
+					IsStatic[iMbr] = part.m_Lead.Harm.ChordInt >= 0;
+				}
+				Refs[HarmNote]++;	// add reference to harmony note
+				HarmNoteArr[iMbr] = HarmNote;
+			} else {	// not harmonizing
+				Refs[OutNote]++;	// add reference to melody note
+				HarmNoteArr[iMbr] = OutNote;
+			}
+		} else	// part disabled
+			HarmNoteArr[iMbr] = -1;	// invalid note
+	}
+	bool	bChanged;
+	do {	// until we get through entire group without making any changes
+		bChanged = FALSE;
+		for (iMbr = 0; iMbr <= nSubparts; iMbr++) {	// for each harmony group member
+			if (IsStatic[iMbr]) {	// if harmony is static
+				int	HarmNote = HarmNoteArr[iMbr];
+				if (Refs[HarmNote] > 1) {	// if static harmony collides
+					Refs[HarmNote]--;	// unreference static harmony note
+					// generate regular harmony note instead
+					int	iPart = FirstPart + iMbr;	// compute member's part index
+					int	iHarmony = m_PartState[iPart].m_HarmIdx;
+					const CHarmony&	harm = m_Harmony[iHarmony];
+					const CPart&	part = m_Patch.m_Part[iPart];
+					HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
+						part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
+					// if regular note also collides and is constrained to chord tones
+					if (Refs[HarmNote] > 0 && part.m_Lead.Harm.ChordInt >= 0) {
+						HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
+							part.m_Lead.Harm.Interval, 0);	// remove constraint
+					}
+					m_PartState[iPart].m_LeadPrevHarmNote = HarmNote;	// update static harmony
+					Refs[HarmNote]++;	// reference regular harmony note
+					HarmNoteArr[iMbr] = HarmNote;
+					IsStatic[iMbr] = FALSE;	// harmony is no longer static
+					bChanged = TRUE;	// indicate that change was made
+				}
+			}
+		}
+	} while (bChanged);
+	for (iMbr = 0; iMbr <= nSubparts; iMbr++) {	// for each harmony group member
+		int	iPart = FirstPart + iMbr;	// compute member's part index
+		const CPart&	part = m_Patch.m_Part[iPart];
+		if (part.m_Enable) {	// if part enabled
+			if (part.m_Lead.Harm.Interval) {	// if harmonizing
+				if (part.m_Lead.Harm.OmitMelody) {	// if omitting melody note
+					MapNote(InNote, Vel, iPart, HarmNoteArr[iMbr]);	// output harmony note
+				} else {	// output melody and harmony notes
+					CScale	OutScale;
+					OutScale.SetSize(2);
+					OutScale[0] = OutNote;
+					OutScale[1] = HarmNoteArr[iMbr];
+					MapChord(InNote, Vel, iPart, OutScale);
+				}
+			} else {	// not harmonizing
+				if (!iMbr)	// for first part only, to avoid duplicate notes
+					MapNote(InNote, Vel, iPart, OutNote);	// output lead note
+			}
+		}
+	}
+}
+
+void CEngine::OnNoteOn(CMidiInst Inst, CNote Note, int Vel)
 {
 //	_tprintf(_T("OnNoteOn %d:%d %s %d\n"), Inst.Port, Inst.Chan, Note.MidiName(), Vel);
 	int	parts = GetPartCount();
@@ -1658,33 +1901,38 @@ inline void CEngine::OnNoteOn(CMidiInst Inst, CNote Note, int Vel)
 						OutNote = GetLeadNote(TransNote, iPart);
 					else
 						OutNote = GetBassNote(TransNote, iPart);
+					if (m_PartState[iPart].m_HarmonySubparts > 0) {
+						OutputHarmonyGroup(iPart, Note, OutNote, Vel);
+						break;
+					}
 					if (part.m_Lead.Harm.Interval) {	// if harmonizing
 						CPartState&	ps = m_PartState[iPart]; 
 						int	iHarmony = ps.m_HarmIdx;
 						const CHarmony&	harm = m_Harmony[iHarmony];
-						CNote	HarmNote(harm.m_ChordScale.HarmonizeNote(
-							OutNote, part.m_Lead.Harm.Interval));
+						CNote	HarmNote;
 						if (part.m_Lead.Harm.StaticMax > 0) {	// if static harmony enabled
 							harm.m_ChordScale.Correct(ps.m_LeadPrevHarmNote);
-							CNote	delta = abs(OutNote - ps.m_LeadPrevHarmNote);
-							// if static harmony's distance from melody is within range
-							if (delta >= part.m_Lead.Harm.StaticMin	
-							&& delta <= part.m_Lead.Harm.StaticMax)
+							if (PreviousHarmonyUsable(part, OutNote, ps.m_LeadPrevHarmNote))
 								HarmNote = ps.m_LeadPrevHarmNote;	// use static harmony
-							else	// static harmony no good
+							else {	// static harmony no good
+								HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
+									part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
 								ps.m_LeadPrevHarmNote = HarmNote;	// update static harmony
+							}
+						} else {	// static harmony disabled
+							HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
+								part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
 						}
-						CScale	OutScale;
+//						_tprintf(_T("%s %s\n"), OutNote.MidiName(), HarmNote.MidiName());
 						if (part.m_Lead.Harm.OmitMelody) {	// if omitting melody note
-							OutScale.SetSize(1);
-							OutScale[0] = HarmNote;
+							MapNote(Note, Vel, iPart, HarmNote);	// output harmony note
 						} else {	// output melody and harmony notes
+							CScale	OutScale;
 							OutScale.SetSize(2);
 							OutScale[0] = OutNote;
 							OutScale[1] = HarmNote;
+							MapChord(Note, Vel, iPart, OutScale);
 						}
-//						_tprintf(_T("%s %s\n"), OutNote.MidiName(), HarmNote.MidiName());
-						MapChord(Note, Vel, iPart, OutScale);
 					} else {	// not harmonizing
 						MapNote(Note, Vel, iPart, OutNote);	// output lead note
 					}
@@ -1730,7 +1978,7 @@ inline void CEngine::OnNoteOn(CMidiInst Inst, CNote Note, int Vel)
 	}
 }
 
-inline void CEngine::OnNoteOff(CMidiInst Inst, CNote Note)
+void CEngine::OnNoteOff(CMidiInst Inst, CNote Note)
 {
 //	_tprintf(_T("OnNoteOff %d:%d %s\n"), Inst.Port, Inst.Chan, Note.MidiName());
 	WCritSec::Lock	lk(m_NoteMapCritSec);	// lock map during iteration
@@ -1744,12 +1992,12 @@ inline void CEngine::OnNoteOff(CMidiInst Inst, CNote Note)
 				map.m_OutNote.SetSize(map.m_ArpIdx);	// only reset notes that were played
 			OutputChord(part.m_Out.Inst, map.m_OutNote, 0);	// reset output notes
 //			_tprintf(_T("removed %s (%s) [%d]\n"), map.m_InNote.MidiName(), map.m_OutNote.NoteMidiNames(), part.m_Out.Inst.Chan);
-			m_NoteMap.RemoveAt(iMap);	// remove mapping
+			m_NoteMap.FastRemoveAt(iMap);	// remove mapping; fast remove may reorder list
 		}
 	}
 }
 
-inline void CEngine::OnControl(CMidiInst Inst, int Ctrl, int Val)
+void CEngine::OnControl(CMidiInst Inst, int Ctrl, int Val)
 {
 //	_tprintf(_T("OnControl %d:%d %d %d\n"), Inst.Port, Inst.Chan, Ctrl, Val);
 	if (m_MidiAssign[Inst.Port].Control[Inst.Chan][Ctrl]) {	// if event is assigned
@@ -1769,7 +2017,7 @@ inline void CEngine::OnControl(CMidiInst Inst, int Ctrl, int Val)
 	}
 }
 
-inline void CEngine::OnWheel(CMidiInst Inst, int Wheel)
+void CEngine::OnWheel(CMidiInst Inst, int Wheel)
 {
 //	_tprintf(_T("OnWheel %d:%d %d\n"), Inst.Port, Inst.Chan, Wheel);
 	if (m_MidiAssign[Inst.Port].Wheel[Inst.Chan]) {	// if event is assigned
@@ -1787,7 +2035,7 @@ inline void CEngine::OnWheel(CMidiInst Inst, int Wheel)
 	}
 }
 
-inline void CEngine::OnProgramChange(CMidiInst Inst, int Val)
+void CEngine::OnProgramChange(CMidiInst Inst, int Val)
 {
 //	_tprintf(_T("OnProgramChange %d:%d %d\n"), Inst.Port, Inst.Chan, Val);
 	if (m_MidiAssign[Inst.Port].ProgChange[Inst.Chan]) {	// if event is assigned
@@ -1805,7 +2053,7 @@ inline void CEngine::OnProgramChange(CMidiInst Inst, int Val)
 	}
 }
 
-inline void CEngine::OnChannelAftertouch(CMidiInst Inst, int Val)
+void CEngine::OnChannelAftertouch(CMidiInst Inst, int Val)
 {
 //	_tprintf(_T("OnChannelAftertouch %d:%d %d\n"), Inst.Port, Inst.Chan, Val);
 	if (m_MidiAssign[Inst.Port].ChanAft[Inst.Chan]) {	// if event is assigned
@@ -1823,7 +2071,7 @@ inline void CEngine::OnChannelAftertouch(CMidiInst Inst, int Val)
 	}
 }
 
-__forceinline void CEngine::OnMidiIn(int Port, MIDI_MSG Msg)
+__forceinline void CEngine::OnMidiIn(int Port, MIDI_MSG Msg)	// only one caller
 {
 //	_tprintf(_T("%x %x %x\n"), Msg.stat, Msg.p1, Msg.p2);
 #if SHOW_ENGINE_STATS
@@ -1972,7 +2220,7 @@ void CEngine::MakeHarmony()
 	}
 }
 
-inline void CEngine::TimerWork()
+__forceinline void CEngine::TimerWork()	// only one caller
 {
 //	_tprintf(_T("CEngine::TimerWork %d %d\n"), GetCurrentThreadId(), GetThreadPriority(GetCurrentThread()));
 	while (1) {
@@ -2053,7 +2301,8 @@ inline void CEngine::TimerWork()
 								if (map.m_ArpIdx < notes) {	// if more notes to play
 									if (IsHarmonyChange && part.m_Comp.Arp.Adapt && map.m_ArpIdx && !map.m_ArpLoops) {
 										CScale	NewComp;
-										GetCompChord(m_Harmony[ps.m_HarmIdx], map.m_InNote, part.m_Comp.Voicing, 0, NewComp);
+										GetCompChord(m_Harmony[ps.m_HarmIdx], map.GetTransposedInputNote(part),
+											part.m_Comp.Voicing, m_PartState[map.m_PartIdx].m_AltComp, NewComp);
 										CScale	diff(NewComp);
 										diff.Difference(map.m_OutNote);	// remove common tones
 										for (int iNote = map.m_ArpIdx; iNote < notes; iNote++) {	// for unplayed output notes
@@ -2063,7 +2312,6 @@ inline void CEngine::TimerWork()
 													break;
 												int	iNearest = diff.FindLeastInterval(note);
 												CNote	NearestNote(diff[iNearest]);
-												NearestNote.ShiftToNearestOctave(note);
 //												_tprintf(_T("adapted %s: %s -> %s\n"), CNote(map.m_InNote).MidiName(), note.MidiName(), NearestNote.MidiName());
 												map.m_OutNote[iNote] = NearestNote;
 												diff.RemoveAt(iNearest);
@@ -2071,10 +2319,29 @@ inline void CEngine::TimerWork()
 										}
 									}
 									if (map.m_ArpTimer >= ArpPeriod) {
-										int	note = chord[map.m_ArpIdx];
-										if (map.m_ArpLoops)	// if not first pass
-											OutputNote(part.m_Out.Inst, note, 0);	// reset current note
-										else {	// first pass
+										CNote	note(chord[map.m_ArpIdx]);
+										if (map.m_ArpLoops) {	// if not first pass
+											CNote	OldNote(note);
+											if (part.m_Comp.Arp.Adapt) {	// if adaptive
+												CScale	NewComp;
+												GetCompChord(m_Harmony[ps.m_HarmIdx], map.GetTransposedInputNote(part),
+													part.m_Comp.Voicing, m_PartState[map.m_PartIdx].m_AltComp, NewComp);
+												while (!NewComp.IsEmpty()) {
+													int	iNearest = NewComp.FindLeastInterval(note);
+													CNote	NearestNote(NewComp[iNearest]);
+													if (NearestNote == note)
+														break;
+													if (chord.Find(NearestNote) < 0) {
+//														_tprintf(_T("adapted %s: %s -> %s\n"), CNote(map.m_InNote).MidiName(), note.MidiName(), NearestNote.MidiName());
+														note = NearestNote;
+														chord[map.m_ArpIdx] = NearestNote;
+														break;
+													}
+													NewComp.FastRemoveAt(iNearest);
+												}
+											}
+											OutputNote(part.m_Out.Inst, OldNote, 0);	// reset current note
+										} else {	// first pass
 											if (!map.m_ArpIdx) {	// if block chord
 												if (part.m_Comp.Arp.Repeat)	// if repeating
 													map.m_ArpLoops = 1;	// block chord counts as first pass
@@ -2086,7 +2353,7 @@ inline void CEngine::TimerWork()
 										map.m_ArpIdx++;
 										// if repeating and out of notes
 										if (part.m_Comp.Arp.Repeat && map.m_ArpIdx >= notes) {
-											if (part.m_Comp.Arp.Order == CPart::COMP::ARP_ALTERNATE)
+											if (part.m_Comp.Arp.Order == CPart::COMP::ARP_ALTERNATE && notes > 1)
 												map.m_ArpIdx = 1;
 											else
 												map.m_ArpIdx = 0;
@@ -2104,8 +2371,10 @@ inline void CEngine::TimerWork()
 			}
 		}
 		if (playing) {	// if time is running
-			if (IsChordChange)	// if chord changed
+			if (IsChordChange) {	// if chord changed
 				FixHeldNotes();	// check and fix notes spanning chord change
+				Notify(NC_CHORD_CHANGE);
+			}
 			m_Elapsed++;	// increment elapsed time
 			if (m_Tick < m_Section.m_EndTick)	// if before end of section
 				m_Tick++;	// proceed to next tick

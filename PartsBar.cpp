@@ -14,6 +14,8 @@
 		04		04apr15	move GetInsertPos implemention into list control
 		05		04apr15	in OnListDrop, move compensation into list control
 		06		11jun15	bump clipboard format for new part MIDI targets
+		07		21aug15	in OnListItemSelect, only enable controls if needed
+		08		25aug15	bump clipboard format for bank select
 
         parts bar
  
@@ -43,7 +45,7 @@ IMPLEMENT_DYNAMIC(CPartsBar, CMySizingControlBar);
 #define RK_PARTS_LIST_WIDTH _T("PartsListWidth")
 
 CPartsBar::CPartsBar() :
-	m_Clipboard(NULL, _T("ChordEasePartArray3"))	// change whenever part layout changes
+	m_Clipboard(NULL, _T("ChordEasePartArray4"))	// change whenever part layout changes
 {
 	m_szHorz = CSize(400, 200);	// default size when horizontally docked
 	m_szVert = m_szHorz;	// default size when vertically docked
@@ -79,9 +81,12 @@ void CPartsBar::SetPart(int PartIdx, const CPart& Part)
 void CPartsBar::OnListItemSelect(int PartIdx)
 {
 	ASSERT(PartIdx < GetPartCount());
-	if (PartIdx >= 0)
+	bool	PrevEnable = m_CurPart >= 0;
+	bool	Enable = PartIdx >= 0;
+	if (Enable != PrevEnable)	// if enable state is changing
+		m_PageView->EnableControls(Enable);
+	if (Enable)
 		m_PageView->SetPart(gEngine.GetPart(PartIdx));
-	m_PageView->EnableControls(PartIdx >= 0);
 	m_CurPart = PartIdx;
 	gEngine.SetCurPart(PartIdx);
 }

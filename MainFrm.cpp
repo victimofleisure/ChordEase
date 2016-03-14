@@ -39,6 +39,12 @@
 		29		27jun15	add chord dictionary MIDI target
 		30		11jul15	support repeated sections and tagging while stopped
 		31		25jul15	add undo code for saving/restoring entire patch
+		32		10aug15	add edit part properties
+		33		21aug15	add subpart change notification
+		34		23aug15	in GetActivePane, check if descendant of bar has focus
+		35		23dec15	add OnMissingMidiDevices
+		36		29feb16	in OnTimer, add output notes bar timer hook
+		37		02mar16	add harmony change handler
 
 		ChordEase main frame
  
@@ -64,6 +70,7 @@
 #include "MessageBoxCheck.h"
 #include "RecordPlayerDlg.h"
 #include "PositionDlg.h"
+#include "NoteMapPropsDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -127,6 +134,7 @@ CMainFrame::CMainFrame() :
 	m_OptionsPage = 0;
 	m_MidiLearn = FALSE;
 	m_MidiChaseEvents = FALSE;
+	m_MissingMidiDevs = FALSE;
 	m_MidiAssignsDlg = NULL;
 }
 
@@ -139,7 +147,7 @@ CMainFrame::~CMainFrame()
 	}
 }
 
-CMainFrame::CStatusCache::CStatusCache() : m_Meter(INT_MAX, INT_MAX)
+inline CMainFrame::CStatusCache::CStatusCache() : m_Meter(INT_MAX, INT_MAX)
 {
 	m_Key = INT_MAX;
 	m_Pos = INT_MAX;
@@ -147,6 +155,13 @@ CMainFrame::CStatusCache::CStatusCache() : m_Meter(INT_MAX, INT_MAX)
 	m_TempoMultiple = 0;
 	m_SectionIndex = 0;
 	m_SectionLastPass = FALSE;
+}
+
+inline CMainFrame::CHarmonyCache::CHarmonyCache()
+{
+	m_Key = -1;
+	m_Root = -1;
+	m_Scale = -1;
 }
 
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
@@ -227,8 +242,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	SetTimer(BUSY_TIMER_ID, BUSY_TIMER_PERIOD, NULL);
 	// delay starting engine until after song is loaded; avoids engine restart
 	PostMessage(UWM_DELAYEDCREATE);
-	if (m_Options.m_Other.AutoCheckUpdates)	// if automatically checking for updates
-		AfxBeginThread(CheckForUpdatesThreadFunc, this);	// launch thread to check
 	return 0;
 }
 
@@ -374,6 +387,7 @@ bool CMainFrame::CreateEngine()
 	gEngine.SetAutoRewind(theApp.GetProfileInt(REG_SETTINGS, RK_AUTO_REWIND, TRUE) != 0);
 	if (!gEngine.Create())	// create engine
 		return(FALSE);
+	m_OutputNotesBar.UpdateKeyLabels();	// depends on engine's current harmony
 	CString	ChordDictPath(theApp.MakeDataFolderPath(CHORD_DICTIONARY_FILE_NAME, TRUE));
 	gEngine.ReadChordDictionary(ChordDictPath);	// read chord dictionary
 	bool	CmdLinePatchOpen;
@@ -452,11 +466,9 @@ int CMainFrame::GetActivePane()
 		if (m_PaneInfo[iPane]) {	// if pane has a parent control bar
 			CControlBar	*pBar = GetControlBar(m_PaneInfo[iPane]);
 			ASSERT(pBar != NULL);	// pane's parent bar should exist
-			if (pBar != NULL) {	// also check in release, just in case
-				CWnd	*pWnd = pBar->GetWindow(GW_CHILD);	// get bar's view
-				if (pWnd != NULL && ::IsChild(pWnd->m_hWnd, hFocusWnd))
-					return(iPane);	// child of bar's view has focus
-			}
+			// if pane's parent bar exists and descendant of bar has focus
+			if (pBar != NULL && ::IsChild(pBar->m_hWnd, hFocusWnd))
+				return(iPane);	
 		}
 	}
 	return(-1);	// window not found
@@ -527,6 +539,33 @@ void CMainFrame::OnSongPositionChange()
 			m_StatusBar.SetPaneText(SBP_POSITION, gEngine.GetTickString());
 			m_StatusCache.m_Pos = pos;
 		}
+	}
+	if (gEngine.GetSectionIndex() != m_StatusCache.m_SectionIndex
+	|| gEngine.SectionLastPass() != m_StatusCache.m_SectionLastPass) {
+		m_ToolBar.OnUpdateCmdUI(this, FALSE);	// update toolbar buttons
+		m_StatusCache.m_SectionIndex = gEngine.GetSectionIndex(); 
+		m_StatusCache.m_SectionLastPass = gEngine.SectionLastPass();
+	}
+	OnHarmonyChange();
+}
+
+void CMainFrame::OnHarmonyChange()
+{
+	// piano dialog shows part's harmony which can have harmonic anticipation,
+	// so update it regardless of whether engine's global harmony has changed
+	if (!m_PianoDlg.IsEmpty())	// if piano dialog exists
+		m_PianoDlg->TimerHook();	// update piano dialog
+	const CEngine::CHarmony&	harm = gEngine.GetCurHarmony();
+	if (m_Harmony.m_Key != harm.m_Key	// if engine's global harmony changed
+	|| m_Harmony.m_Root != harm.m_ChordScale[0]
+	|| m_Harmony.m_Scale != harm.m_Scale) {
+		m_Harmony.m_Key = harm.m_Key;	// update cached harmony
+		m_Harmony.m_Root = harm.m_ChordScale[0];
+		m_Harmony.m_Scale = harm.m_Scale;
+		if (m_ChordBar.IsWindowVisible())	// if chord bar visible
+			m_ChordBar.UpdateChord();	// update chord bar
+		if (m_OutputNotesBar.IsWindowVisible())	// if output notes bar visible
+			m_OutputNotesBar.TimerHook();	// update output notes bar
 	}
 }
 
@@ -611,6 +650,31 @@ void CMainFrame::WriteMidiTargetsTable(LPCTSTR Path)
 #error MakeMidiTargetsTable doesn't belong in Release
 #endif	// _DEBUG
 #endif // WRITE_MIDI_TARGETS_TABLE
+
+bool CMainFrame::OnMissingMidiDevices(const CMidiPortIDArray& Missing, CEngine *pEngine)
+{
+	int	nIDs = Missing.GetSize();
+	ASSERT(nIDs);	// empty missing devices array is logic error
+	if (!nIDs)	// if no missing devices
+		return(FALSE);	// nothing to do but cancel
+	m_MissingMidiDevs = TRUE;	// enter missing MIDI devices state
+	if (!m_IsCreated)	// if app not fully up yet
+		return(FALSE);	// avoid modal dialog; OnDelayedCreate will retry
+	CString	msg((LPCTSTR)IDS_ENGMSG_MISSING_DEVICE);
+	msg += LDS(IDS_ENGMSG_MISSING_DEV_LIST_HDR);	// append column header
+	for (int iID = 0; iID < nIDs; iID++) {	// for each missing device
+		const CMidiPortID&	id = Missing[iID];
+		// m_ID contains device type and device ID, separated by colon
+		int	nTypeLen = id.m_ID.Find(':');	// find separator
+		CString	sDevType(id.m_ID.Left(nTypeLen));	// extract device type
+		CString	sPort;
+		sPort.Format(_T("%d"), id.m_Port);
+		msg += sDevType + '\t' + sPort + '\t' + id.m_Name + '\n';
+	}
+	int	retc = AfxMessageBox(msg, MB_RETRYCANCEL | MB_ICONEXCLAMATION);	// go modal
+	m_MissingMidiDevs = FALSE;	// exit missing MIDI devices state
+	return(retc == IDRETRY);	// true if retry, else cancel
+}
 
 void CMainFrame::SetTempo(double Tempo)
 {
@@ -699,6 +763,42 @@ UINT CMainFrame::CheckForUpdatesThreadFunc(LPVOID Param)
 	}
 	END_CATCH
 	return(0);
+}
+
+bool CMainFrame::EditPartProperties(CListCtrlExSel& List, bool IsSorted, bool NotifyUndo)
+{
+	CIntArrayEx	sel;
+	List.GetSelection(sel);
+	int	nSels = sel.GetSize();
+	if (!nSels)	// if no selection
+		return(FALSE);		// nothing to do
+	CNoteMapPropsDlg	dlg;
+	int	iSel;
+	for (iSel = 0; iSel < nSels; iSel++) {	// for selected items
+		int	iPart;
+		if (IsSorted) {	 // if list is sorted, item data is part index
+			iPart = INT64TO32(List.GetItemData(sel[iSel]));	// dereference sort
+			sel[iSel] = iPart;	// convert selection index to part index
+		} else	// list not sorted
+			iPart = sel[iSel];	// item index same as part index
+		dlg.SetPart(gEngine.GetPart(iPart));	// add part to dialog
+	}
+	HWND	hFocusWnd = ::GetFocus();	// save focus
+	W64INT	retc = dlg.DoModal();
+	if (::IsWindow(hFocusWnd) && ::IsWindowVisible(hFocusWnd))	// extra cautious
+		::SetFocus(hFocusWnd);	// restore focus
+	if (retc != IDOK)	// if changes weren't saved
+		return(FALSE);
+	if (NotifyUndo)	// if undo notification requested
+		NotifyEdit(0, UCODE_PATCH);
+	for (iSel = 0; iSel < nSels; iSel++) {	// for selected items
+		int	iPart = sel[iSel];	// load part index, accounting for sort
+		CPart	part(gEngine.GetPart(iPart));	// copy engine part to buffer
+		dlg.GetPart(part);	// update buffered part from dialog
+		SetPart(iPart, part);	// update engine part
+	}
+	List.Invalidate();
+	return(TRUE);
 }
 
 void CMainFrame::GetClipboardUndoInfo(CUndoState& State)
@@ -995,6 +1095,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_EDIT_INSERT, OnEditInsert)
 	ON_COMMAND(ID_EDIT_OPTIONS, OnEditOptions)
 	ON_COMMAND(ID_EDIT_PASTE, OnEditPaste)
+	ON_COMMAND(ID_EDIT_PROPERTIES, OnEditProperties)
 	ON_COMMAND(ID_EDIT_REDO, OnEditRedo)
 	ON_COMMAND(ID_EDIT_RENAME, OnEditRename)
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
@@ -1033,6 +1134,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditDelete)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_INSERT, OnUpdateEditInsert)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdateEditPaste)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PROPERTIES, OnUpdateEditProperties)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_RENAME, OnUpdateEditRename)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, OnUpdateEditSelectAll)
@@ -1129,6 +1231,7 @@ BOOL CMainFrame::DestroyWindow()
 
 void CMainFrame::OnClose() 
 {
+	SendMessage(WM_KEYUP, VK_MENU);	// release menu key to hide menu mnemonics
 	if (!m_PatchDoc.GetTitle().IsEmpty()) {	// if patch was read from file
 		if (!m_PatchDoc.CanCloseFrame(this))	// if save check fails
 			return;	// cancel close
@@ -1142,7 +1245,6 @@ void CMainFrame::OnDropFiles(HDROP hDropInfo)
 {
 	UINT	Files = DragQueryFile(hDropInfo, 0xFFFFFFFF, 0, 0);
 	TCHAR	Path[MAX_PATH];
-	CStringArray	PathList;
 	for (UINT i = 0; i < Files; i++) {	// for each dropped file
 		DragQueryFile(hDropInfo, i, Path, MAX_PATH);
 		if (CChordEaseApp::IsPatchPath(Path))	// if patch file
@@ -1158,14 +1260,6 @@ void CMainFrame::OnTimer(W64UINT nIDEvent)
 	switch (nIDEvent) {
 	case VIEW_TIMER_ID:
 		OnSongPositionChange();	// update song position in UI
-		if (gEngine.GetSectionIndex() != m_StatusCache.m_SectionIndex
-		|| gEngine.SectionLastPass() != m_StatusCache.m_SectionLastPass) {
-			m_ToolBar.OnUpdateCmdUI(this, FALSE);	// update toolbar buttons
-			m_StatusCache.m_SectionIndex = gEngine.GetSectionIndex(); 
-			m_StatusCache.m_SectionLastPass = gEngine.SectionLastPass();
-		}
-		if (!m_PianoDlg.IsEmpty())	// if piano dialog exists
-			m_PianoDlg->TimerHook();	// relay timer message
 		return;
 	case BUSY_TIMER_ID:
 		// prevent system from sleeping, logging out, blanking display, etc.
@@ -1295,6 +1389,8 @@ LRESULT	CMainFrame::OnModelessDestroy(WPARAM wParam, LPARAM lParam)
 LRESULT	CMainFrame::OnDelayedCreate(WPARAM wParam, LPARAM lParam)
 {
 	m_IsCreated = TRUE;	// set done flag first in case we throw an exception
+	if (m_MissingMidiDevs)	// if missing MIDI devices, reload patch
+		gEngine.SetPatch(gEngine.GetPatch(), TRUE);	// update ports
 	theApp.BoostThreads();	// boost priority of MIDI input callbacks (if needed)
 	gEngine.Run(TRUE);	// start engine after document loads song
 	LoadToolDialogState();	// order matters; do before updating hook states
@@ -1305,6 +1401,8 @@ LRESULT	CMainFrame::OnDelayedCreate(WPARAM wParam, LPARAM lParam)
 		theApp.m_pszAppName, MB_YESNO, IDNO, _T("TryDemo"));
 	if (retc == IDYES)	// if user wants to try demo
 		OnAppDemo();
+	if (m_Options.m_Other.AutoCheckUpdates)	// if automatically checking for updates
+		AfxBeginThread(CheckForUpdatesThreadFunc, this);	// launch thread to check
 	return(0);
 }
 
@@ -1318,9 +1416,6 @@ LRESULT	CMainFrame::OnEngineNotify(WPARAM wParam, LPARAM lParam)
 {
 	switch (wParam) {
 	case CEngine::NC_END_OF_SONG:
-		break;
-	case CEngine::NC_MISSING_DEVICE:
-		AfxMessageBox(IDS_ENGMSG_MISSING_DEVICE);
 		break;
 	case CEngine::NC_DEVICE_STATE_CHANGE:
 		if (m_DeviceBar.IsWindowVisible())
@@ -1347,8 +1442,16 @@ LRESULT	CMainFrame::OnEngineNotify(WPARAM wParam, LPARAM lParam)
 	case CEngine::NC_TRANSPORT_CHANGE:
 		m_ToolBar.OnUpdateCmdUI(this, FALSE);	// update toolbar buttons
 		break;
+	case CEngine::NC_TAG_EXIT:
+		break;
 	case CEngine::NC_TAP_TEMPO:
 		m_PatchBar.SetPatch(gEngine.GetPatch());
+		break;
+	case CEngine::NC_SUBPART_CHANGE:
+		m_PartsBar.SetPatch(gEngine.GetPatch());
+		break;
+	case CEngine::NC_CHORD_CHANGE:
+		OnSongPositionChange();
 		break;
 	}
 	return(0);
@@ -1390,29 +1493,36 @@ LRESULT	CMainFrame::OnMidiTargetChange(WPARAM wParam, LPARAM lParam)
 			NotifyEdit(0, UCODE_MIDI_CHASE, UE_COALESCE | UE_INSIGNIFICANT);
 			m_PatchBar.ChaseMidiTarget(iPage, iTarget);	// chase to target
 		}
-		if (bChanged) {	// if target parameter changed
-			const CPatch&	patch = gEngine.GetPatch();
-			m_PatchBar.UpdatePage(iPage, patch);	// update page
-			switch (iTarget) {
-			case CPatch::MIDI_TARGET_TRANSPOSE:
-			case CPatch::MIDI_TARGET_CHORD_ROOT:
-			case CPatch::MIDI_TARGET_CHORD_TYPE:
-			case CPatch::MIDI_TARGET_CHORD_BASS:
-				m_View->UpdateChart();	// update chart view
-				break;
-			case CPatch::MIDI_TARGET_CHORD_SCALE:
-			case CPatch::MIDI_TARGET_CHORD_MODE:
-				m_ChordBar.UpdateChordIfVisible();
-				if (m_ChordDictDlg.IsWindowVisible())
-					m_ChordDictDlg.UpdateDictionary();
-				break;
-			case CPatch::MIDI_TARGET_CHORD_DICTIONARY:
-				if (m_ChordDictDlg.GetSubDictionaryCount()) {
-					int	val = gEngine.GetPatch().m_MidiShadow[CPatch::MIDI_TARGET_CHORD_DICTIONARY];
-					int	iSub = val * m_ChordDictDlg.GetSubDictionaryCount() / MIDI_NOTES;
-					m_ChordDictDlg.SelectSubDictionary(iSub);
+		switch (iTarget) {
+		case CPatch::MIDI_TARGET_REWIND:
+		case CPatch::MIDI_TARGET_NEXT_CHORD:
+		case CPatch::MIDI_TARGET_PREV_CHORD:
+		case CPatch::MIDI_TARGET_SONG_POSITION:
+			OnSongPositionChange();
+			break;
+		case CPatch::MIDI_TARGET_CHORD_DICTIONARY:
+			if (m_ChordDictDlg.GetSubDictionaryCount()) {
+				int	val = gEngine.GetPatch().m_MidiShadow[CPatch::MIDI_TARGET_CHORD_DICTIONARY];
+				int	iSub = val * m_ChordDictDlg.GetSubDictionaryCount() / MIDI_NOTES;
+				m_ChordDictDlg.SelectSubDictionary(iSub);
+			}
+			break;
+		default:
+			if (bChanged) {	// if target parameter changed
+				const CPatch&	patch = gEngine.GetPatch();
+				m_PatchBar.UpdatePage(iPage, patch);	// update page
+				switch (iTarget) {
+				case CPatch::MIDI_TARGET_TRANSPOSE:
+				case CPatch::MIDI_TARGET_CHORD_ROOT:
+				case CPatch::MIDI_TARGET_CHORD_TYPE:
+				case CPatch::MIDI_TARGET_CHORD_BASS:
+					m_View->UpdateChart();	// update chart view
+					break;
+				case CPatch::MIDI_TARGET_CHORD_SCALE:
+				case CPatch::MIDI_TARGET_CHORD_MODE:
+					OnHarmonyChange();
+					break;
 				}
-				break;
 			}
 		}
 	}
@@ -1517,7 +1627,16 @@ LRESULT CMainFrame::OnMidiOutputData(WPARAM wParam, LPARAM lParam)
 
 LRESULT	CMainFrame::OnDeviceNodeChange(WPARAM wParam, LPARAM lParam)
 {
-	if (gEngine.OnDeviceChange()) {	// if device actually changed
+//	_tprintf(_T("OnDeviceNodeChange m_MissingMidiDevs=%d\n"), m_MissingMidiDevs);
+	bool	UpdateUI = FALSE;
+	if (m_MissingMidiDevs) {	// if already in missing MIDI devices state
+		UpdateUI = TRUE;	// avoid modal reentrance, but update user interface
+	} else {	// not in missing MIDI devices state
+		bool	Changed;
+		if (gEngine.OnDeviceChange(Changed))	// notify engine of possible device change
+			UpdateUI = Changed;	// only update user interface if device actually changed
+	}
+	if (UpdateUI) {	// if user interface needs updating
 		UpdateViews();
 		if (m_MidiInputBar.IsWindowVisible())
 			m_MidiInputBar.UpdateDevices();
@@ -1696,6 +1815,22 @@ void CMainFrame::OnEditOptions()
 		ApplyOptions(PrevOpts);	// apply edited options
 	} else	// canceled
 		m_Options = PrevOpts;	// restore previous options
+}
+
+void CMainFrame::OnEditProperties()
+{
+	// if accelerator included Alt key and we display a modal dialog,
+	// main menu's mnemonics get stuck in visible (underlined) state
+	SendMessage(WM_KEYUP, VK_MENU);	// release menu key to hide menu mnemonics
+	if (m_PartsBar.ListHasFocus())
+		EditPartProperties(m_PartsBar.GetListCtrl(), FALSE, TRUE);	// not sorted, notify undo
+	else if (m_View->HasFocus())
+		m_View->SendMessage(WM_COMMAND, ID_EDIT_CHORD_PROPS);
+}
+
+void CMainFrame::OnUpdateEditProperties(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_PartsBar.GetSelectedCount());
 }
 
 void CMainFrame::OnPatchNew() 

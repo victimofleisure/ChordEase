@@ -9,6 +9,9 @@
 		rev		date	comments
 		00		09jun15	initial version
 		01		02mar16	add harmony change handler
+		02		26mar16	use IsVisible for more reliable results
+		03		06feb17	account for patch transposition
+		04		07feb17	in note combos, show key-appropriate accidentals
 
 		chord toolbar
  
@@ -45,6 +48,7 @@ const int CChordBar::m_InitWidth[CONTROLS] = {
 CChordBar::CChordBar()
 {
 	memset(&m_Cache, -1, sizeof(m_Cache));
+	m_Cache.SongKey = C;
 	m_DelayedInitDone = FALSE;
 	m_ChordDictChange = FALSE;
 }
@@ -66,8 +70,25 @@ BOOL CChordBar::LoadToolBar(UINT nIDResource)
 	DWORD	sz = GetToolBarCtrl().GetButtonSize();
 	GetToolBarCtrl().SetButtonSize(CSize(1, HIWORD(sz)));	// make dummy button as narrow as possible
 	SetWindowText(LDS(IDR_CHORD_BAR));
-	PostMessage(UWM_DELAYEDINIT);
 	return TRUE;
+}
+
+void CChordBar::OnDelayedInit()
+{
+	InitNoteCombos();
+	InitChordTypeCombo();
+	for (int iScale = 0; iScale < SCALES; iScale++) {	// for each scale
+		CString	s(CDiatonic::ScaleName(iScale));
+		CChordEaseApp::SnakeToStartCase(s);
+		m_Scale.AddString(s);
+	}
+	for (int iMode = 0; iMode < MODES; iMode++) {	// for each mode
+		CString	s(CDiatonic::ModeName(iMode));
+		CChordEaseApp::SnakeToStartCase(s);
+		m_Mode.AddString(s);
+	}
+	m_DelayedInitDone = TRUE;
+	UpdateChord();
 }
 
 CSize CChordBar::CalcDynamicLayout(int nLength, DWORD dwMode)
@@ -78,6 +99,13 @@ CSize CChordBar::CalcDynamicLayout(int nLength, DWORD dwMode)
 		sz.cx -= 1;
 	GetToolBarCtrl().HideButton(ID_CHORD_BAR_DUMMY, TRUE);	// hide dummy button again
 	return sz;
+}
+
+void CChordBar::InitNoteCombos()
+{
+	CPatchGeneralDlg::InitNoteCombo(m_Root, m_Cache.SongKey);
+	CPatchGeneralDlg::InitNoteCombo(m_Bass, m_Cache.SongKey);
+	m_Bass.InsertString(0, _T("*"));	// insert root item
 }
 
 void CChordBar::InitChordTypeCombo()
@@ -97,7 +125,7 @@ void CChordBar::UpdateChordTypes()
 
 void CChordBar::OnChordDictionaryChange(bool Compatible)
 {
-	if (IsWindowVisible()) {	// if we're shown
+	if (IsVisible()) {	// if we're shown
 		if (!Compatible)	// if dictionaries are incompatible
 			UpdateChordTypes();	// update chord types
 		UpdateChord();	// always update chord
@@ -113,6 +141,15 @@ void CChordBar::UpdateChord()
 	if (m_ChordDictChange) {	// if dictionary changed while we were hidden
 		UpdateChordTypes();
 		m_ChordDictChange = FALSE;
+	}
+	CNote	nSongKey(gEngine.GetSongKey());
+	if (nSongKey != m_Cache.SongKey) {	// if song key changed
+		m_Root.ResetContent();
+		m_Bass.ResetContent();
+		m_Cache.SongKey = nSongKey;	// order matters
+		InitNoteCombos();
+		m_Cache.Root = -1;	// combo current selection is lost
+		m_Cache.Bass = -1;
 	}
 	const CEngine::CHarmony&	harm = gEngine.GetCurHarmony();
 	int	iRoot = harm.m_ChordScale[0];
@@ -184,32 +221,10 @@ BEGIN_MESSAGE_MAP(CChordBar, CMyToolBar)
 	ON_CBN_SELCHANGE(ID_CHORD_BAR_TYPE, OnSelchangeType)
 	ON_MESSAGE(WM_COMMANDHELP, OnCommandHelp)
 	//}}AFX_MSG_MAP
-	ON_MESSAGE(UWM_DELAYEDINIT, OnDelayedInit)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CChordBar message handlers
-
-LRESULT CChordBar::OnDelayedInit(WPARAM wParam, LPARAM lParam)
-{
-	// initialize combo boxes
-	CPatchGeneralDlg::InitNoteCombo(m_Root);
-	CPatchGeneralDlg::InitNoteCombo(m_Bass);
-	m_Bass.InsertString(0, _T("*"));	// insert root item
-	InitChordTypeCombo();
-	for (int iScale = 0; iScale < SCALES; iScale++) {	// for each scale
-		CString	s(CDiatonic::ScaleName(iScale));
-		CChordEaseApp::SnakeToStartCase(s);
-		m_Scale.AddString(s);
-	}
-	for (int iMode = 0; iMode < MODES; iMode++) {	// for each mode
-		CString	s(CDiatonic::ModeName(iMode));
-		CChordEaseApp::SnakeToStartCase(s);
-		m_Mode.AddString(s);
-	}
-	m_DelayedInitDone = TRUE;
-	return 0;
-}
 
 LRESULT CChordBar::OnCommandHelp(WPARAM wParam, LPARAM lParam)
 {
@@ -222,8 +237,11 @@ void CChordBar::OnSelchangeRoot()
 	int	iRoot = m_Root.GetCurSel();
 	if (iRoot >= 0 && iRoot != m_Cache.Root) {	// if root valid and changed
 		int	iChord = PreChordEdit();
-		gEngine.SetChordRoot(iChord, iRoot);
 		m_Cache.Root = iRoot;
+		// engine transposes root, so untranspose it to avoid ratcheting
+		CNote	nRoot(iRoot);
+		nRoot.TransposeNormal(-gEngine.GetPatch().m_Transpose);	// untranspose
+		gEngine.SetChordRoot(iChord, nRoot);
 		PostChordEdit();
 	}
 }
@@ -233,8 +251,8 @@ void CChordBar::OnSelchangeType()
 	int	iType = m_Type.GetCurSel();
 	if (iType >= 0 && iType != m_Cache.Type) {	// if type valid and changed
 		int	iChord = PreChordEdit();
-		gEngine.SetChordType(iChord, iType);
 		m_Cache.Type = iType;
+		gEngine.SetChordType(iChord, iType);
 		PostChordEdit();
 	}
 }
@@ -244,8 +262,12 @@ void CChordBar::OnSelchangeBass()
 	int	iBass = m_Bass.GetCurSel();
 	if (iBass >= 0 && iBass != m_Cache.Bass) {	// if bass valid and changed
 		int	iChord = PreChordEdit();
-		gEngine.SetChordBass(iChord, iBass - 1);	// compensate for root item
 		m_Cache.Bass = iBass;
+		// engine transposes bass, so untranspose it to avoid ratcheting
+		CNote	nBass(iBass - 1);	// compensate for root item
+		if (nBass >= 0)	// if slash chord
+			nBass.TransposeNormal(-gEngine.GetPatch().m_Transpose);	// untranspose
+		gEngine.SetChordBass(iChord, nBass);
 		PostChordEdit();
 	}
 }

@@ -13,6 +13,7 @@
  		03		09sep14	use default memberwise copy
 		04		18sep14	add Transpose and ChangeLength
         05      10jun15	in Transpose, handle negative bass note
+		06		06feb17	in Transpose, move implementation into Song::CChord
  
 		song editing container
 
@@ -342,10 +343,7 @@ void CSongState::Transpose(CIntRange BeatRange, int Steps)
 	CIntRange	ChordRange, Offset;
 	ChordRange = FindChordRange(BeatRange, Offset);
 	for (int iChord = ChordRange.Start; iChord <= ChordRange.End; iChord++) {
-		CSong::CChord&	ch = m_Chord[iChord];
-		ch.m_Root = CNote(ch.m_Root + Steps).Normal();
-		if (ch.m_Bass >= 0)	// if slash chord
-			ch.m_Bass = CNote(ch.m_Bass + Steps).Normal();
+		m_Chord[iChord].Transpose(Steps);
 	}
 }
 

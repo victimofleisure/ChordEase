@@ -20,6 +20,7 @@
         10      10jun15	in CChord, allow bass note to be -1 for unspecified
 		11		10jun15	add SetChordScale and SetChordMode
 		12		11jun15	refactor SetChordDictionary to update chord array
+		13		06feb17	in CChord, add Transpose
 
 		song container
 
@@ -49,6 +50,7 @@ public:
 		bool	operator!=(const CChord& Chord) const;
 		bool	EqualNoDuration(const CChord& Chord) const;
 		bool	TranslateType(const CIntArrayEx& TranTbl);
+		void	Transpose(int Steps);
 		int		m_Duration;		// duration in beats
 		CNote	m_Root;			// normalized root note
 		CNote	m_Bass;			// normalized bass note, or -1 if unspecified

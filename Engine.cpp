@@ -39,6 +39,9 @@
 		29		19jan16	in Create, add OnTimeChange to fix fast playback bug
 		30		02feb16	move previous harmony note test to function; update inlining
 		31		02mar16	add chord change notification
+		32		20mar16	add numbers mapping function
+ 		33		27mar16	add EmulateNoteOn
+ 		34		27mar16	in SetBassApproachTarget, handle section repeat
 
 		engine
  
@@ -47,7 +50,6 @@
 #include "stdafx.h"
 #include "Resource.h"
 #include "Engine.h"
-#include "Diatonic.h"
 #include "MidiWrap.h"
 #include <math.h>
 #include "shlwapi.h"	// for PathFindExtension
@@ -611,6 +613,8 @@ void CEngine::OnSongEdit()
 	if (m_Tick >= GetTickCount())	// if past end of song
 		m_Tick = 0;	// rewind to start of song
 	UpdateSection();
+	if (m_Song.IsEmpty())	// if song empty
+		m_IsPlaying = FALSE;	// stop playing
 }
 
 const CSong::CChord& CEngine::GetSafeChord(int ChordIdx) const
@@ -775,7 +779,7 @@ void CEngine::SetPart(int PartIdx, const CPart& Part)
 	m_PartState[PartIdx].OnTimeChange(Part, m_Patch.m_PPQ);
 	if (!Part.CompareTargets(PrevPart) && IsRunning())	// if MIDI targets changed
 		UpdateMidiAssigns();
-	if (Part.m_Lead.Harm.Subpart != PrevPart.m_Lead.Harm.Subpart	// if subpart changed
+	if (Part.m_Harm.Subpart != PrevPart.m_Harm.Subpart	// if subpart changed
 	|| memcmp(&Part.m_In, &PrevPart.m_In, sizeof(Part.m_In)))	// or input settings changed
 		UpdateHarmonyGroups();
 }
@@ -787,8 +791,8 @@ void CEngine::UpdateHarmonyGroups()
 	int	iPart = 0;
 	while (iPart < nParts) {	// while parts remain
 		// if current part is a harmony subpart and preceding part isn't
-		if (m_Patch.m_Part[iPart].m_Lead.Harm.Subpart && iPart > 0 
-		&& !m_Patch.m_Part[iPart - 1].m_Lead.Harm.Subpart) {
+		if (m_Patch.m_Part[iPart].m_Harm.Subpart && iPart > 0 
+		&& !m_Patch.m_Part[iPart - 1].m_Harm.Subpart) {
 			int	iLeader = iPart - 1;	// preceding part is harmony group leader
 			CMidiInst	LeadInst(m_Patch.m_Part[iLeader].m_In.Inst);
 			do {	// determine harmony group size by skipping over subparts
@@ -802,7 +806,7 @@ void CEngine::UpdateHarmonyGroups()
 					SubpartChange = TRUE;	// set change flag
 				}
 				iPart++;	// increment loop variable
-			} while (iPart < nParts && m_Patch.m_Part[iPart].m_Lead.Harm.Subpart);
+			} while (iPart < nParts && m_Patch.m_Part[iPart].m_Harm.Subpart);
 			int	nSubparts = iPart - iLeader - 1;	// total number of subparts
 			nSubparts = min(nSubparts, MAX_HARMONY_GROUP_SIZE - 1);
 			m_PartState[iLeader].m_HarmonySubparts = nSubparts;
@@ -935,28 +939,34 @@ void CEngine::UpdateMidiTarget(CMidiInst Inst, int Event, int Ctrl, int Val)
 					UMT(part.m_Out.BankSelectLSB, NormParamToMidiVal(pos));
 					OutputControl(part.m_Out.Inst, BANK_SELECT_LSB, part.m_Out.BankSelectLSB);
 					break;
-				case CPart::MIDI_TARGET_LEAD_HARM_INTERVAL:
-					UMT(part.m_Lead.Harm.Interval, round(pos * CDiatonic::DEGREES));
+				case CPart::MIDI_TARGET_HARM_INTERVAL:
+					UMT(part.m_Harm.Interval, round(pos * CDiatonic::DEGREES));
 					break;
-				case CPart::MIDI_TARGET_LEAD_HARM_OMIT_MELODY:
-					UMT(part.m_Lead.Harm.OmitMelody, pos > 0);
+				case CPart::MIDI_TARGET_HARM_OMIT_MELODY:
+					UMT(part.m_Harm.OmitMelody, pos > 0);
 					break;
-				case CPart::MIDI_TARGET_LEAD_HARM_CROSSING:
-					UMT(part.m_Lead.Harm.Crossing, pos > 0);
+				case CPart::MIDI_TARGET_HARM_CROSSING:
+					UMT(part.m_Harm.Crossing, pos > 0);
 					break;
-				case CPart::MIDI_TARGET_LEAD_HARM_STATIC_MIN:
-					UMT(part.m_Lead.Harm.StaticMin, round(pos * NOTES));
+				case CPart::MIDI_TARGET_HARM_STATIC_MIN:
+					UMT(part.m_Harm.StaticMin, round(pos * NOTES));
 					break;
-				case CPart::MIDI_TARGET_LEAD_HARM_STATIC_MAX:
-					UMT(part.m_Lead.Harm.StaticMax, round(pos * NOTES));
+				case CPart::MIDI_TARGET_HARM_STATIC_MAX:
+					UMT(part.m_Harm.StaticMax, round(pos * NOTES));
 					break;
-				case CPart::MIDI_TARGET_LEAD_HARM_CHORD_DEGREE:
-					UMT(part.m_Lead.Harm.Chord.Degree, static_cast<short>(
+				case CPart::MIDI_TARGET_HARM_CHORD_DEGREE:
+					UMT(part.m_Harm.Chord.Degree, static_cast<short>(
 						NormParamToEnum(pos, CDiatonic::DEGREES)));
 					break;
-				case CPart::MIDI_TARGET_LEAD_HARM_CHORD_SIZE:
-					UMT(part.m_Lead.Harm.Chord.Size, static_cast<short>(
+				case CPart::MIDI_TARGET_HARM_CHORD_SIZE:
+					UMT(part.m_Harm.Chord.Size, static_cast<short>(
 						NormParamToEnum(pos, CDiatonic::DEGREES)));
+					break;
+				case CPart::MIDI_TARGET_NUMBERS_GROUP:
+					UMT(part.m_Numbers.Group, NormParamToEnum(pos, CDiatonic::DEGREES));
+					break;
+				case CPart::MIDI_TARGET_NUMBERS_ORIGIN:
+					UMT(part.m_Numbers.Origin, NormParamToEnum(pos, CPart::NUMBERS::ORIGIN_RANGE) + CPart::NUMBERS::ORIGIN_MIN);
 					break;
 				case CPart::MIDI_TARGET_COMP_VOICING:
 					UMT(part.m_Comp.Voicing, NormParamToEnum(pos, CHORD_VOICINGS));
@@ -1468,6 +1478,7 @@ void CEngine::FixHeldNotes()
 				break;
 			case CPart::FUNC_LEAD:
 			case CPart::FUNC_BASS:
+			case CPart::FUNC_NUMBERS:
 				{
 					int	notes = map.m_OutNote.GetSize();
 					for (int iNote = 0; iNote < notes; iNote++) {	// for each output note
@@ -1554,6 +1565,73 @@ CNote CEngine::GetLeadNote(CNote Note, int PartIdx) const
 	return(CDiatonic::AlterNote(Note, harm.m_Accidentals));
 }
 
+#define NUMSYSDEF(a, b, c, d) {a - 1, b - 1, c - 1, d - 1}	// convert to zero-origin
+CNote CEngine::GetNumbersNote(CNote Note, int PartIdx) const
+{
+	enum {
+		TONALITIES = 2,	// major or minor
+		GROUPS = 7,		// groups per tonality
+		TONES = 4,		// scale tones per group
+	};
+	static const int	Numbers[TONALITIES][GROUPS][TONES] = {
+		{	// major
+			NUMSYSDEF(	1, 2, 3, 5	),	// 1 - 5
+			NUMSYSDEF(	3, 5, 6, 7	),	// 3 - 7
+			NUMSYSDEF(	5, 6, 7, 2	),	// 5 - 9
+			NUMSYSDEF(	7, 2, 3, 4	),	// 7 - 11
+			NUMSYSDEF(	2, 3, 4, 6	),	// 9 - 13
+			NUMSYSDEF(	4, 6, 7, 1	),	// 11 - 15
+			NUMSYSDEF(	6, 7, 1, 3	),	// 13 - 17
+		},
+		{	// minor
+			NUMSYSDEF(	1, 3, 4, 5	),	// 1 - 5
+			NUMSYSDEF(	3, 4, 5, 7	),	// 3 - 7
+			NUMSYSDEF(	5, 7, 1, 2	),	// 5 - 9
+			NUMSYSDEF(	7, 1, 2, 4	),	// 7 - 11
+			NUMSYSDEF(	2, 4, 5, 6	),	// 9 - 13
+			NUMSYSDEF(	4, 5, 6, 1	),	// 11 - 15
+			NUMSYSDEF(	6, 1, 2, 3	),	// 13 - 17
+		},
+	};
+	enum {
+		DEGREE_SHIFT = 21,	// align to diatonic scale at C4
+		OCTAVE_SHIFT = 9,
+	};
+	int	iHarmony = m_PartState[PartIdx].m_HarmIdx;
+	const CHarmony&	harm = m_Harmony[iHarmony];
+	bool	bMinor = harm.IsMinor();
+	const CPart& part = m_Patch.m_Part[PartIdx];
+	int	iGroup = part.m_Numbers.Group;
+	const int	*pGroup = Numbers[bMinor][iGroup];
+	CScale	ch;
+	ch.SetSize(TONES);
+	for (int iTone = 0; iTone < TONES; iTone++)	// for each tone
+		ch[iTone] = harm.m_ChordScale[pGroup[iTone]];
+	CNote	NormNote = Note.Normal();
+	int	iDegree = CDiatonic::GetNoteDegree(NormNote) + DEGREE_SHIFT
+		+ Note.Octave() * CDiatonic::DEGREES + part.m_Numbers.Origin;
+	ASSERT(iDegree >= 0);	// below zero, integer divide truncates up
+	CNote	n;	// code below is at least 4x faster than sorting chord
+	switch (iDegree & 3) {	// optimization of (iDegree % TONES)
+	case 0:
+		n = ch.Min();	// smallest
+		break;
+	case 1:
+		n = ch.Min2();	// 2nd smallest
+		break;
+	case 2:
+		n = ch.Max2();	// 2nd largest
+		break;
+	case 3:
+		n = ch.Max();	// largest
+		break;
+	}
+	CNote	OutNote(n + (iDegree / TONES - OCTAVE_SHIFT) * OCTAVE);
+	if (!CDiatonic::IsDiatonic(NormNote))	// if accidental
+		OutNote--;	// add flat
+	return(OutNote);
+}
+
 CNote CEngine::GetBassNote(CNote Note, int PartIdx) const
 {
 	const CPart&	part = m_Patch.m_Part[PartIdx];
@@ -1633,18 +1711,18 @@ void CEngine::SetBassApproachTarget(int PartIdx)
 	if (!m_Song.GetChordCount())	// if song is empty
 		return;	// avoid access violation
 	int	NowRem = NowTick % m_TicksPerBeat;
-	int	NowBeat = NowTick / m_TicksPerBeat % m_Song.GetBeatCount();
+	int	NowBeat = NowTick / m_TicksPerBeat;
 	int	iChord = m_Song.GetChordIndex(NowBeat);
 	int	BeatsToNextChord = m_Song.GetStartBeat(iChord) 
 		+ GetChord(iChord).m_Duration - NowBeat;
-	iChord = m_Song.GetNextChord(iChord);	// proceed to next chord
+	iChord = GetNextChord(iChord);	// proceed to next chord
 	// initial target is next chord; compute distance to it in ticks
 	int	TicksToTarget = BeatsToNextChord * m_TicksPerBeat - NowRem;
 	CPartState&	ps = m_PartState[PartIdx];
 	// if distance to next chord is within harmonic anticipation window
 	if (TicksToTarget <= ps.m_Anticipation) {
 		TicksToTarget += GetChord(iChord).m_Duration * m_TicksPerBeat;
-		iChord = m_Song.GetNextChord(iChord);	// proceed to next chord
+		iChord = GetNextChord(iChord);	// proceed to next chord
 	}
 	int	quant = ShiftBySigned(m_Song.GetMeter().m_Numerator, 
 		m_Patch.m_Part[PartIdx].m_Bass.TargetAlignment);
@@ -1654,7 +1732,7 @@ void CEngine::SetBassApproachTarget(int PartIdx)
 		while (m_Song.GetStartBeat(iChord) % quant && SkipBeats < quant) {
 //			_tprintf(_T("skipping %s\n"), m_Song.GetChordName(iChord));
 			SkipBeats += GetChord(iChord).m_Duration;
-			iChord = m_Song.GetNextChord(iChord);	// proceed to next chord
+			iChord = GetNextChord(iChord);	// proceed to next chord
 		}
 		TicksToTarget += SkipBeats * m_TicksPerBeat;	// skip unaligned chords
 	}
@@ -1763,15 +1841,15 @@ bool CEngine::ApplyNonDiatonicRule(int Rule, CNote& Note)
 __forceinline bool CEngine::PreviousHarmonyUsable(const CPart& Part, CNote OutNote, CNote PrevHarmNote)
 {
 	int	delta;
-	if (Part.m_Lead.Harm.Crossing)	// if crossing allowed
+	if (Part.m_Harm.Crossing)	// if crossing allowed
 		delta = abs(OutNote - PrevHarmNote);
 	else {	// no crossing
-		if (Part.m_Lead.Harm.Interval > 0)	// if harmony above
+		if (Part.m_Harm.Interval > 0)	// if harmony above
 			delta = PrevHarmNote - OutNote;
 		else	// harmony below
 			delta = OutNote - PrevHarmNote;
 	}
-	return (delta >= Part.m_Lead.Harm.StaticMin	&& delta <= Part.m_Lead.Harm.StaticMax);
+	return (delta >= Part.m_Harm.StaticMin	&& delta <= Part.m_Harm.StaticMax);
 }
 
 void CEngine::OutputHarmonyGroup(int FirstPart, CNote InNote, CNote OutNote, int Vel)
@@ -1788,14 +1866,14 @@ void CEngine::OutputHarmonyGroup(int FirstPart, CNote InNote, CNote OutNote, int
 		int	iPart = FirstPart + iMbr;	// compute member's part index
 		const CPart&	part = m_Patch.m_Part[iPart];
 		if (part.m_Enable) {	// if part enabled
-			if (part.m_Lead.Harm.Interval) {	// if harmonizing
-				if (!part.m_Lead.Harm.OmitMelody)	// if part outputs melody
+			if (part.m_Harm.Interval) {	// if harmonizing
+				if (!part.m_Harm.OmitMelody)	// if part outputs melody
 					Refs[OutNote]++;	// add reference to melody note
 				CPartState&	ps = m_PartState[iPart]; 
 				int	iHarmony = ps.m_HarmIdx;
 				const CHarmony&	harm = m_Harmony[iHarmony];
 				CNote	HarmNote;
-				if (part.m_Lead.Harm.StaticMax > 0) {	// if static harmony enabled
+				if (part.m_Harm.StaticMax > 0) {	// if static harmony enabled
 					harm.m_ChordScale.Correct(ps.m_LeadPrevHarmNote);
 					if (PreviousHarmonyUsable(part, OutNote, ps.m_LeadPrevHarmNote)
 					&& !Refs[ps.m_LeadPrevHarmNote]) {	// and note is available
@@ -1803,14 +1881,14 @@ void CEngine::OutputHarmonyGroup(int FirstPart, CNote InNote, CNote OutNote, int
 						IsStatic[iMbr] = TRUE;	// mark voice as static
 					} else {	// static harmony no good
 						HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
-							part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
+							part.m_Harm.Interval, part.m_Harm.ChordInt);
 						ps.m_LeadPrevHarmNote = HarmNote;	// update static harmony
-						IsStatic[iMbr] = part.m_Lead.Harm.ChordInt >= 0;
+						IsStatic[iMbr] = part.m_Harm.ChordInt >= 0;
 					}
 				} else {	// static harmony disabled
 					HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
-						part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
-					IsStatic[iMbr] = part.m_Lead.Harm.ChordInt >= 0;
+						part.m_Harm.Interval, part.m_Harm.ChordInt);
+					IsStatic[iMbr] = part.m_Harm.ChordInt >= 0;
 				}
 				Refs[HarmNote]++;	// add reference to harmony note
 				HarmNoteArr[iMbr] = HarmNote;
@@ -1835,11 +1913,11 @@ void CEngine::OutputHarmonyGroup(int FirstPart, CNote InNote, CNote OutNote, int
 					const CHarmony&	harm = m_Harmony[iHarmony];
 					const CPart&	part = m_Patch.m_Part[iPart];
 					HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
-						part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
+						part.m_Harm.Interval, part.m_Harm.ChordInt);
 					// if regular note also collides and is constrained to chord tones
-					if (Refs[HarmNote] > 0 && part.m_Lead.Harm.ChordInt >= 0) {
+					if (Refs[HarmNote] > 0 && part.m_Harm.ChordInt >= 0) {
 						HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
-							part.m_Lead.Harm.Interval, 0);	// remove constraint
+							part.m_Harm.Interval, 0);	// remove constraint
 					}
 					m_PartState[iPart].m_LeadPrevHarmNote = HarmNote;	// update static harmony
 					Refs[HarmNote]++;	// reference regular harmony note
@@ -1854,8 +1932,8 @@ void CEngine::OutputHarmonyGroup(int FirstPart, CNote InNote, CNote OutNote, int
 		int	iPart = FirstPart + iMbr;	// compute member's part index
 		const CPart&	part = m_Patch.m_Part[iPart];
 		if (part.m_Enable) {	// if part enabled
-			if (part.m_Lead.Harm.Interval) {	// if harmonizing
-				if (part.m_Lead.Harm.OmitMelody) {	// if omitting melody note
+			if (part.m_Harm.Interval) {	// if harmonizing
+				if (part.m_Harm.OmitMelody) {	// if omitting melody note
 					MapNote(InNote, Vel, iPart, HarmNoteArr[iMbr]);	// output harmony note
 				} else {	// output melody and harmony notes
 					CScale	OutScale;
@@ -1870,6 +1948,47 @@ void CEngine::OutputHarmonyGroup(int FirstPart, CNote InNote, CNote OutNote, int
 			}
 		}
 	}
+}
+
+CNote CEngine::EmulateNoteOn(CMidiInst Inst, CNote InNote, int& PartIdx) const
+{
+	CNote	OutNote = NOTE_UNMAPPED;	// default to unmapped
+	int	iPart;
+	int	nParts = GetPartCount();
+	for (iPart = 0; iPart < nParts; iPart++) {	// for each part
+		const CPart&	part = GetPart(iPart);
+		// if input note matches part's criteria
+		if (part.NoteMatches(Inst, InNote)) {
+			CNote	TransNote = InNote + part.m_In.Transpose;
+			int	iRule = part.m_In.NonDiatonic;
+			if (iRule != CPart::INPUT::NDR_ALLOW) {	// if non-diatonic rule
+				if (!CEngine::ApplyNonDiatonicRule(iRule, TransNote))
+					continue;	// suppress input note
+			}
+			if (TransNote < 0 || TransNote > MIDI_NOTE_MAX)
+				continue;	// transposed note out of range, so skip it
+			switch (part.m_Function) {
+			case CPart::FUNC_BYPASS:
+				OutNote = InNote;	// null mapping
+				break;
+			case CPart::FUNC_LEAD:
+				OutNote = GetLeadNote(TransNote, iPart);
+				break;
+			case CPart::FUNC_COMP:
+				OutNote = NOTE_MAPPED_TO_CHORD;
+				break;
+			case CPart::FUNC_BASS:
+				OutNote = GetBassNote(TransNote, iPart);
+				break;
+			case CPart::FUNC_NUMBERS:
+				OutNote = GetNumbersNote(TransNote, iPart);
+				break;
+			}
+			break;	// only show input note's first mapping
+		}
+	}
+	PartIdx = iPart;	// pass part index back to caller
+	return(OutNote);
 }
 
 void CEngine::OnNoteOn(CMidiInst Inst, CNote Note, int Vel)
@@ -1895,36 +2014,46 @@ void CEngine::OnNoteOn(CMidiInst Inst, CNote Note, int Vel)
 				break;
 			case CPart::FUNC_LEAD:
 			case CPart::FUNC_BASS:
+			case CPart::FUNC_NUMBERS:
 				{
 					CNote	OutNote;
-					if (part.m_Function == CPart::FUNC_LEAD)
+					switch (part.m_Function) {
+					case CPart::FUNC_LEAD:
 						OutNote = GetLeadNote(TransNote, iPart);
-					else
+						break;
+					case CPart::FUNC_BASS:
 						OutNote = GetBassNote(TransNote, iPart);
+						break;
+					case CPart::FUNC_NUMBERS:
+						OutNote = GetNumbersNote(TransNote, iPart);
+						break;
+					default:
+						NODEFAULTCASE;
+					}
 					if (m_PartState[iPart].m_HarmonySubparts > 0) {
 						OutputHarmonyGroup(iPart, Note, OutNote, Vel);
 						break;
 					}
-					if (part.m_Lead.Harm.Interval) {	// if harmonizing
+					if (part.m_Harm.Interval) {	// if harmonizing
 						CPartState&	ps = m_PartState[iPart]; 
 						int	iHarmony = ps.m_HarmIdx;
 						const CHarmony&	harm = m_Harmony[iHarmony];
 						CNote	HarmNote;
-						if (part.m_Lead.Harm.StaticMax > 0) {	// if static harmony enabled
+						if (part.m_Harm.StaticMax > 0) {	// if static harmony enabled
 							harm.m_ChordScale.Correct(ps.m_LeadPrevHarmNote);
 							if (PreviousHarmonyUsable(part, OutNote, ps.m_LeadPrevHarmNote))
 								HarmNote = ps.m_LeadPrevHarmNote;	// use static harmony
 							else {	// static harmony no good
 								HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
-									part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
+									part.m_Harm.Interval, part.m_Harm.ChordInt);
 								ps.m_LeadPrevHarmNote = HarmNote;	// update static harmony
 							}
 						} else {	// static harmony disabled
 							HarmNote = harm.m_ChordScale.HarmonizeNote(OutNote, 
-								part.m_Lead.Harm.Interval, part.m_Lead.Harm.ChordInt);
+								part.m_Harm.Interval, part.m_Harm.ChordInt);
 						}
 //						_tprintf(_T("%s %s\n"), OutNote.MidiName(), HarmNote.MidiName());
-						if (part.m_Lead.Harm.OmitMelody) {	// if omitting melody note
+						if (part.m_Harm.OmitMelody) {	// if omitting melody note
 							MapNote(Note, Vel, iPart, HarmNote);	// output harmony note
 						} else {	// output melody and harmony notes
 							CScale	OutScale;
@@ -2195,6 +2324,22 @@ int CEngine::WrapBeat(int Beat) const
 	}
 	ASSERT(m_Song.GetBeatCount());	// else divide by zero
 	return(CNote::Mod(Beat, m_Song.GetBeatCount()));	// wrap within song
+}
+
+int CEngine::GetNextChord(int ChordIdx) const
+{
+	int	iBeat = m_Song.GetStartBeat(ChordIdx) + GetChord(ChordIdx).m_Duration;	// beat after current chord
+	if (!m_Section.ContainsBeat(iBeat))	// if beat outside current section
+		iBeat = WrapBeat(iBeat);	// handle beat wraparound
+	return(m_Song.GetChordIndex(iBeat));	// convert beat to chord index
+}
+
+int CEngine::GetPrevChord(int ChordIdx) const
+{
+	int	iBeat = m_Song.GetStartBeat(ChordIdx) - 1;	// beat before current chord
+	if (!m_Section.ContainsBeat(iBeat))	// if beat outside current section
+		iBeat = WrapBeat(iBeat);	// handle beat wraparound
+	return(m_Song.GetChordIndex(iBeat));	// convert beat to chord index
 }
 
 void CEngine::SetHarmonyCount(int Count)

@@ -10,6 +10,7 @@
 		00		12sep13	initial version
  		01		09sep14	use default memberwise copy
 		02		16mar15	consolidate MIDI target's fixed info
+		03		21mar16	add LoadV3 for legacy harmonizer vars
  
 		part container
 
@@ -68,4 +69,25 @@ void CPart::Serialize(CArchive &ar)
 		#include "PartDef.h"	// generate code to store members
 	}
 	CMidiTarget::Serialize(ar, m_MidiTarget, MIDI_TARGETS);	// serialize MIDI targets
+}
+
+void CPart::LoadV3(LPCTSTR Section)
+{
+	#define LEGACYDEF(oldname, newname) theApp.RdReg(Section, _T(#oldname), m_##newname);
+	#include "PartLegacyDef.h"	// generate code to read legacy part members
+	#define LEGACY_PART_MIDI	// tell include file to define MIDI targets
+	enum {
+		#define LEGACYDEF(oldname, newname) LMT_##oldname,
+		#include "PartLegacyDef.h"	// generate enumeration of legacy MIDI targets
+		LEGACY_MIDI_TARGETS
+	};
+	static const CMidiTarget::FIXED_INFO LegacyMidiTargetInfo[LEGACY_MIDI_TARGETS] = {	
+		#define LEGACYDEF(oldname, newname) {_T(#oldname)},
+		#include "PartLegacyDef.h"	// generate table of legacy MIDI target info
+	};
+	CFixedArray<CMidiTarget, LEGACY_MIDI_TARGETS>	LegacyMidiTarget;
+	CMidiTarget::Load(Section, LegacyMidiTarget, LEGACY_MIDI_TARGETS, LegacyMidiTargetInfo);
+	#define LEGACYDEF(oldname, newname) \
+		m_MidiTarget[MIDI_TARGET_##newname] = LegacyMidiTarget[LMT_##oldname];
+	#include "PartLegacyDef.h"	// copy legacy targets to equivalent current targets
 }

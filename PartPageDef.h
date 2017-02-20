@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		20sep13	initial version
+		01		21mar16	add harmonizer page
  
 		define part pages
 
@@ -18,6 +19,7 @@ PARTPAGEDEF(Output)
 PARTPAGEDEF(Lead)
 PARTPAGEDEF(Comp)
 PARTPAGEDEF(Bass)
+PARTPAGEDEF(Harmonizer)
 PARTPAGEDEF(Auto)
 PARTPAGEDEF(MidiTarget)
 

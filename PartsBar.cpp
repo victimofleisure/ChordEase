@@ -16,6 +16,7 @@
 		06		11jun15	bump clipboard format for new part MIDI targets
 		07		21aug15	in OnListItemSelect, only enable controls if needed
 		08		25aug15	bump clipboard format for bank select
+		09		21mar16	bump clipboard format for harmonizer
 
         parts bar
  
@@ -45,7 +46,7 @@ IMPLEMENT_DYNAMIC(CPartsBar, CMySizingControlBar);
 #define RK_PARTS_LIST_WIDTH _T("PartsListWidth")
 
 CPartsBar::CPartsBar() :
-	m_Clipboard(NULL, _T("ChordEasePartArray4"))	// change whenever part layout changes
+	m_Clipboard(NULL, _T("ChordEasePartArray5"))	// change whenever part layout changes
 {
 	m_szHorz = CSize(400, 200);	// default size when horizontally docked
 	m_szVert = m_szHorz;	// default size when vertically docked

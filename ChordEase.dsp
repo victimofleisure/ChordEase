@@ -808,6 +808,14 @@ SOURCE=.\PartFunctionDef.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\PartHarmonizerDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\PartHarmonizerDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\PartInputDlg.cpp
 # End Source File
 # Begin Source File
@@ -821,6 +829,10 @@ SOURCE=.\PartLeadDlg.cpp
 # Begin Source File
 
 SOURCE=.\PartLeadDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PartLegacyDef.h
 # End Source File
 # Begin Source File
 

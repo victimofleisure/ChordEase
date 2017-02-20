@@ -116,7 +116,7 @@ void CPatchSyncDlg::OnChangedPort(NMHDR* pNMHDR, LRESULT* pResult)
 
 void CPatchSyncDlg::OnSyncInEnable() 
 {
-	int	CurPPQ = theApp.m_Engine.GetPatch().m_PPQ;
+	int	CurPPQ = gEngine.GetPatch().m_PPQ;
 	// if enabling MIDI clock sync and current PPQ isn't MIDI clock PPQ
 	bool	LimitPPQ = m_InEnable.GetCheck() && CurPPQ != MIDI_CLOCK_PPQ;
 	if (LimitPPQ && !PATCH_UNDO_TEST) {	// if PPQ needs limiting (except during undo test)

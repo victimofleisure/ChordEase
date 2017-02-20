@@ -7,38 +7,32 @@
  
 		revision history:
 		rev		date	comments
-        00      20sep13	initial version
-		01		21aug15	add harmony subpart
-		02		31aug15	add harmonizer chord tone constraint
-		03		19dec15	add harmonizer crossing enable
-		04		20mar16	add numbers mapping function
-		05		21mar16	give harmonizer its own page
-		06		23apr16	add numbers origin
+        00      21mar16	initial version
 
-		part lead dialog
+		part harmonizer dialog
  
 */
 
-#if !defined(AFX_PARTLEADDLG_H__A22C5BF1_0CA9_4516_9F52_D9C0F54C5676__INCLUDED_)
-#define AFX_PARTLEADDLG_H__A22C5BF1_0CA9_4516_9F52_D9C0F54C5676__INCLUDED_
+#if !defined(AFX_PARTHARMONIZERDLG_H__A22C5BF1_0CA9_4516_9F52_D9C0F54C5676__INCLUDED_)
+#define AFX_PARTHARMONIZERDLG_H__A22C5BF1_0CA9_4516_9F52_D9C0F54C5676__INCLUDED_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-// PartLeadDlg.h : header file
+// PartHarmonizerDlg.h : header file
 //
 
 /////////////////////////////////////////////////////////////////////////////
-// CPartLeadDlg dialog
+// CPartHarmonizerDlg dialog
 
 #include "PartPageDlg.h"
 
-class CPartLeadDlg : public CPartPageDlg
+class CPartHarmonizerDlg : public CPartPageDlg
 {
-	DECLARE_DYNAMIC(CPartLeadDlg);
+	DECLARE_DYNAMIC(CPartHarmonizerDlg);
 // Construction
 public:
-	CPartLeadDlg(CWnd* pParent = NULL);   // standard constructor
+	CPartHarmonizerDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Attributes
 	static	UINT	GetTemplateID();
@@ -47,7 +41,7 @@ public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CPartLeadDlg)
+	//{{AFX_VIRTUAL(CPartHarmonizerDlg)
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
@@ -55,20 +49,27 @@ public:
 // Implementation
 protected:
 // Dialog Data
-	//{{AFX_DATA(CPartLeadDlg)
-	enum { IDD = IDD_PART_LEAD };
-	CComboBox	m_NumbersGroup;
-	CSpinIntEdit	m_NumbersOrigin;
+	//{{AFX_DATA(CPartHarmonizerDlg)
+	enum { IDD = IDD_PART_HARMONIZER };
+	CMidiValEdit	m_StaticMax;
+	CMidiValEdit	m_StaticMin;
+	CButton	m_OmitMelody;
+	CButton	m_Subpart;
+	CButton	m_Crossing;
+	CMidiOffsetEdit	m_Interval;
+	CComboBox	m_ChordDegree;
+	CComboBox	m_ChordSize;
 	//}}AFX_DATA
 
 // Generated message map functions
-	//{{AFX_MSG(CPartLeadDlg)
+	//{{AFX_MSG(CPartHarmonizerDlg)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnSubpart();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 
-inline UINT CPartLeadDlg::GetTemplateID()
+inline UINT CPartHarmonizerDlg::GetTemplateID()
 {
 	return(IDD);
 }
@@ -76,4 +77,4 @@ inline UINT CPartLeadDlg::GetTemplateID()
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_PARTLEADDLG_H__A22C5BF1_0CA9_4516_9F52_D9C0F54C5676__INCLUDED_)
+#endif // !defined(AFX_PARTHARMONIZERDLG_H__A22C5BF1_0CA9_4516_9F52_D9C0F54C5676__INCLUDED_)

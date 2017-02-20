@@ -8,6 +8,7 @@
 		revision history:
 		rev		date	comments
 		00		09jun15	initial version
+		01		26mar16	use IsVisible for more reliable results
  
 		toolbar base class
  
@@ -88,7 +89,7 @@ void CMyToolBar::OnWindowPosChanging(WINDOWPOS FAR* lpwndpos)
 	// so post ourself a message that we'll receive after things settle down;
 	// if showing or hiding bar, and message not already posted
 	if ((lpwndpos->flags & (SWP_SHOWWINDOW | SWP_HIDEWINDOW)) && !m_IsShowChanging) {
-		PostMessage(UWM_SHOWCHANGING, IsWindowVisible());	// post message
+		PostMessage(UWM_SHOWCHANGING, IsVisible());	// post message
 		m_IsShowChanging = TRUE;	// message is pending
 	}
 	CToolBar::OnWindowPosChanging(lpwndpos);
@@ -97,7 +98,7 @@ void CMyToolBar::OnWindowPosChanging(WINDOWPOS FAR* lpwndpos)
 LRESULT CMyToolBar::OnShowChanging(WPARAM wParam, LPARAM lParam)
 {
 	m_IsShowChanging = FALSE;	// reset message pending flag
-	BOOL	bShow = IsWindowVisible();
+	BOOL	bShow = IsVisible();
 	if (!bShow || (bShow && !wParam))	// if hiding, or showing and previously hidden
 		OnShowChanged(bShow);	// notify derived class
 	if (!bShow && ::IsChild(m_hWnd, ::GetFocus()))	// if hiding and our child has focus

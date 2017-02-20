@@ -12,6 +12,7 @@
 		02		08mar15	add tag length and repeat
 		03		21mar15	add tap tempo
 		04		11jun15	in OnSelchangeKey, standardize range check
+		05		07feb17	in InitNoteCombo, add key argument
 
         patch general dialog
  
@@ -94,10 +95,10 @@ void CPatchGeneralDlg::UpdateKeyCombo()
 	m_Key.SetCurSel(gEngine.GetSongKey().Normal());
 }
 
-void CPatchGeneralDlg::InitNoteCombo(CComboBox& Combo)
+void CPatchGeneralDlg::InitNoteCombo(CComboBox& Combo, CNote Key)
 {
 	for (int iNote = 0; iNote < NOTES; iNote++)
-		Combo.AddString(CNote(iNote).Name(F));
+		Combo.AddString(CNote(iNote).Name(Key));
 }
 
 void CPatchGeneralDlg::DoDataExchange(CDataExchange* pDX)
@@ -169,7 +170,7 @@ void CPatchGeneralDlg::OnSelchangeKey()
 void CPatchGeneralDlg::OnUpdatePPQ(CCmdUI* pCmdUI)
 {
 	// if sync to external MIDI clock, PPQ is restricted so disable its control
-	pCmdUI->Enable(!theApp.m_Engine.GetPatch().m_Sync.In.Enable);
+	pCmdUI->Enable(!gEngine.GetPatch().m_Sync.In.Enable);
 }
 
 void CPatchGeneralDlg::OnTapTempo() 

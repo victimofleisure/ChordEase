@@ -18,6 +18,9 @@
 		08		25aug15	add bank select
 		09		31aug15	add harmonizer chord tone constraint
 		10		19dec15	add harmonizer crossing enable
+		11		20mar16	add numbers mapping function
+		12		21mar16	add LoadV3 for legacy harmonizer vars
+		13		23apr16	add numbers origin
 
 		part container
 
@@ -48,23 +51,31 @@ public:
 
 // Public data
 	struct LEAD {
-		struct HARM {
-			int		Interval;	// generic interval, in diatonic steps
-			bool	OmitMelody;	// true if harmonizer should omit melody note
-			bool	Subpart;	// true if part is subordinate to a harmony group
-			bool	Crossing;	// true if static harmony can cross melody
-			int		StaticMin;	// minimum static harmony interval, in semitones
-			int		StaticMax;	// maximum static harmony interval, in semitones
-			union {
-				struct CHORD {
-					short	Size;	// chord size in notes, of zero for unconstrained
-					short	Degree;	// degree of chord, in cycle of thirds steps
-				};
-				CHORD	Chord;		// chord to constrain harmony to
-				int		ChordInt;	// alias chord info to an integer
+	};
+	struct HARM {
+		int		Interval;	// generic interval, in diatonic steps
+		bool	OmitMelody;	// true if harmonizer should omit melody note
+		bool	Subpart;	// true if part is subordinate to a harmony group
+		bool	Crossing;	// true if static harmony can cross melody
+		int		StaticMin;	// minimum static harmony interval, in semitones
+		int		StaticMax;	// maximum static harmony interval, in semitones
+		union {
+			struct CHORD {
+				short	Size;	// chord size in notes, of zero for unconstrained
+				short	Degree;	// degree of chord, in cycle of thirds steps
 			};
+			CHORD	Chord;		// chord to constrain harmony to
+			int		ChordInt;	// alias chord info to an integer
 		};
-		HARM	Harm;			// harmonizer settings
+	};
+	struct NUMBERS {
+		enum {
+			ORIGIN_MIN = -12,	// three octaves below middle C
+			ORIGIN_MAX = 12,	// three octaves above middle C
+			ORIGIN_RANGE = ORIGIN_MAX - ORIGIN_MIN + 1,
+		};
+		int		Group;			// numbers group index, in heptatonic scale degrees
+		int		Origin;			// offset of origin from middle C, in tetratonic degrees
 	};
 	struct COMP {
 		enum {	// variation schemes
@@ -142,6 +153,8 @@ public:
 	INPUT	m_In;			// input settings
 	OUTPUT	m_Out;			// output settings
 	LEAD	m_Lead;			// lead settings
+	HARM	m_Harm;			// harmonizer settings
+	NUMBERS m_Numbers;		// numbers settings
 	COMP	m_Comp;			// comp settings
 	BASS	m_Bass;			// bass settings
 	AUTO	m_Auto;			// auto settings
@@ -165,6 +178,7 @@ public:
 	void	Load(LPCTSTR Section);
 	void	Save(LPCTSTR Section) const;
 	void	Serialize(CArchive& ar);
+	void	LoadV3(LPCTSTR Section);
 
 // Public data
 	CString	m_Name;			// part name

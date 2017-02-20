@@ -26,7 +26,9 @@
 		16		03jan16	add GetHarmonyGroupNotes
 		17		17jan16	add GetTransposedInputNote
 		18		02feb16	move previous harmony note test to function
- 
+ 		19		20mar16	add numbers mapping function
+ 		20		27mar16	add EmulateNoteOn
+
 		engine
  
 */
@@ -42,6 +44,7 @@
 #include "Statistics.h"
 #include "Patch.h"
 #include "RingBuf.h"
+#include "Diatonic.h"
 
 #define SHOW_ENGINE_STATS 0
 
@@ -74,6 +77,7 @@ public:
 		int		m_Scale;		// scale index
 		CScale	m_Accidentals;	// accidentals
 		CScale	m_ChordScale;	// chord scale
+		bool	IsMinor() const;
 	};
 	typedef CArrayEx<CHarmony, CHarmony&> CHarmonyArray;
 	class CNoteMap : public WCopyable {
@@ -92,6 +96,12 @@ public:
 		int		m_ArpLoops;		// arpeggio repeat counter
 	};
 	typedef CArrayEx<CNoteMap, CNoteMap&> CNoteMapArray;
+
+// Constants
+	enum {	// reserved note values used for mapping exceptions
+		NOTE_UNMAPPED = 1000,			// note isn't mapped
+		NOTE_MAPPED_TO_CHORD = 1001,	// note is mapped to a chord
+	};
 
 // Attributes
 	bool	IsCreated() const;
@@ -142,11 +152,10 @@ public:
 	const CSong::CSection&	GetCurSection() const;
 	int		GetSectionIndex() const;
 	bool	SectionLastPass() const;
-	CNote	GetLeadNote(CNote Note, int PartIdx) const;
-	CNote	GetBassNote(CNote Note, int PartIdx) const;
 	int		GetHarmonyCount() const;
 	const CHarmony&	GetHarmony(int HarmIdx) const;
 	const CHarmony&	GetCurHarmony() const;
+	void	GetHarmony(const CSong::CChord& Chord, CHarmony& Harm) const;
 	int		GetHarmonyIndex() const;
 	int		GetPartHarmonyIndex(int PartIdx) const;
 	void	GetNoteMap(CNoteMapArray& NoteMap);
@@ -165,6 +174,8 @@ public:
 	void	SetChordType(int TypeIdx, const CSong::CChordType& Type);
 	bool	SetChordScale(int TypeIdx, int Scale);
 	bool	SetChordMode(int TypeIdx, int Mode);
+	int		GetNextChord(int ChordIdx) const;
+	int		GetPrevChord(int ChordIdx) const;
 
 // Operations
 	bool	ReadChordDictionary(LPCTSTR Path);
@@ -187,6 +198,7 @@ public:
 	void	InputMidi(int Port, MIDI_MSG Msg);
 	bool	StartTag();
 	bool	TapTempo();
+	CNote	EmulateNoteOn(CMidiInst Inst, CNote InNote, int& PartIdx) const;
 	static	bool	ApplyNonDiatonicRule(int Rule, CNote& Note);
 
 protected:
@@ -341,7 +353,9 @@ protected:
 	void	UpdatePartPatch(const CPart& Part, const CPart *PrevPart = NULL);
 	void	UpdatePatches();
 	void	UpdateHarmonyGroups();
-	void	GetHarmony(const CSong::CChord& Chord, CHarmony& Harm) const;
+	CNote	GetLeadNote(CNote Note, int PartIdx) const;
+	CNote	GetBassNote(CNote Note, int PartIdx) const;
+	CNote	GetNumbersNote(CNote Note, int PartIdx) const;
 	void	GetCompChord(const CHarmony& Harmony, CNote WindowNote, int Voicing, bool Alt, CScale& Chord);
 	void	FixHeldNotes();
 	void	OnNoteOn(CMidiInst Inst, CNote Note, int Vel);
@@ -404,6 +418,13 @@ inline CEngine::CRunTimer::operator bool() const
 inline void CEngine::CRunTimer::SetRun(bool Enable)
 {
 	m_PrevRun = Enable;
+}
+
+inline bool CEngine::CHarmony::IsMinor() const
+{
+	// if chord scale has minor third, except for altered scale
+	return(m_ChordScale[2].LeastInterval(m_ChordScale[0]) == 3
+		&& !(m_Scale == MELODIC_MINOR && m_Key == m_ChordScale[1]));
 }
 
 inline CEngine::CNoteMap::CNoteMap()

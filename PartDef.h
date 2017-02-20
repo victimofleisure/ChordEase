@@ -14,6 +14,9 @@
 		04		25aug15	add bank select
 		05		31aug15	add harmonizer chord tone constraint
 		06		19dec15	add harmonizer crossing enable
+		07		20mar16	add numbers mapping function
+		08		21mar16	give harmonizer its own page
+		09		23apr16	add numbers origin
 
 		part definitions
 
@@ -43,14 +46,16 @@ PARTDEF(	Out.FixHeldNotes,			TRUE)
 PARTDEF(	Auto.Play,					FALSE)
 PARTDEF(	Auto.Window,				48 + F)	// F3
 PARTDEF(	Auto.Velocity,				100)
-PARTDEF(	Lead.Harm.Interval,			0)
-PARTDEF(	Lead.Harm.OmitMelody,		FALSE)
-PARTDEF(	Lead.Harm.Subpart,			FALSE)
-PARTDEF(	Lead.Harm.Crossing,			TRUE)
-PARTDEF(	Lead.Harm.StaticMin,		0)
-PARTDEF(	Lead.Harm.StaticMax,		0)
-PARTDEF(	Lead.Harm.Chord.Size,		0)
-PARTDEF(	Lead.Harm.Chord.Degree,		0)
+PARTDEF(	Harm.Interval,				0)
+PARTDEF(	Harm.OmitMelody,			FALSE)
+PARTDEF(	Harm.Subpart,				FALSE)
+PARTDEF(	Harm.Crossing,				TRUE)
+PARTDEF(	Harm.StaticMin,				0)
+PARTDEF(	Harm.StaticMax,				0)
+PARTDEF(	Harm.Chord.Size,			0)
+PARTDEF(	Harm.Chord.Degree,			0)
+PARTDEF(	Numbers.Group,				0)
+PARTDEF(	Numbers.Origin,				0)
 PARTDEF(	Comp.Voicing,				0)
 PARTDEF(	Comp.Variation,				CPart::COMP::VAR_ALT_A_B)
 PARTDEF(	Comp.Arp.Period,			0)

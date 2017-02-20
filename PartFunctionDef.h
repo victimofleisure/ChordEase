@@ -8,7 +8,8 @@
 		revision history:
 		rev		date	comments
 		00		02sep13	initial version
- 
+ 		01		20mar16	add numbers mapping function
+
 		define part functions
 
 */
@@ -17,5 +18,6 @@ PARTFUNCTIONDEF(BYPASS)
 PARTFUNCTIONDEF(LEAD)
 PARTFUNCTIONDEF(COMP)
 PARTFUNCTIONDEF(BASS)
+PARTFUNCTIONDEF(NUMBERS)
 
 #undef PARTFUNCTIONDEF

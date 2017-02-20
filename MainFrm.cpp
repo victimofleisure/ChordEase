@@ -45,6 +45,9 @@
 		35		23dec15	add OnMissingMidiDevices
 		36		29feb16	in OnTimer, add output notes bar timer hook
 		37		02mar16	add harmony change handler
+		38		26mar16	in CreateEngine, add chord bar delayed init
+		39		09feb17	don't update patch page for chord MIDI targets
+		40		10feb17	for scale and mode MIDI targets, update chord dictionary
 
 		ChordEase main frame
  
@@ -390,6 +393,7 @@ bool CMainFrame::CreateEngine()
 	m_OutputNotesBar.UpdateKeyLabels();	// depends on engine's current harmony
 	CString	ChordDictPath(theApp.MakeDataFolderPath(CHORD_DICTIONARY_FILE_NAME, TRUE));
 	gEngine.ReadChordDictionary(ChordDictPath);	// read chord dictionary
+	m_ChordBar.OnDelayedInit();	// chord bar uses chord dictionary
 	bool	CmdLinePatchOpen;
 	if (!theApp.m_PatchPath.IsEmpty())	// if patch specified on command line
 		CmdLinePatchOpen = OpenPatch(theApp.m_PatchPath);	// open command line patch
@@ -1289,8 +1293,7 @@ void CMainFrame::OnUpdateIndicatorKey(CCmdUI *pCmdUI)
 {
 	CNote	key;
 	if (!gEngine.GetSong().IsEmpty()) {	// if song is open
-		key = gEngine.GetSong().GetKey() 
-			+ gEngine.GetPatch().m_Transpose;
+		key = gEngine.GetSongKey();
 	} else	// no song
 		key = INT_MIN;	// invalid key
 	if (key != m_StatusCache.m_Key) {	// if key differs from cached value
@@ -1509,8 +1512,11 @@ LRESULT	CMainFrame::OnMidiTargetChange(WPARAM wParam, LPARAM lParam)
 			break;
 		default:
 			if (bChanged) {	// if target parameter changed
-				const CPatch&	patch = gEngine.GetPatch();
-				m_PatchBar.UpdatePage(iPage, patch);	// update page
+				if (iTarget < CPatch::MIDI_TARGET_CHORD_ROOT	// if not chord target
+				|| iTarget > CPatch::MIDI_TARGET_CHORD_MODE) {
+					const CPatch&	patch = gEngine.GetPatch();
+					m_PatchBar.UpdatePage(iPage, patch);	// update patch page
+				}
 				switch (iTarget) {
 				case CPatch::MIDI_TARGET_TRANSPOSE:
 				case CPatch::MIDI_TARGET_CHORD_ROOT:
@@ -1520,6 +1526,7 @@ LRESULT	CMainFrame::OnMidiTargetChange(WPARAM wParam, LPARAM lParam)
 					break;
 				case CPatch::MIDI_TARGET_CHORD_SCALE:
 				case CPatch::MIDI_TARGET_CHORD_MODE:
+					theApp.GetMain()->GetChordDictionaryDlg().UpdateCurrentChord();
 					OnHarmonyChange();
 					break;
 				}
@@ -2020,7 +2027,7 @@ void CMainFrame::OnTransportTapTempo()
 
 void CMainFrame::OnUpdateTransportTapTempo(CCmdUI* pCmdUI) 
 {
-	pCmdUI->Enable(!theApp.m_Engine.GetPatch().m_Sync.In.Enable);
+	pCmdUI->Enable(!gEngine.GetPatch().m_Sync.In.Enable);
 }
 
 void CMainFrame::OnMidiAssignments() 

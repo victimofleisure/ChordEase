@@ -18,6 +18,8 @@
 		08		28aug15	in UpdateNotes, get port and channel from part
 		09		28aug15	in UpdateNotes, skip auto-play notes
 		10		21dec15	use extended string array
+		11		27mar16	move EmulateNoteOn into engine
+		12		18apr16	output note must be within MIDI range, not just positive
 
 		piano dialog
 
@@ -30,7 +32,6 @@
 #include "ChordEase.h"
 #include "PianoDlg.h"
 #include "Note.h"
-#include "Diatonic.h"
 #include "ChordEaseDoc.h"
 #include "ChordEaseView.h"
 
@@ -191,9 +192,9 @@ void CPianoDlg::UpdateKeyLabels()
 			bool	LabelChange = FALSE;
 			for (int iKey = 0; iKey < nKeys; iKey++) {	// for each key
 				int	iPart;
-				CNote	OutNote = EmulateNoteOn(inst, StartNote + iKey, iPart);
+				CNote	OutNote(gEngine.EmulateNoteOn(inst, StartNote + iKey, iPart));
 				CString	label;
-				if (OutNote >= 0) {	// if input note is mapped to a single note
+				if (OutNote.IsMidi()) {	// if input note is mapped to a valid note
 					int	iHarmony = gEngine.GetPartHarmonyIndex(iPart);
 					const CEngine::CHarmony&	harm = gEngine.GetHarmony(iHarmony);
 					switch (m_State.KeyLabelType) {
@@ -218,7 +219,7 @@ void CPianoDlg::UpdateKeyLabels()
 						break;
 					}
 				} else {	// input note isn't mapped one-to-one
-					if (OutNote == NOTE_MAPPED_TO_CHORD)	// if mapped to chord
+					if (OutNote == CEngine::NOTE_MAPPED_TO_CHORD)	// if mapped to chord
 						label = _T("/");	// show generic symbol
 					else	// input note isn't mapped
 						label.Empty();	// no label
@@ -273,9 +274,9 @@ void CPianoDlg::UpdateKeyColors()
 		pPalette = m_ThirdsPalette;
 	for (int iKey = 0; iKey < nKeys; iKey++) {	// for each key
 		int	iPart;
-		CNote	OutNote = EmulateNoteOn(inst, StartNote + iKey, iPart);
+		CNote	OutNote(gEngine.EmulateNoteOn(inst, StartNote + iKey, iPart));
 		int	color = -1;	// default color scheme
-		if (OutNote >= 0) {	// if input note is mapped to a single note
+		if (OutNote.IsMidi()) {	// if input note is mapped to a valid note
 			int	iHarmony = gEngine.GetPartHarmonyIndex(iPart);
 			const CEngine::CHarmony&	harm = gEngine.GetHarmony(iHarmony);
 			int iTone = harm.m_ChordScale.Find(OutNote.Normal());
@@ -315,45 +316,6 @@ void CPianoDlg::UpdateInvertLabels()
 		break;
 	}
 	m_Piano.SetStyle(CPianoCtrl::PS_INVERT_LABELS, Invert);
-}
-
-CNote CPianoDlg::EmulateNoteOn(CMidiInst Inst, CNote InNote, int& PartIdx)
-{
-	// emulate behavior of CEngine::OnNoteOn
-	CNote	OutNote = NOTE_UNMAPPED;	// default to unmapped
-	int	iPart;
-	int	nParts = gEngine.GetPartCount();
-	for (iPart = 0; iPart < nParts; iPart++) {	// for each part
-		const CPart&	part = gEngine.GetPart(iPart);
-		// if input note matches part's criteria
-		if (part.NoteMatches(Inst, InNote)) {
-			CNote	TransNote = InNote + part.m_In.Transpose;
-			int	iRule = part.m_In.NonDiatonic;
-			if (iRule != CPart::INPUT::NDR_ALLOW) {	// if non-diatonic rule
-				if (!CEngine::ApplyNonDiatonicRule(iRule, TransNote))
-					continue;	// suppress input note
-			}
-			if (TransNote < 0 || TransNote > MIDI_NOTE_MAX)
-				continue;	// transposed note out of range, so skip it
-			switch (part.m_Function) {
-			case CPart::FUNC_BYPASS:
-				OutNote = InNote;	// null mapping
-				break;
-			case CPart::FUNC_LEAD:
-				OutNote = gEngine.GetLeadNote(TransNote, iPart);
-				break;
-			case CPart::FUNC_COMP:
-				OutNote = NOTE_MAPPED_TO_CHORD;
-				break;
-			case CPart::FUNC_BASS:
-				OutNote = gEngine.GetBassNote(TransNote, iPart);
-				break;
-			}
-			break;	// only show input note's first mapping
-		}
-	}
-	PartIdx = iPart;	// pass part index back to caller
-	return(OutNote);
 }
 
 void CPianoDlg::TimerHook()

@@ -11,6 +11,7 @@
 		01		07oct14	add OnUpdatePPQ
 		02		08mar15	add tag length and repeat
 		03		21mar15	add tap tempo
+		04		07feb17	in InitNoteCombo, add key argument
 
         patch general dialog
  
@@ -47,7 +48,7 @@ public:
 	double	GetTempo() const;
 
 // Operations
-	static	void	InitNoteCombo(CComboBox& Combo);
+	static	void	InitNoteCombo(CComboBox& Combo, CNote Key = F);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

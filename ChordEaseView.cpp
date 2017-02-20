@@ -32,6 +32,9 @@
 		22		18jun15	add grid line width, scaled proportionately for printing
 		23		21dec15	use extended string array
 		24		02mar16	add harmony change handler
+		25		06feb17	in popups, account for patch transposition
+		26		08feb17	in popups, show key-appropriate accidentals
+		27		08feb17	in UpdateChart, explicitly update chord bar
 
 		ChordEase view
  
@@ -203,7 +206,10 @@ inline CPoint CChordEaseView::CalcPos(int Beat) const
 void CChordEaseView::UpdateChart()
 {
 //	_tprintf(_T("CChordEaseView::UpdateChart\n"));
-	theApp.GetMain()->OnHarmonyChange();
+	theApp.GetMain()->OnHarmonyChange();	// may not update chord bar
+	CChordBar&	ChordBar = theApp.GetMain()->GetChordBar();
+	if (ChordBar.IsWindowVisible())	// if chord bar visible
+		ChordBar.UpdateChord();	// update chord bar
 	m_ChordSymbol.RemoveAll();
 	m_SectionSymbol.RemoveAll();
 	m_Selection = NULL_SELECTION;
@@ -227,7 +233,7 @@ void CChordEaseView::UpdateChart()
 		int	iMeasure = CalcMeasure(iBeat, iBeatWithinMeasure);
 		int	iChord = song.GetChordIndex(iBeat);
 		if (!iBeatWithinMeasure || iChord != iPrevChord) {
-			CSong::CChord	chord = song.GetChord(iChord);
+			CSong::CChord	chord(song.GetChord(iChord));
 			chord.m_Duration = 0;	// ignore duration
 			CMeasureChord&	mc = mca[iMeasure];
 			mc.m_Chord.Add(chord);
@@ -720,7 +726,7 @@ void CChordEaseView::BeginPopupEdit(int ChordIdx)
 		AfxThrowResourceException();
 	pEdit->SendMessage(WM_SETFONT, WPARAM(GetChartFont()), TRUE);
 	int	iSongChord = GetSongChordIndex(ChordIdx);
-	pEdit->SetWindowText(gEngine.GetSong().GetChordName(iSongChord));
+	pEdit->SetWindowText(gEngine.GetSong().GetChordName(iSongChord, m_Transpose));
 	pEdit->SetSel(0, -1);	// select entire text
 }
 
@@ -738,7 +744,7 @@ bool CChordEaseView::OnDestroyPopupEdit()
 	if (!IsValidChordIndex(m_EditChordIdx))	// improbable but just in case
 		return(FALSE);
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
-	CSong::CChord	chord = gEngine.GetChord(iSongChord);
+	CSong::CChord	chord(gEngine.GetChord(iSongChord));
 	int	ErrID = gEngine.GetSong().ParseChordSymbol(m_PopupEditText, chord);
 	if (ErrID) {	// if error parsing chord symbol
 		CString	msg;
@@ -746,6 +752,7 @@ bool CChordEaseView::OnDestroyPopupEdit()
 		AfxMessageBox(msg);
 		return(FALSE);
 	}
+	chord.Transpose(-m_Transpose);	// untranspose
 	if (chord == gEngine.GetChord(iSongChord))	// if chord unchanged
 		return(FALSE);
 	if (!SetChord(m_EditChordIdx, chord))
@@ -899,12 +906,14 @@ int CChordEaseView::PresetToDuration(int PresetIdx)
 bool CChordEaseView::MakeChordPopups(CMenu& Menu, int ChordIdx)
 {
 	int	iSongChord = GetSongChordIndex(ChordIdx);
-	const CSong::CChord&	chord = gEngine.GetChord(iSongChord);
+	CSong::CChord	chord(gEngine.GetChord(iSongChord));
+	chord.Transpose(m_Transpose);	// apply transposition if any
 	CMenu	*pPopup;
 	CStringArrayEx	item;
 	item.SetSize(OCTAVE);
+	CNote	nSongKey(gEngine.GetSongKey());
 	for (CNote iNote = 0; iNote < OCTAVE; iNote++)	// for each chromatic note
-		item[iNote] = iNote.Name();
+		item[iNote] = iNote.Name(nSongKey);
 	pPopup = Menu.GetSubMenu(CSM_ROOT);	// make root popup
 	if (!MakePopup(*pPopup, CSMID_ROOT_START, item, chord.m_Root))
 		return(FALSE);
@@ -1720,7 +1729,7 @@ void CChordEaseView::OnChordDuration(UINT nID)
 	int	iPreset = nID - CSMID_DURATION_START;
 	ASSERT(iPreset >= 0 && iPreset < DURATION_PRESETS);
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
-	CSong::CChord	ch = gEngine.GetChord(iSongChord);
+	CSong::CChord	ch(gEngine.GetChord(iSongChord));
 	int	dur = PresetToDuration(iPreset);
 	if (dur < 0) {	// if other non-preset duration
 		CDurationDlg	dlg;
@@ -1741,8 +1750,9 @@ void CChordEaseView::OnChordRoot(UINT nID)
 {
 	CNote	note = nID - CSMID_ROOT_START;
 	ASSERT(note.IsNormal());
+	note.TransposeNormal(-m_Transpose);	// untranspose
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
-	CSong::CChord	ch = gEngine.GetChord(iSongChord);
+	CSong::CChord	ch(gEngine.GetChord(iSongChord));
 	if (note != ch.m_Root) {	// if selection changed
 		ch.m_Root = note;
 		SetChord(m_EditChordIdx, ch);
@@ -1754,7 +1764,7 @@ void CChordEaseView::OnChordType(UINT nID)
 	int	iType = nID - CSMID_TYPE_START;
 	ASSERT(iType >= 0 && iType < gEngine.GetSong().GetChordTypeCount());
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
-	CSong::CChord	ch = gEngine.GetChord(iSongChord);
+	CSong::CChord	ch(gEngine.GetChord(iSongChord));
 	if (iType != ch.m_Type) {	// if selection changed
 		ch.m_Type = iType;
 		SetChord(m_EditChordIdx, ch);
@@ -1766,8 +1776,10 @@ void CChordEaseView::OnChordBass(UINT nID)
 	CNote	note = nID - CSMID_BASS_START;
 	ASSERT(note >= 0 && note <= NOTES);	// allow for root item
 	note--;	// compensate for root item
+	if (note >= 0)	// if slash chord
+		note.TransposeNormal(-m_Transpose);	// untranspose
 	int	iSongChord = GetSongChordIndex(m_EditChordIdx);
-	CSong::CChord	ch = gEngine.GetChord(iSongChord);
+	CSong::CChord	ch(gEngine.GetChord(iSongChord));
 	if (note != ch.m_Bass) {	// if selection changed
 		ch.m_Bass = note;
 		SetChord(m_EditChordIdx, ch);
@@ -1983,11 +1995,13 @@ void CChordEaseView::OnEditChordProps()
 	CInsertChordDlg	dlg(NULL, TRUE);	// edit existing chord's properties
 	int	iChord = GetCurChord();
 	int	iSongChord = GetSongChordIndex(iChord);
-	CSong::CChord	chord = gEngine.GetChord(iSongChord);
+	CSong::CChord	chord(gEngine.GetChord(iSongChord));
+	chord.Transpose(m_Transpose);	// apply transposition if any
 	dlg.SetChord(chord);
 	if (dlg.DoModal() == IDOK) {
 		CSong::CChord	NewChord;
 		dlg.GetChord(NewChord);
+		NewChord.Transpose(-m_Transpose);	// untranspose
 		if (NewChord != chord)	// if chord changed
 			SetChord(iChord, NewChord);
 	}

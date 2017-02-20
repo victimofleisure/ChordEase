@@ -703,33 +703,17 @@ BEGIN
                     ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
 END
 
-IDD_PART_LEAD DIALOG DISCARDABLE  0, 0, 180, 116
+IDD_PART_LEAD DIALOG DISCARDABLE  0, 0, 180, 86
 STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
 CAPTION "Lead"
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Harmonizer",IDC_STATIC,7,7,162,102
-    LTEXT           "Generic interval:",IDC_STATIC,14,18,52,8
-    EDITTEXT        IDC_PART_LEAD_HARM_INTERVAL,14,28,34,12,ES_AUTOHSCROLL
-    GROUPBOX        "Static harmony range",IDC_STATIC,73,15,88,41
-    LTEXT           "Minimum:",IDC_STATIC,81,26,30,8
-    EDITTEXT        IDC_PART_LEAD_HARM_STATIC_MIN,81,36,34,12,ES_AUTOHSCROLL
-    LTEXT           "Maximum:",IDC_STATIC,119,26,32,8
-    EDITTEXT        IDC_PART_LEAD_HARM_STATIC_MAX,119,36,34,12,
-                    ES_AUTOHSCROLL
-    CONTROL         "Omit melody",IDC_PART_LEAD_HARM_OMIT_MELODY,"Button",
-                    BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,14,46,54,10
-    CONTROL         "Subpart",IDC_PART_LEAD_HARM_SUBPART,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,14,61,41,10
-    CONTROL         "Crossing",IDC_PART_LEAD_HARM_CROSSING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,14,76,41,10
-    GROUPBOX        "Chord",IDC_STATIC,73,59,88,41
-    LTEXT           "Degree:",IDC_STATIC,81,70,26,8
-    COMBOBOX        IDC_PART_LEAD_HARM_CHORD_DEGREE,81,80,34,80,
-                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Size:",IDC_STATIC,119,70,16,8
-    COMBOBOX        IDC_PART_LEAD_HARM_CHORD_SIZE,119,80,34,80,
-                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Numbers",IDC_STATIC,7,7,98,42
+    LTEXT           "Group:",IDC_STATIC,15,18,21,8
+    COMBOBOX        IDC_PART_NUMBERS_GROUP,15,28,44,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Origin:",IDC_STATIC,63,18,21,8
+    EDITTEXT        IDC_PART_NUMBERS_ORIGIN,63,28,34,12,ES_AUTOHSCROLL
 END
 
 IDD_PART_COMP DIALOG DISCARDABLE  0, 0, 180, 114
@@ -843,7 +827,7 @@ BEGIN
                     LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,0,0,180,150
 END
 
-IDD_PART_AUTO DIALOG DISCARDABLE  0, 0, 180, 114
+IDD_PART_AUTO DIALOG DISCARDABLE  0, 0, 180, 86
 STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
 CAPTION "Auto"
 FONT 8, "MS Sans Serif"
@@ -1295,6 +1279,33 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,183,199,44,14
 END
 
+IDD_PART_HARMONIZER DIALOG DISCARDABLE  0, 0, 180, 98
+STYLE DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Harmonizer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Generic interval:",IDC_STATIC,7,10,52,8
+    EDITTEXT        IDC_PART_HARM_INTERVAL,7,20,34,12,ES_AUTOHSCROLL
+    GROUPBOX        "Static harmony range",IDC_STATIC,67,7,88,41
+    LTEXT           "Minimum:",IDC_STATIC,75,18,30,8
+    EDITTEXT        IDC_PART_HARM_STATIC_MIN,75,28,34,12,ES_AUTOHSCROLL
+    LTEXT           "Maximum:",IDC_STATIC,113,18,32,8
+    EDITTEXT        IDC_PART_HARM_STATIC_MAX,113,28,34,12,ES_AUTOHSCROLL
+    CONTROL         "Omit melody",IDC_PART_HARM_OMIT_MELODY,"Button",
+                    BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,7,38,54,10
+    CONTROL         "Subpart",IDC_PART_HARM_SUBPART,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,53,41,10
+    CONTROL         "Crossing",IDC_PART_HARM_CROSSING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,68,41,10
+    GROUPBOX        "Chord constraint",IDC_STATIC,67,51,88,41
+    LTEXT           "Degree:",IDC_STATIC,75,62,26,8
+    COMBOBOX        IDC_PART_HARM_CHORD_DEGREE,75,72,34,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Size:",IDC_STATIC,113,62,16,8
+    COMBOBOX        IDC_PART_HARM_CHORD_SIZE,113,72,34,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1350,7 +1361,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 173
         TOPMARGIN, 7
-        BOTTOMMARGIN, 109
+        BOTTOMMARGIN, 79
     END
 
     IDD_PART_COMP, DIALOG
@@ -1398,7 +1409,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 173
         TOPMARGIN, 7
-        BOTTOMMARGIN, 107
+        BOTTOMMARGIN, 79
         HORZGUIDE, 7
     END
 
@@ -1553,6 +1564,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 213
     END
+
+    IDD_PART_HARMONIZER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 173
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 91
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1619,33 +1638,52 @@ END
 
 IDD_PART_LEAD DLGINIT
 BEGIN
-    IDC_PART_LEAD_HARM_CHORD_DEGREE, 0x403, 2, 0
+    IDC_PART_NUMBERS_GROUP, 0x403, 6, 0
+0x2031, 0x202d, 0x0035, 
+    IDC_PART_NUMBERS_GROUP, 0x403, 6, 0
+0x2033, 0x202d, 0x0037, 
+    IDC_PART_NUMBERS_GROUP, 0x403, 6, 0
+0x2035, 0x202d, 0x0032, 
+    IDC_PART_NUMBERS_GROUP, 0x403, 6, 0
+0x2037, 0x202d, 0x0034, 
+    IDC_PART_NUMBERS_GROUP, 0x403, 6, 0
+0x2032, 0x202d, 0x0036, 
+    IDC_PART_NUMBERS_GROUP, 0x403, 6, 0
+0x2034, 0x202d, 0x0031, 
+    IDC_PART_NUMBERS_GROUP, 0x403, 6, 0
+0x2036, 0x202d, 0x0033, 
+    0
+END
+
+IDD_PART_HARMONIZER DLGINIT
+BEGIN
+    IDC_PART_HARM_CHORD_DEGREE, 0x403, 2, 0
 0x0031, 
-    IDC_PART_LEAD_HARM_CHORD_DEGREE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_DEGREE, 0x403, 2, 0
 0x0033, 
-    IDC_PART_LEAD_HARM_CHORD_DEGREE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_DEGREE, 0x403, 2, 0
 0x0035, 
-    IDC_PART_LEAD_HARM_CHORD_DEGREE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_DEGREE, 0x403, 2, 0
 0x0037, 
-    IDC_PART_LEAD_HARM_CHORD_DEGREE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_DEGREE, 0x403, 2, 0
 0x0032, 
-    IDC_PART_LEAD_HARM_CHORD_DEGREE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_DEGREE, 0x403, 2, 0
 0x0034, 
-    IDC_PART_LEAD_HARM_CHORD_DEGREE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_DEGREE, 0x403, 2, 0
 0x0036, 
-    IDC_PART_LEAD_HARM_CHORD_SIZE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_SIZE, 0x403, 2, 0
 0x0030, 
-    IDC_PART_LEAD_HARM_CHORD_SIZE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_SIZE, 0x403, 2, 0
 0x0031, 
-    IDC_PART_LEAD_HARM_CHORD_SIZE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_SIZE, 0x403, 2, 0
 0x0032, 
-    IDC_PART_LEAD_HARM_CHORD_SIZE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_SIZE, 0x403, 2, 0
 0x0033, 
-    IDC_PART_LEAD_HARM_CHORD_SIZE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_SIZE, 0x403, 2, 0
 0x0034, 
-    IDC_PART_LEAD_HARM_CHORD_SIZE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_SIZE, 0x403, 2, 0
 0x0035, 
-    IDC_PART_LEAD_HARM_CHORD_SIZE, 0x403, 2, 0
+    IDC_PART_HARM_CHORD_SIZE, 0x403, 2, 0
 0x0036, 
     0
 END
@@ -1665,6 +1703,9 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDS_SONG_ERR_CHORD_TONE_RANGE "Chord tone out of range: '%s'."
+    IDS_SONG_ERR_DUP_CHORD_TYPE "Duplicate chord type '%s'."
+    IDS_SONG_ERR_READ       "Error reading '%s' at line %d."
     IDS_SONG_ERR_SCALE_TOO_LONG "Scale '%s' is too long."
     IDS_SONG_ERR_SEC_BAD_REPEAT "Invalid section repeat count."
     IDS_SONG_ERR_SEC_BAD_SYNTAX "Invalid section syntax."
@@ -1678,13 +1719,13 @@ BEGIN
     IDS_THREADS_COL_THREAD_ID "ID"
     IDS_THREADS_COL_USER_TIME "User"
     IDS_UC_BASE_PATCH       "Base Patch"
-    IDS_UC_CUT              "Cut Parts"
-    IDS_UC_DELETE           "Delete Parts"
-    IDS_UC_ENABLE_PART      "Enable Part"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDS_UC_CUT              "Cut Parts"
+    IDS_UC_DELETE           "Delete Parts"
+    IDS_UC_ENABLE_PART      "Enable Part"
     IDS_UC_INSERT           "Insert Part"
     IDS_UC_MIDI_CHASE       "MIDI Chase"
     IDS_UC_MIDI_TARGETS     "MIDI Targets"
@@ -1697,6 +1738,46 @@ BEGIN
     IDS_UC_SELECT_PART_PAGE "Select Part Page"
     IDS_UC_SELECT_PATCH_PAGE "Select Patch Page"
     IDS_UC_TAP_TEMPO        "Tap Tempo"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_OUT_NOTES_SM_ALL_CHANS "Show output notes for all channels"
+    IDS_OUT_NOTES_SM_ALL_PORTS "Show output notes for all ports"
+    IDS_OUT_NOTES_SM_FILTER_CHAN "Show output notes for this channel only"
+    IDS_OUT_NOTES_SM_FILTER_PORT "Show output notes for this port only"
+    IDS_OUT_NOTES_SM_PIANO_SIZE "Select piano size in keys"
+    IDS_PARTS_BAR           "Parts"
+    IDS_PARTS_COL_FUNCTION  "Function"
+    IDS_PARTS_COL_PART_NAME "Part"
+    IDS_PARTS_TIP_LIST      "List of parts"
+    IDS_PART_FORMAT         "Part%d"
+    IDS_PART_FUNC_BASS      "Bass"
+    IDS_PART_FUNC_BYPASS    "Bypass"
+    IDS_PART_FUNC_COMP      "Comp"
+    IDS_PART_FUNC_LEAD      "Lead"
+    IDS_PART_FUNC_NUMBERS   "Numbers"
+    IDS_PART_MT_AUTO_PLAY   "Auto Play"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_PART_MT_FUNCTION    "Part Function"
+    IDS_PART_MT_HARM_CHORD_DEGREE "Harmonizer Chord Degree"
+    IDS_PART_MT_HARM_CHORD_SIZE "Harmonizer Chord Size"
+    IDS_PART_MT_HARM_CROSSING "Harmonizer Crossing"
+    IDS_PART_MT_HARM_INTERVAL "Harmonizer Interval"
+    IDS_PART_MT_HARM_OMIT_MELODY "Harmonizer Omit Melody"
+    IDS_PART_MT_HARM_STATIC_MAX "Harmonizer Static Max"
+    IDS_PART_MT_HARM_STATIC_MIN "Harmonizer Static Min"
+    IDS_PART_MT_IN_CC_NOTE  "Input CC Note"
+    IDS_PART_MT_IN_CC_NOTE_VEL "Input CC Note Velocity"
+    IDS_PART_MT_IN_NON_DIATONIC "Input Non-Diatonic"
+    IDS_PART_MT_IN_TRANSPOSE "Input Transpose"
+    IDS_PART_MT_IN_VEL_OFFSET "Input Vel. Offset"
+    IDS_PART_MT_IN_ZONE_HIGH "Input Zone High"
+    IDS_PART_MT_IN_ZONE_LOW "Input Zone Low"
+    IDS_PART_MT_NUMBERS_GROUP "Numbers Group"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -1722,6 +1803,9 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDS_PATCH_MT_METRO_ENABLE "Metro. Enable"
+    IDS_PATCH_MT_METRO_VOLUME "Metro. Volume"
+    IDS_PATCH_MT_NEXT_CHORD "Next Chord"
     IDS_PATCH_MT_NEXT_SECTION "Next Section"
     IDS_PATCH_MT_PAUSE      "Pause"
     IDS_PATCH_MT_PLAY       "Play"
@@ -1735,13 +1819,13 @@ BEGIN
     IDS_PATCH_MT_TAP_TEMPO  "Tap Tempo"
     IDS_PATCH_MT_TEMPO      "Tempo"
     IDS_PATCH_MT_TEMPO_MULTIPLE "Tempo Multiple"
-    IDS_PATCH_MT_TRANSPOSE  "Transpose"
-    IDS_PATCH_NEWER_VERSION "'%1' is from a newer version of ChordEase. Some of its features may not be supported."
-    IDS_PATCH_PPQ_CHANGE_WARN "PPQ will be changed from %d to %d."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDS_PATCH_MT_TRANSPOSE  "Transpose"
+    IDS_PATCH_NEWER_VERSION "'%1' is from a newer version of ChordEase. Some of its features may not be supported."
+    IDS_PATCH_PPQ_CHANGE_WARN "PPQ will be changed from %d to %d."
     IDS_RECORD_AS           "Record As"
     IDS_RECORD_LOCKED       "Locked to always record."
     IDS_REC_PLAY_COL_CHANNEL "Chan"
@@ -1757,53 +1841,13 @@ BEGIN
     IDS_SECTION_NAME_SPACES "Section name can't contain spaces."
     IDS_SEC_LIST_COL_IMPLICIT "Implicit"
     IDS_SEC_LIST_COL_INDEX  "#"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
     IDS_SEC_LIST_COL_LENGTH "Length"
     IDS_SEC_LIST_COL_NAME   "Name"
     IDS_SEC_LIST_COL_REPEAT "Repeat"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
-    IDS_PART_MT_IN_CC_NOTE  "Input CC Note"
-    IDS_PART_MT_IN_CC_NOTE_VEL "Input CC Note Velocity"
-    IDS_PART_MT_IN_NON_DIATONIC "Input Non-Diatonic"
-    IDS_PART_MT_IN_TRANSPOSE "Input Transpose"
-    IDS_PART_MT_IN_VEL_OFFSET "Input Vel. Offset"
-    IDS_PART_MT_IN_ZONE_HIGH "Input Zone High"
-    IDS_PART_MT_IN_ZONE_LOW "Input Zone Low"
-    IDS_PART_MT_LEAD_HARM_CHORD_DEGREE "Harmonizer Chord Degree"
-    IDS_PART_MT_LEAD_HARM_CHORD_SIZE "Harmonizer Chord Size"
-    IDS_PART_MT_LEAD_HARM_CROSSING "Harmonizer Crossing"
-    IDS_PART_MT_LEAD_HARM_INTERVAL "Harmonizer Interval"
-    IDS_PART_MT_LEAD_HARM_OMIT_MELODY "Harmonizer Omit Melody"
-    IDS_PART_MT_LEAD_HARM_STATIC_MAX "Harmonizer Static Max"
-    IDS_PART_MT_LEAD_HARM_STATIC_MIN "Harmonizer Static Min"
-    IDS_PART_MT_OUT_ANTICIPATION "Output Harm. Anticipation"
-    IDS_PART_MT_OUT_BANK_SELECT_LSB "Bank Select LSB"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
-    IDS_PART_MT_OUT_BANK_SELECT_MSB "Bank Select MSB"
-    IDS_PART_MT_OUT_FIX_HELD_NOTES "Output Fix Held Notes"
-    IDS_PART_MT_OUT_PATCH   "Output Patch"
-    IDS_PART_MT_OUT_VOLUME  "Output Volume"
-    IDS_PATCH_BAD_FORMAT    "'%1' has an invalid format."
-    IDS_PATCH_BAR           "Patch"
-    IDS_PATCH_MT_CHORD_BASS "Chord Bass"
-    IDS_PATCH_MT_CHORD_DICTIONARY "Chord Dictionary"
-    IDS_PATCH_MT_CHORD_MODE "Chord Mode"
-    IDS_PATCH_MT_CHORD_ROOT "Chord Root"
-    IDS_PATCH_MT_CHORD_SCALE "Chord Scale"
-    IDS_PATCH_MT_CHORD_TYPE "Chord Type"
-    IDS_PATCH_MT_LEAD_IN    "Lead-in"
-    IDS_PATCH_MT_METRO_ENABLE "Metro. Enable"
-    IDS_PATCH_MT_METRO_VOLUME "Metro. Volume"
-    IDS_PATCH_MT_NEXT_CHORD "Next Chord"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
     IDS_SEC_LIST_COL_START  "Start"
     IDS_SONG_ERR_BAD_BASS_NOTE "Invalid bass note in '%s'."
     IDS_SONG_ERR_BAD_CHORD  "Invalid chord '%s'."
@@ -1817,9 +1861,26 @@ BEGIN
     IDS_SONG_ERR_BAD_SCALE  "Unknown scale '%s'."
     IDS_SONG_ERR_BAD_SYNTAX "Invalid syntax."
     IDS_SONG_ERR_BAD_TEMPO  "Invalid tempo '%s'."
-    IDS_SONG_ERR_CHORD_TONE_RANGE "Chord tone out of range: '%s'."
-    IDS_SONG_ERR_DUP_CHORD_TYPE "Duplicate chord type '%s'."
-    IDS_SONG_ERR_READ       "Error reading '%s' at line %d."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_PART_MT_NUMBERS_ORIGIN "Numbers Origin"
+    IDS_PART_MT_OUT_ANTICIPATION "Output Harm. Anticipation"
+    IDS_PART_MT_OUT_BANK_SELECT_LSB "Bank Select LSB"
+    IDS_PART_MT_OUT_BANK_SELECT_MSB "Bank Select MSB"
+    IDS_PART_MT_OUT_FIX_HELD_NOTES "Output Fix Held Notes"
+    IDS_PART_MT_OUT_PATCH   "Output Patch"
+    IDS_PART_MT_OUT_VOLUME  "Output Volume"
+    IDS_PATCH_BAD_FORMAT    "'%1' has an invalid format."
+    IDS_PATCH_BAR           "Patch"
+    IDS_PATCH_MT_CHORD_BASS "Chord Bass"
+    IDS_PATCH_MT_CHORD_DICTIONARY "Chord Dictionary"
+    IDS_PATCH_MT_CHORD_MODE "Chord Mode"
+    IDS_PATCH_MT_CHORD_ROOT "Chord Root"
+    IDS_PATCH_MT_CHORD_SCALE "Chord Scale"
+    IDS_PATCH_MT_CHORD_TYPE "Chord Type"
+    IDS_PATCH_MT_LEAD_IN    "Lead-in"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -2009,26 +2070,7 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDS_OUT_NOTES_SM_ALL_CHANS "Show output notes for all channels"
-    IDS_OUT_NOTES_SM_ALL_PORTS "Show output notes for all ports"
-    IDS_OUT_NOTES_SM_FILTER_CHAN "Show output notes for this channel only"
-    IDS_OUT_NOTES_SM_FILTER_PORT "Show output notes for this port only"
-    IDS_OUT_NOTES_SM_PIANO_SIZE "Select piano size in keys"
-    IDS_PARTS_BAR           "Parts"
-    IDS_PARTS_COL_FUNCTION  "Function"
-    IDS_PARTS_COL_PART_NAME "Part"
-    IDS_PARTS_TIP_LIST      "List of parts"
-    IDS_PART_FORMAT         "Part%d"
-    IDS_PART_FUNC_BASS      "Bass"
-    IDS_PART_FUNC_BYPASS    "Bypass"
-    IDS_PART_FUNC_COMP      "Comp"
-    IDS_PART_FUNC_LEAD      "Lead"
-    IDS_PART_MT_AUTO_PLAY   "Auto Play"
     IDS_PART_MT_AUTO_VELOCITY "Auto Velocity"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
     IDS_PART_MT_AUTO_WINDOW "Auto Window"
     IDS_PART_MT_BASS_APPROACH_LENGTH "Bass Approach Length"
     IDS_PART_MT_BASS_APPROACH_TRIGGER "Bass Approach Trigger"
@@ -2044,7 +2086,6 @@ BEGIN
     IDS_PART_MT_COMP_VARIATION "Comp Variation"
     IDS_PART_MT_COMP_VOICING "Comp Voicing"
     IDS_PART_MT_ENABLE      "Part Enable"
-    IDS_PART_MT_FUNCTION    "Part Function"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -2283,6 +2324,16 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDC_PART_HARM_CHORD_DEGREE 
+                            "Constrain harmony to chord of this diatonic degree"
+    IDC_PART_HARM_CHORD_SIZE 
+                            "Constrain harmony to chord of this size, in notes"
+    IDC_PART_HARM_CROSSING  "True if static harmony can cross melody"
+    IDC_PART_HARM_INTERVAL  "Generic harmony interval, in diatonic steps"
+    IDC_PART_HARM_OMIT_MELODY "True if harmonizer should omit melody note"
+    IDC_PART_HARM_STATIC_MAX "Maximum static harmony interval, in semitones"
+    IDC_PART_HARM_STATIC_MIN "Minimum static harmony interval, in semitones"
+    IDC_PART_HARM_SUBPART   "True if part is subordinate to a harmony group"
     IDC_PART_IN_CC_NOTE     "Note input via continuous controller"
     IDC_PART_IN_CC_NOTE_VEL "Velocity of note input via continuous controller"
     IDC_PART_IN_CHAN        "Input channel number"
@@ -2291,27 +2342,15 @@ BEGIN
     IDC_PART_IN_PORT        "MIDI input device index"
     IDC_PART_IN_TRANSPOSE   "Input transposition, in semitones"
     IDC_PART_IN_VEL_OFFSET  "Input note velocity offset"
-    IDC_PART_IN_ZONE_HIGH   "Highest note of input range"
-    IDC_PART_IN_ZONE_LOW    "Lowest note of input range"
-    IDC_PART_LEAD_HARM_CHORD_DEGREE 
-                            "Constrain harmony to chord of this diatonic degree"
-    IDC_PART_LEAD_HARM_CHORD_SIZE 
-                            "Constrain harmony to chord of this size, in notes"
-    IDC_PART_LEAD_HARM_CROSSING "True if static harmony can cross melody"
-    IDC_PART_LEAD_HARM_INTERVAL "Generic harmony interval, in diatonic steps"
-    IDC_PART_LEAD_HARM_OMIT_MELODY 
-                            "True if harmonizer should omit melody note"
-    IDC_PART_LEAD_HARM_STATIC_MAX 
-                            "Maximum static harmony interval, in semitones"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDC_PART_LEAD_HARM_STATIC_MIN 
-                            "Minimum static harmony interval, in semitones"
-    IDC_PART_LEAD_HARM_SUBPART 
-                            "True if part is subordinate to a harmony group"
+    IDC_PART_IN_ZONE_HIGH   "Highest note of input range"
+    IDC_PART_IN_ZONE_LOW    "Lowest note of input range"
     IDC_PART_NAME           "Part name"
+    IDC_PART_NUMBERS_GROUP  "Tension of numbers tetrachord, relative to tonal center"
+    IDC_PART_NUMBERS_ORIGIN "Offset of numbers origin from middle C, in tetratonic degrees"
     IDC_PART_OUT_ANTICIPATION 
                             "Harmonic anticipation, as fraction of whole note"
     IDC_PART_OUT_BANK_SELECT_LSB 
@@ -2326,12 +2365,12 @@ BEGIN
     IDC_PART_OUT_PATCH      "Patch number, or -1 if none"
     IDC_PART_OUT_PORT       "MIDI output device index"
     IDC_PART_OUT_VOLUME     "Output volume, or -1 if none"
-    IDC_PATCH_GEN_KEY       "Transposed key signature"
-    IDC_PATCH_GEN_LEAD_IN   "Lead-in length, in measures"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDC_PATCH_GEN_KEY       "Transposed key signature"
+    IDC_PATCH_GEN_LEAD_IN   "Lead-in length, in measures"
     IDC_PATCH_GEN_PPQ       "Time resolution, in pulses per quarter note"
     IDC_PATCH_GEN_SONG_POSITION "Song position, in chords"
     IDC_PATCH_GEN_TAG_LENGTH "Length of tag, in measures"
@@ -2346,12 +2385,12 @@ BEGIN
     IDC_PATCH_METRO_CHANNEL "Output channel number"
     IDC_PATCH_METRO_DEVICE_NAME "Metronome output device name"
     IDC_PATCH_METRO_ENABLE  "Enable metronome"
-    IDC_PATCH_METRO_NOTE    "Normal metronome note"
-    IDC_PATCH_METRO_PATCH   "Patch number, or -1 if none"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDC_PATCH_METRO_NOTE    "Normal metronome note"
+    IDC_PATCH_METRO_PATCH   "Patch number, or -1 if none"
     IDC_PATCH_METRO_PORT    "MIDI output device index"
     IDC_PATCH_METRO_VELOCITY "Note velocity"
     IDC_PATCH_METRO_VOLUME  "Output volume, or -1 if none"
@@ -2365,11 +2404,11 @@ BEGIN
     IDC_PATCH_SYNC_OUT_PORT "Index of output device to send MIDI clock to"
     IDC_PIANO_CHANNEL       "Output channel number"
     IDC_PIANO_KEY_COUNT     "Number of keys"
-    IDC_PIANO_PORT          "MIDI output device index"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDC_PIANO_PORT          "MIDI output device index"
     IDC_PIANO_START_NOTE    "Keyboard's first note"
     IDC_PIANO_VELOCITY      "Output velocity"
     IDC_REC_PLAY_EXPORT     "Export the recording as a MIDI file"
@@ -2378,11 +2417,11 @@ BEGIN
     IDC_REC_PLAY_POS_SLIDER "Playback position"
     IDC_REC_PLAY_SAVE       "Save the recording with a new name"
     IDC_REC_PLAY_STOP       "Stop playback and rewind"
-    IDC_REC_PLAY_TRACK_LIST "List of tracks in the recording"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
+    IDC_REC_PLAY_TRACK_LIST "List of tracks in the recording"
     IDC_SECTION_PROPS_LENGTH "Section length"
     IDC_SECTION_PROPS_NAME  "Section name"
     IDC_SECTION_PROPS_REPEAT "Section repeat count, or zero for indefinite"

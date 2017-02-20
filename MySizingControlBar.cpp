@@ -17,6 +17,7 @@
 		07      20mar14	derive from variable base class
 		08		29apr15	add OnShowChanged overridable
 		09		24jul15	in OnShowChanging, avoid hidden control with focus
+		10		26mar16	use IsVisible for more reliable results
 
         wrapper for Cristi Posea's sizable control bar
  
@@ -77,7 +78,7 @@ void CMySizingControlBar::OnWindowPosChanging(WINDOWPOS FAR* lpwndpos)
 	// so post ourself a message that we'll receive after things settle down;
 	// if showing or hiding bar, and message not already posted
 	if ((lpwndpos->flags & (SWP_SHOWWINDOW | SWP_HIDEWINDOW)) && !m_IsShowChanging) {
-		PostMessage(UWM_SHOWCHANGING, IsWindowVisible());	// post message
+		PostMessage(UWM_SHOWCHANGING, IsVisible());	// post message
 		m_IsShowChanging = TRUE;	// message is pending
 	}
 	CDerivedSizingControlBar::OnWindowPosChanging(lpwndpos);
@@ -86,7 +87,7 @@ void CMySizingControlBar::OnWindowPosChanging(WINDOWPOS FAR* lpwndpos)
 LRESULT CMySizingControlBar::OnShowChanging(WPARAM wParam, LPARAM lParam)
 {
 	m_IsShowChanging = FALSE;	// reset message pending flag
-	BOOL	bShow = IsWindowVisible();
+	BOOL	bShow = IsVisible();
 	if (!bShow || (bShow && !wParam))	// if hiding, or showing and previously hidden
 		OnShowChanged(bShow);	// notify derived class
 	if (!bShow && ::IsChild(m_hWnd, ::GetFocus()))	// if hiding and our child has focus

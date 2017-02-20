@@ -10,6 +10,7 @@
         00      20sep13	initial version
 		01		16mar15	add const overload of MIDI target dialog accessor
 		02		23mar15	add MIDI target page accessor
+		03		21mar16	add harmonizer page
 
 		part page view
  
@@ -31,6 +32,7 @@
 #include "PartInputDlg.h"
 #include "PartOutputDlg.h"
 #include "PartLeadDlg.h"
+#include "PartHarmonizerDlg.h"
 #include "PartCompDlg.h"
 #include "PartBassDlg.h"
 #include "PartAutoDlg.h"

@@ -14,6 +14,8 @@
 		04		21jun15	add status bar hints and recent file list
 		05		21dec15	use extended string array
 		06		02mar16	add harmony change handler
+		07		10feb17	add UpdateCurrentChord
+		08		11feb17	in Sort, preserve selection
 
 		chord dictionary editing dialog
 
@@ -25,7 +27,6 @@
 #include "stdafx.h"
 #include "ChordEase.h"
 #include "ChordDictionaryDlg.h"
-#include "Diatonic.h"
 #include "PopupCombo.h"
 #include "FocusEdit.h"
 #include "MainFrm.h"
@@ -354,6 +355,18 @@ void CChordDictionaryDlg::UpdateAlias(int TypeIdx, int AliasIdx)
 	}
 }
 
+void CChordDictionaryDlg::UpdateCurrentChord()
+{
+	if (IsWindowVisible()) {	// if we're showing
+		int	iType = gEngine.GetCurHarmony().m_Type;
+		const CSong::CChordType&	type = gEngine.GetSong().GetChordType(iType);
+		m_Dict[iType].m_Scale = type.m_Scale;
+		m_Dict[iType].m_Mode = type.m_Mode;
+		SetCurType(iType);	// redraw item
+		UpdateSpelling(iType);
+	}
+}
+
 void CChordDictionaryDlg::OnApplyError(LPCTSTR ErrorMsg, int UndoCode)
 {
 	CIntArrayEx	sel;
@@ -673,19 +686,33 @@ bool CChordDictionaryDlg::Sort(int ColIdx)
 {
 	NotifyUndoableEdit(0, UCODE_SORT);
 	int	nTypes = m_Dict.GetSize();
-	CIntArrayEx	ItemIdx;
+	CIntArrayEx	ItemIdx, RevIdx;
 	ItemIdx.SetSize(nTypes);
+	RevIdx.SetSize(nTypes);
 	int	iType;
-	for (iType = 0; iType < nTypes; iType++)
+	for (iType = 0; iType < nTypes; iType++)	// for each type
 		ItemIdx[iType] = iType;
 	m_SortCol = ColIdx;
 	m_SortThis = this;	// pass our instance to sort compare
 	qsort(ItemIdx.GetData(), nTypes, sizeof(int), StaticSortCompare);
 	m_SortThis = NULL;	// reset instance pointer
 	CSong::CChordDictionary	dict(m_Dict);	// copy dictionary to temp
-	for (iType = 0; iType < nTypes; iType++)
-		m_Dict[iType] = dict[ItemIdx[iType]];
+	for (iType = 0; iType < nTypes; iType++) {	// for each type
+		int	iSortedType = ItemIdx[iType];
+		RevIdx[iSortedType] = iType;
+		m_Dict[iType] = dict[iSortedType];
+	}
+	CIntArrayEx	OldSel;
+	m_List.GetSelection(OldSel);	// get selected item indices
 	UpdateList();
+	CIntArrayEx	NewSel;
+	int	nSels = OldSel.GetSize();
+	NewSel.SetSize(nSels);
+	for (int iSel = 0; iSel < nSels; iSel++)	// for each selected item
+		NewSel[iSel] = RevIdx[OldSel[iSel]];	// remap item index for sort
+	m_List.SetSelection(NewSel);	// apply remapped selection
+	if (nSels)
+		m_List.EnsureVisible(NewSel[0], FALSE);
 	return(ApplyChanges(UCODE_SORT));
 }
 

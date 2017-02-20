@@ -2346,6 +2346,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PartHarmonizerDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PartHarmonizerDlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PartInputDlg.cpp"
 				>
 			</File>
@@ -2359,6 +2367,10 @@
 			</File>
 			<File
 				RelativePath=".\PartLeadDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PartLegacyDef.h"
 				>
 			</File>
 			<File

@@ -10,6 +10,7 @@
         00      20sep13	initial version
 		01		15may14	add non-diatonic rule combo
 		02		21aug15	disable controls if harmony subpart
+		03		21mar16	in SetPart, fix legacy harmonizer name
 
 		part input dialog
  
@@ -61,7 +62,7 @@ void CPartInputDlg::SetPart(const CPart& Part)
 	m_VelOffset.SetVal(Part.m_In.VelOffset);
 	m_NonDiatonic.SetCurSel(Part.m_In.NonDiatonic);
 	UpdateDeviceName(Part.m_In.Inst.Port);
-	EnableControls(!Part.m_Lead.Harm.Subpart);
+	EnableControls(!Part.m_Harm.Subpart);
 }
 
 void CPartInputDlg::UpdateDeviceName(int Port)

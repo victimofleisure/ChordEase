@@ -10,6 +10,7 @@
 		00		23aug13	initial version
 		01		03apr15	add archive operators
 		02		12jun15	in IntervalName, add default note argument
+		03		06feb17	add TransposeNormal
  
 		note object
 
@@ -84,7 +85,8 @@ public:
 	CNote	operator*=(CNote Note);
 	CNote	operator/=(CNote Note);
 	CNote	operator%=(CNote Note);
-	void	Normalize();
+	CNote	Normalize();
+	CNote	TransposeNormal(int Steps);
 	void	ShiftToSameOctave(CNote Note);
 	void	ShiftToNearestOctave(CNote Note);
 	void	ShiftToWindow(CNote Note);
@@ -187,9 +189,15 @@ inline CNote CNote::operator%=(CNote Note)
 	return(m_Note %= Note);
 }
 
-inline void CNote::Normalize()
+inline CNote CNote::Normalize()
 {
-	m_Note = Normal();
+	return(m_Note = Normal());
+}
+
+inline CNote CNote::TransposeNormal(int Steps)
+{
+	m_Note += Steps;
+	return(Normalize());
 }
 
 inline int CNote::Mod(int Val, int Modulo)

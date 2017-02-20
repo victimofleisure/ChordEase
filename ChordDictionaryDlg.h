@@ -12,6 +12,7 @@
 		02		13jun15	refactor undo; remove apply button
 		03		21jun15	add status bar hints and recent file list
 		04		21dec15	use extended string array
+		05		10feb17	add UpdateCurrentChord
 
 		chord dictionary editing dialog
 
@@ -82,6 +83,7 @@ public:
 	void	UpdateMode(int TypeIdx, int Mode);
 	bool	UpdateComp(int TypeIdx, int VarIdx, LPCTSTR Text);
 	void	UpdateAlias(int TypeIdx, int AliasIdx);
+	void	UpdateCurrentChord();
 	void	UpdateDictionary(int TypeIdx = -1);
 	bool	Open(CString Path, UINT Flags = 0);
 	bool	Save(CString Path);

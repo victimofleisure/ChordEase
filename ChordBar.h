@@ -9,7 +9,9 @@
 		rev		date	comments
 		00		09jun15	initial version
 		01		02mar16	remove conditional update
- 
+		02		26mar16	make delayed init public
+		03		07feb17	add InitNoteCombos and SongKey
+
 		chord toolbar
  
 */
@@ -34,6 +36,7 @@ class CChordBar : public CMyToolBar
 // Construction
 public:
 	CChordBar();
+	void	OnDelayedInit();
 
 // Attributes
 public:
@@ -63,7 +66,6 @@ protected:
 	afx_msg void OnSelchangeType();
 	afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
-	afx_msg LRESULT OnDelayedInit(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 // Constants
@@ -74,7 +76,6 @@ protected:
 	};
 	enum {
 		DROP_HEIGHT = 250,
-		UWM_DELAYEDINIT = WM_USER + 1776,
 	};
 	static const int	m_InitWidth[CONTROLS];
 
@@ -86,6 +87,7 @@ protected:
 		int		Key;
 		int		Scale;
 		int		Mode;
+		int		SongKey;
 	};
 
 // Data members
@@ -100,6 +102,7 @@ protected:
 	bool	m_ChordDictChange;	// true if chord dictionary changes while we're hidden
 
 // Helpers
+	void	InitNoteCombos();
 	void	InitChordTypeCombo();
 	void	UpdateChordTypes();
 	int		PreChordEdit();

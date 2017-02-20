@@ -19,6 +19,7 @@
         09      05apr15	add chord dictionary set and write methods
         10      10jun15	in CChord, allow bass note to be -1 for unspecified
 		11		11jun15	refactor SetChordDictionary to update chord array
+		12		06feb17	in CChord, add Transpose
 
 		song container
 
@@ -46,6 +47,13 @@ bool CSong::CChord::TranslateType(const CIntArrayEx& TranTbl)
 		return(FALSE);
 	m_Type = TranTbl[m_Type];	// translate chord type
 	return(TRUE);
+}
+
+void CSong::CChord::Transpose(int Steps)
+{
+	m_Root.TransposeNormal(Steps);
+	if (m_Bass >= 0)	// if slash chord
+		m_Bass.TransposeNormal(Steps);
 }
 
 bool CSong::CChordType::IsAliasOf(const CChordType& Type) const

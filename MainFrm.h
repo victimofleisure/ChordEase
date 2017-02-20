@@ -549,7 +549,7 @@ inline bool CMainFrame::IsMidiChase() const
 
 inline const CMidiTarget& CMainFrame::GetMidiTarget(int PartIdx, int TargetIdx)
 {
-	return(theApp.m_Engine.GetPatch().GetMidiTarget(PartIdx, TargetIdx));
+	return(gEngine.GetPatch().GetMidiTarget(PartIdx, TargetIdx));
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -12,6 +12,7 @@
 		02		24aug15	add velocity color option
 		03		27aug15	add other key color types
 		04		21dec15	use extended string array
+		05		27mar16	move EmulateNoteOn into engine
 
 		piano dialog
 
@@ -137,10 +138,6 @@ protected:
 		KC_THIRDS,				// show scale tones in thirds
 		KEY_COLOR_TYPES
 	};
-	enum {	// reserved note values used for mapping exceptions
-		NOTE_UNMAPPED = -1,			// note isn't mapped
-		NOTE_MAPPED_TO_CHORD = -2,	// note is mapped to a chord
-	};
 	enum {	// piano sizes
 		#define PIANOSIZEDEF(StartNote, KeyCount) PS_##KeyCount,
 		#include "PianoSizeDef.h"	// generate piano size enum
@@ -188,7 +185,6 @@ protected:
 	void	UpdateKeyColors();
 	void	UpdateNotes();
 	void	UpdateInvertLabels();
-	CNote	EmulateNoteOn(CMidiInst Inst, CNote InNote, int& PartIdx);
 };
 
 inline int CPianoDlg::GetVelocityColor(int Velocity)

@@ -12,6 +12,7 @@
 		02		04apr15	in OnInitDialog, rename chord type accessor
         03      10jun15	in OnInitDialog and OnOK, handle negative bass note
 		04		21dec15	use extended string array
+		05		08feb17	in OnInitDialog, show key-appropriate accidentals
 
         insert chord dialog
  
@@ -162,8 +163,9 @@ BOOL CInsertChordDlg::OnInitDialog()
 	// init root and bass combos
 	CString	s;
 	m_Bass.AddString(LDS(IDS_INSCH_BASS_ROOT));
-	CPatchGeneralDlg::InitNoteCombo(m_Root);
-	CPatchGeneralDlg::InitNoteCombo(m_Bass);
+	CNote	nSongKey(gEngine.GetSongKey());
+	CPatchGeneralDlg::InitNoteCombo(m_Root, nSongKey);
+	CPatchGeneralDlg::InitNoteCombo(m_Bass, nSongKey);
 	m_Root.SetCurSel(m_Chord.m_Root);
 	m_Bass.SetCurSel(m_Chord.m_Bass + 1);	// compensate for root item
 	// init chord type combo

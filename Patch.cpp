@@ -16,6 +16,7 @@
 		06		06apr15	in GetMidiAssignments, remove engine references
 		07		22dec15	add device names to port ID class; bump file version
 		08		23dec15	in UpdatePorts, return missing devices
+		09		21mar16	add LoadV3 for legacy harmonizer vars
 
 		patch container
 
@@ -29,7 +30,7 @@
 #include <math.h>	// for pow
 
 #define FILE_ID			_T("ChordEase")
-#define	FILE_VERSION	3
+#define	FILE_VERSION	4
 
 #define RK_FILE_ID		_T("FileID")
 #define RK_FILE_VERSION	_T("FileVersion")
@@ -108,6 +109,8 @@ bool CPatch::Read(LPCTSTR Path)
 		for (int iPart = 0; iPart < parts; iPart++) {	// for each part
 			section.Format(_T("Part%d"), iPart);
 			m_Part[iPart].Load(section);	// read part
+			if (m_FileVersion < 4)
+				m_Part[iPart].LoadV3(section);
 		}
 		m_InPortID.Read(RK_MIDI_IN_PORT_ID);	// read input port IDs
 		m_OutPortID.Read(RK_MIDI_OUT_PORT_ID);	// read output port IDs

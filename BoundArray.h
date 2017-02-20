@@ -12,6 +12,7 @@
 		02		03apr15	add serialization
 		03		28may15	pass element by const reference
 		04		20dec15	add fast remove for unordered lists
+		05		20mar16	add min/max methods
  
 		dynamic array with a fixed maximum size
  
@@ -60,6 +61,10 @@ public:
 	void	Mid(CBoundArray& arr, int nFirst) const;
 	void	Mid(CBoundArray& arr, int nFirst, int nCount) const;
 	void	Serialize(CArchive& ar);
+	TYPE	Min() const;
+	TYPE	Max() const;
+	TYPE	Min2() const;
+	TYPE	Max2() const;
 
 protected:
 // Data members
@@ -363,6 +368,70 @@ void CBoundArray<TYPE, MAX_SIZE>::Serialize(CArchive& ar)
 		for (int iElem = 0; iElem < nElems; iElem++)
 			ar >> m_Data[iElem];
 	}
+}
+
+template<class TYPE, int MAX_SIZE>
+inline TYPE CBoundArray<TYPE, MAX_SIZE>::Min() const
+{
+	ASSERT(m_Size > 0);
+	int	nElems = m_Size;
+	TYPE	nMin = m_Data[0];
+	for (int iElem = 1; iElem < nElems; iElem++) {
+		if (m_Data[iElem] < nMin)
+			nMin = m_Data[iElem];
+	}
+	return(nMin);
+}
+
+template<class TYPE, int MAX_SIZE>
+inline TYPE CBoundArray<TYPE, MAX_SIZE>::Max() const
+{
+	ASSERT(m_Size > 0);
+	int	nElems = m_Size;
+	TYPE	nMax = m_Data[0];
+	for (int iElem = 1; iElem < nElems; iElem++) {
+		if (m_Data[iElem] > nMax)
+			nMax = m_Data[iElem];
+	}
+	return(nMax);
+}
+
+template<class TYPE, int MAX_SIZE>
+inline TYPE CBoundArray<TYPE, MAX_SIZE>::Min2() const
+{
+	ASSERT(m_Size > 1);
+	int	nElems = m_Size;
+	TYPE	nMin = m_Data[0];
+	TYPE	nMin2 = m_Data[1];
+	for (int iElem = 1; iElem < nElems; iElem++) {
+		if (m_Data[iElem] < nMin) {
+			nMin2 = nMin;
+			nMin = m_Data[iElem];
+		} else {
+			if (m_Data[iElem] < nMin2)
+				nMin2 = m_Data[iElem];
+		}
+	}
+	return(nMin2);
+}
+
+template<class TYPE, int MAX_SIZE>
+inline TYPE CBoundArray<TYPE, MAX_SIZE>::Max2() const
+{
+	ASSERT(m_Size > 1);
+	int	nElems = m_Size;
+	TYPE	nMax = m_Data[0];
+	TYPE	nMax2 = m_Data[1];
+	for (int iElem = 1; iElem < nElems; iElem++) {
+		if (m_Data[iElem] > nMax) {
+			nMax2 = nMax;
+			nMax = m_Data[iElem];
+		} else {
+			if (m_Data[iElem] > nMax2)
+				nMax2 = m_Data[iElem];
+		}
+	}
+	return(nMax2);
 }
 
 #endif

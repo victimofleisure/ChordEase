@@ -1,5 +1,6 @@
 @echo off
-C:\Chris\tools\navgen templateGH.html .
+copy C:\Chris\MyProjects\ChordEase\web\*.* .
+C:\Chris\tools\navgen templateGitHub.html .
 if errorlevel 1 goto err
 "C:\Chris\MyProjects\FixSelfUrl\Release\FixSelfUrl" *.html
 if errorlevel 1 goto err

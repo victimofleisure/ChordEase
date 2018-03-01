@@ -1,0 +1,14 @@
+<title>Undo/Redo</title>
+<body>
+
+<h3>Undo/Redo</h3>
+
+<p>Any operation that modifies either the <a href="../../Concepts/Song.htm">song</a> or the <a href="../../Concepts/Patch.htm">patch</a> can be undone via <span class="cmd">Edit/Undo</span> or <span class="key">Ctrl+Z</span>, and redone via <span class="cmd">Edit/Redo</span> or <span class="key">Ctrl+Y</span>. Undo is unlimited. Note that the song and the patch have independent undo histories, and consequently the undo/redo command's action depends on which window has focus, as shown below. To undo/redo a song edit, first make sure the <a href="../../Concepts/Chart_view.htm">chart view</a> has focus, otherwise you may inadvertently undo/redo a patch edit.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Focus</th><th>Action</th></tr>
+<tr><td>Chart view</td><td>Undo/Redo the most recent song edit.</td></tr>
+<tr><td>Any other window</td><td>Undo/Redo the most recent patch edit.</td></tr>
+</table>
+
+</body>

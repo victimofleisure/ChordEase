@@ -1,0 +1,10 @@
+<title>Length</title>
+<body>
+
+<h3>Length</h3>
+
+<p>This command changes the length of the selected chords. The command displays a dialog that prompts the user to enter a scaling percentage. Enter 200% to make the selection twice as long, 50% to make it half as long, etc. Note that the scaling can potentially cause rounding errors, because ChordEase uses integers to represent chord durations. If the specified scaling would cause rounding errors, a warning is displayed.
+
+<p>For example, if the <a href="../../Concepts/Song.htm">song</a> is in 4/4 time and has one chord per measure, any of its chords can be scaled by 50% without rounding errors, because each chord has a duration of 4 and half of 4 is an integer. However if the song is in 3/4, since each chord has a duration of 3 and half of 3 isn't an integer, the scaling would cause rounding errors, and consequently a warning is displayed. In this particular case the problem could be avoided by doubling the song's time signature from 3/4 to 6/8; see the discussion of time signature changes in <a href="../../Dialogs/Song_Properties.htm">song properties</a>. In some cases it may be preferable to cancel the length change, and manually edit the chord durations instead; see <a href="../../Concepts/Chart_view.htm">chart view</a>.
+
+</body>

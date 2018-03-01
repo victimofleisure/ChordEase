@@ -1,0 +1,16 @@
+<title>Start Tag</title>
+<body>
+
+<h3>Start Tag</h3>
+
+<p>This command spontaneously repeats one or more measures, which is also known as <em>tagging</em>. Tags can be impromptu, unlike <a href="../../Concepts/Sections.htm">sections</a> which must be arranged beforehand. A tag can repeat a fixed number of times or indefinitely. A fixed repeat count is useful for endings, whereas indefinite repeat is useful for jamming on part of a <a href="../../Concepts/Song.htm">song</a>.
+
+<p>A tag is specified via its last measure, its <a href="../../Patch_bar/General.htm#Tag_Length">length</a> in measures, and its <a href="../../Patch_bar/General.htm#Tag_Repeat">repeat count</a>. To start tagging, first adjust the length and repeat count if needed. Then issue the Start Tag command during the last of the measures you wish to repeat, using <span class="cmd">Transport/Start Tag</span>, <span class="key">Ctrl+T</span>, or a suitably <a href="../../Concepts/MIDI_targets.htm">assigned</a> MIDI controller. It's recommended to issue the command approximately halfway through the last measure, in order to minimize the risk of tagging the wrong measures. Issuing the command too late can also cause incorrect <a href="../../Parts_bar/Part_Output.htm#Harmonic_Anticipation">harmonic anticipation</a>.
+
+<p>To exit a tag, use the Start Tag command again, or the <a href="../../Menus/Transport/Next_Section.htm">Next Section</a> command if you prefer. Either command finishes the current pass through the tag before proceeding on to the following measure. A tag with a fixed repeat count exits automatically after the specified number of repetitions, though you can also exit it prematurely. An indefinitely repeating tag doesn't exit until you tell it to.
+
+<p>Note that a tag can't wrap around from the end of the song to the beginning. For example if the tag length is two measures, a tag can't be started until the song's second measure.
+
+<p>Tagging is normally done with the song <a href="../../Menus/Transport/Play-Stop.htm">playing</a>, but it's also supported in free time mode, i.e. when the song is stopped and you're stepping through its chords manually via the <a href="../../Menus/Transport/Next_Chord.htm">Next Chord</a> and <a href="../../Menus/Transport/Previous_Chord.htm">Previous Chord</a> commands.
+
+</body>

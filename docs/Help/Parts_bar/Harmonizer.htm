@@ -1,0 +1,119 @@
+<title>Harmonizer</title>
+<body>
+
+<h3>Harmonizer</h3>
+
+<p>The harmonizer automatically generates a harmony line for the <a href="../Concepts/Part.htm">part</a>'s output melody notes. The harmonizer is available for all melodic <a href="../Concepts/Mapping_functions.htm">mapping functions</a>, including <a href="../Parts_bar/Lead.htm">lead</a> and <a href="../Parts_bar/Bass.htm">bass</a>, but has no effect on the <a href="../Parts_bar/Comp.htm">comp</a> mapping function. The harmonization is diatonic, meaning the specified <a href="../Parts_bar/Harmonizer.htm#Generic_interval">generic interval</a> is altered as needed to fit the current chord scale. Other harmonizer features include <a href="../Parts_bar/Harmonizer.htm#Static_harmony_range">static harmony</a> and constraining the harmony to a <a href="../Parts_bar/Harmonizer.htm#Constrain_to_chord">chord</a>. It's possible to generate multiple harmony lines for a given melody, e.g. three-part or four-part harmony, by creating multiple parts; for more information, see <a href="../Parts_bar/Harmonizer.htm#Omit_melody">omit melody</a> and <a href="../Parts_bar/Harmonizer.htm#Harmony_groups">harmony groups</a> below.
+
+<a name="Generic_interval"><p><b>Generic interval</b></a>
+<p>This is the <em>nominal</em> interval between the melody note and the harmony note, in scale steps. The actual interval varies as needed to ensure that the harmony note belongs to the current chord scale. For example if the generic interval is a third, the actual interval may be a major third or a minor third, depending on the chord scale and melody note. The generic interval can be conceptualized as how many scale tones are skipped getting from the melody to the harmony. The generic interval can be positive or negative; if it's negative, the harmony is below the melody, otherwise it's above it. A partial table of generic intervals is given below. Intervals larger than those shown in the table are permitted.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Generic interval</th><th>Actual interval</th></tr>
+<tr><td>&minus;7</td><td>octave below</td></tr>
+<tr><td>&minus;6</td><td>7th below</td></tr>
+<tr><td>&minus;5</td><td>6th below</td></tr>
+<tr><td>&minus;4</td><td>5th below</td></tr>
+<tr><td>&minus;3</td><td>4th below</td></tr>
+<tr><td>&minus;2</td><td>3rd below</td></tr>
+<tr><td>&minus;1</td><td>2nd below</td></tr>
+<tr><td>0</td><td>harmony disabled</td></tr>
+<tr><td>1</td><td>2nd above</td></tr>
+<tr><td>2</td><td>3rd above</td></tr>
+<tr><td>3</td><td>4th above</td></tr>
+<tr><td>4</td><td>5th above</td></tr>
+<tr><td>5</td><td>6th above</td></tr>
+<tr><td>6</td><td>7th above</td></tr>
+<tr><td>7</td><td>octave above</td></tr>
+</table>
+
+<p>For a more specific example, suppose the generic interval is 2 (3rd above) and the current scale is C major. If the melody note is C, the harmony note is E, i.e. a major third, but if the melody note is D, the harmony note is F, i.e. a minor third.
+
+<a name="Static_harmony_range"><p><b>Static harmony range</b></a>
+<p>This setting lets you configure the <a href="../Parts_bar/Harmonizer.htm">harmonizer</a> to generate static harmony under certain circumstances. Static harmony is when the melody note changes but the harmony note doesn't, i.e. a stationary, non-moving harmony line. Normally the harmony is a fixed <a href="../Parts_bar/Harmonizer.htm#Generic_interval">generic interval</a> from the melody, and consequently when the melody changes, the harmony changes too. However if a static harmony range is specified, the following rule is applied: if the interval between a new melody note and the previous harmony note is within the specified range, the previous harmony note is reused, resulting in static harmony. By default, the static harmony can cross the melody, but this is <a href="../Parts_bar/Harmonizer.htm#Crossing">configurable</a>.
+
+<p>The static harmony range is specified as a minimum interval and a maximum interval in semitones. The maximum must be greater than or equal to the minimum. If the maximum is zero, static harmony is disabled. The wider the static harmony range is, the more intervals are allowed, and the more often static harmony will occur. Note that if the minimum is zero, unisons may occur, i.e. the harmony and melody notes may be identical. In the extreme case where the minimum is zero and the maximum is twelve, the melody must deviate from the harmony by more than an octave before the harmony changes, resulting in a drone-like effect. The best results are obtained by carefully matching the static harmony range to the generic interval. For example if the generic interval is thirds, a range of 3 to 7 works well: as long as the melody stays within a minor third to a perfect fifth of the harmony, static harmony occurs.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th colspan=2>Chromatic intervals</th></tr>
+<tr><td>0</td><td>unison</td></tr>
+<tr><td>1</td><td>minor second</td></tr>
+<tr><td>2</td><td>major second</td></tr>
+<tr><td>3</td><td>minor third</td></tr>
+<tr><td>4</td><td>major third</td></tr>
+<tr><td>5</td><td>perfect fourth</td></tr>
+<tr><td>6</td><td>tritone</td></tr>
+<tr><td>7</td><td>perfect fifth</td></tr>
+<tr><td>8</td><td>minor sixth</td></tr>
+<tr><td>9</td><td>major sixth</td></tr>
+<tr><td>10</td><td>minor seventh</td></tr>
+<tr><td>11</td><td>major seventh</td></tr>
+<tr><td>12</td><td>octave</td></tr>
+</table>
+
+<a name="Omit_melody"><p><b>Omit melody</b></a>
+<p>This setting lets you output a harmony without outputting the melody on which the harmony is based. Normally both the melody and the harmony are output. If this setting is enabled, the melody note is omitted, so that only the harmony note is output. This may be useful if you're using multiple parts to generate multiple harmony lines, as in three-part or four-part harmony. For example, suppose you have two parts harmonizing in response to the same input, one generating thirds, and the other generating fifths. By default, each part outputs a melody note and a harmony note, resulting in two copies of the melody note. This might be acceptable if the parts are sent to different instruments, but otherwise it's likely to cause undesirable acoustic artifacts such as flanging. To avoid this, you should enable omit melody for one of the parts. If you're unsure, use the <a href="../Dialogs/MIDI_Output_bar.htm">MIDI Output bar</a> to check for <a href="../Loose_ends/Duplicate_notes.htm">duplicate notes</a>.
+
+<a name="Subpart"><p><b>Subpart</b></a>
+<p>This setting causes the part to join a <a href="../Parts_bar/Harmonizer.htm#Harmony_groups">harmony group</a>. Harmony groups are useful for preventing note collisions in multipart harmonization. A harmony group consists of two or more harmony <a href="../Concepts/Part.htm">parts</a> which are <em>adjacent</em> in the <a href="../Parts_bar/Parts_list.htm">parts list</a>, and all but the <em>first</em> of which have the subpart setting checked. The group's first part (the one with subpart unchecked) is the <em>leader</em>, and the subparts are subordinate to it.
+
+<a name="Crossing"><p><b>Crossing</b></a>
+<p>This setting determines whether <a href="../Parts_bar/Harmonizer.htm#Static_harmony_range">static harmony</a> can cross the melody. If a harmony that's normally below the melody moves above the melody, or vice versa, i.e. if the harmony switches sides, this is called <em>crossing</em>. Allowing crossing makes static harmony more likely, and more complex. By default, crossing is allowed.
+
+<p>The static harmonizer computes the difference between each new melody note and the previous harmony note, and reuses the previous harmony note if the difference is within a specified range. If crossing is enabled, the difference is computed as an absolute value so its sign doesn't matter, whereas if crossing is disabled, the difference must have the same sign as the <a href="../Parts_bar/Harmonizer.htm#Generic_interval">generic interval</a> for static harmony to occur.
+
+<a name="Constrain_to_chord"><p><b>Chord</b></a>
+<p>These settings let you constrain the harmonizer to the notes of a chord. The chord is specified via its diatonic <em>degree</em> in thirds, and its <em>size</em> in notes. Degree is relative to the current chord scale, which changes as the <a href="../Concepts/Song.htm">song</a> progresses. The most common sizes are four (tetrachordal harmony) and three (triadic harmony). A size of zero disables the chord constraint feature. The following table shows the constraint resulting from each degree, for the two most common sizes.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th rowspan=2>Degree</th><th colspan=2>Constraint</th></tr>
+<tr><th>Size=4</th><th>Size=3</th></tr>
+<tr><td>1</td><td>1 3 5 7</td><td>1 3 5</td></tr>
+<tr><td>3</td><td>3 5 7 2</td><td>3 5 7</td></tr>
+<tr><td>5</td><td>5 7 2 4</td><td>5 7 2</td></tr>
+<tr><td>7</td><td>7 2 4 6</td><td>7 2 4</td></tr>
+<tr><td>2</td><td>2 4 6 1</td><td>2 4 6</td></tr>
+<tr><td>4</td><td>4 6 1 3</td><td>4 6 1</td></tr>
+<tr><td>6</td><td>6 1 3 5</td><td>6 1 3</td></tr>
+</table>
+
+<p>For example, suppose the current chord is Cmaj7. If degree is 1 and size is 4, the harmony is constrained to 1,3,5,7 in the C major scale, or C,E,G,B. However if degree is 3, the harmony is constrained to 3,5,7,2 instead, or E,G,B,D. This is analagous to substituting the III chord for the I chord. Degree lets you control the harmony's <em>tension</em> or distance from the tonal center. If degree is kept constant, the harmony maintains a consistent tension relative to the chord progression. A degree of 1 is the most "in" (minimal tension).
+
+<p>The <a href="../Parts_bar/Harmonizer.htm#Generic_interval">generic interval</a> still determines the harmony's approximate distance from the melody. The harmony note is first calculated using the generic interval, and then quantized to the nearest chord tone.
+
+<p>The chord constraint can be combined with <a href="../Parts_bar/Harmonizer.htm#Static_harmony_range">static harmony</a>, in which case static harmony has priority: if the previous harmony note passes the static harmony range test, it's reused regardless of whether it's a chord tone. However if the previous harmony note is out of range, the new harmony note is constrained to the nearest chord tone.
+
+<a name="Harmony_groups"><p><b>Harmony groups</b></a>
+<p>Harmony groups are a means of avoiding collisions in multipart harmony. Harmony groups are only useful if all the following statements are true:
+<ul>
+<li>You want multipart harmony, i.e. a melody plus two or more harmony lines.
+<li>You want the harmony lines to be <a href="../Parts_bar/Harmonizer.htm#Static_harmony_range">static</a>, or constrained to a <a href="../Parts_bar/Harmonizer.htm#Constrain_to_chord">chord</a>, or both.
+<li>You care about collisions.
+</ul>
+
+<p>A <em>collision</em> is when two harmony lines generate the exact same note. Collisions might be acceptable, for example if the harmony lines are output to different instruments. However if the harmony lines are output to the same instrument (i.e. the same MIDI <a href="../Parts_bar/Part_Output.htm#Output_Port">port</a> and <a href="../Parts_bar/Part_Output.htm#Output_Channel">channel</a>), collisions will likely produce undesirable audio artifacts such as cancellation or flanging (see <a href="../Loose_ends/Duplicate_notes.htm">duplicate notes</a>).
+
+<p>A harmony group consists of two or more harmony <a href="../Concepts/Part.htm">parts</a> which are <em>adjacent</em> in the <a href="../Parts_bar/Parts_list.htm">parts list</a>, and all but the <em>first</em> of which have the <a href="../Parts_bar/Harmonizer.htm#Subpart">subpart</a> setting checked. The group's first part is the <em>leader</em>, and the group's remaining parts are <em>subparts</em>. Below is an example setup for four-voice harmony constrained to a tetrachord.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Part name</th><th>Part function</th><th>Generic interval</th><th>Omit melody</th><th>Subpart</th><th>Chord size</th></tr>
+<tr><td>Melody & Harmony1</td><td>Lead<td>&minus;2</td><td>No</td><td>No</td><td>4</td></tr>
+<tr><td>Harmony2</td><td>Lead</td><td>&minus;3</td><td>Yes</td><td>Yes</td><td>4</td></tr>
+<tr><td>Harmony3</td><td>Lead</td><td>&minus;5</td><td>Yes</td><td>Yes</td><td>4</td></tr>
+</table>
+
+<p>The ChordEase distribution includes a <a href="../Concepts/Patch.htm">patch</a> for the above setup, in the patches subfolder, with the file name "harmony group (4-voice, constrained to chord).cep". Without the use of a harmony group, this patch would produce collisions frequently due to Harmony1 and Harmony2 being only one scale step apart. A similar patch for a harmony group with static harmony is also provided.
+
+<p>Use the following steps to create a typical harmony group:
+
+<ol>
+<li>Create a lead part.
+<li>Give the lead part a harmony, by setting its <a href="../Parts_bar/Harmonizer.htm#Generic_interval">generic interval</a> non-zero, e.g. &minus;2 for thirds below. Also set a static harmony range and/or constrain the harmony to a chord, e.g. by setting Chord Size to 4.
+<li>Create one or more copies of the lead part via copy/paste. Note that the original and its copies must all be <em>contiguous</em> in the parts list.
+<li>Give each part a <em>different</em> non-zero generic interval. You may also want to give the parts different names to avoid confusion.
+<li>For all parts <em>except</em> the first one, check Omit melody and Subpart.
+</ol>
+
+<p>Harmony group members can have different static harmony and chord constraint settings. They can also be output to different instruments, in which case they should all have <a href="../Parts_bar/Part_Output.htm#Controllers_thru">controllers thru</a> set. However each member of a harmony group <em>must</em> have a unique generic interval, otherwise collisions will occur. Note that only the group leader's <a href="../Parts_bar/Part_Input.htm">input settings</a> are meaningful, and consequently the input page is disabled for subparts.
+
+</body>

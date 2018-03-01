@@ -1,0 +1,20 @@
+<title>Chord substitution</title>
+<body>
+
+<h3>Chord substitution</h3>
+
+<p>Chord substitution is supported by switching between two or more chord dictionaries. A <a href="../Loose_ends/Chord_dictionary.htm">chord dictionary</a> defines the set of <a href="../Loose_ends/Chord_types.htm">chord types</a> that a <a href="../Concepts/Song.htm">song</a> can use, by mapping each type to a <a href="../Loose_ends/Scales.htm">scale</a> and <a href="../Loose_ends/Scales.htm#Modes">mode</a>. Substituting a different dictionary alters the harmonic content of all your songs at once, by redefining their chord types. Substitution can be <a href="../Concepts/MIDI_targets.htm">remotely controlled</a> via MIDI, so it's possible to switch dictionaries seamlessly during a performance. For example you might have one dictionary for playing melodies and another dictionary for soloing, with a third dictionary containing unorthodox definitions for playing "out".
+
+<p>Note that for chord substitution to be effective, <em>all chord dictionaries must define the same chord symbols in the same order</em>, otherwise switching performance will be greatly reduced, timing of notes may be disrupted, and audible glitches may result.
+
+<p>To set up basic chord substition, use the following steps:
+
+<ol>
+<li>Create a primary chord dictionary, by saving the current chord dictionary under a new name (e.g. "primary chord dictionary.txt") via the <a href="../Dialogs/Chord_Dictionary_dialog.htm">Chord Dictionary dialog</a>'s <span class="cmd">File/Save As</span> command. The destination can be any folder you like, but the <a href="../Options/Other.htm#Application_data_folder">application data folder</a> would be a good choice.
+<li>Create an alternate chord dictionary, by editing the definitions of one or more chord symbols. Be careful to avoid renaming or reordering the symbols themselves. When you're done, save the chord dictionary under another name (e.g. "alternate chord dictionary.txt") as explained above, ideally in the same folder as your primary dictionary.
+<li>Use the <span class="cmd">Subs/Edit</span> command to bring up the <a href="../Dialogs/Path_List.htm">Substitute Chord Dictionaries</a> dialog. This dialog lets you create a list of the paths to your chord dictionaries. Use this dialog's Insert command to insert your primary chord dictionary. Then similarly insert your alternate chord dictionary. Note that the path list can be reordered via dragging. Press OK to save your changes. If you get a message warning that your chord dictionaries are incompatible, it's because you violated the requirement that they must define the same chord symbols in the same order.
+</ol>
+
+<p>The names of your chord dictionaries should now appear as items in the Chord Dictionary dialog's <span class="cmd">Subs</span> menu. To switch to a different chord dictionary, simply select its corresponding menu item. For seamless switching, it's recommended to assign a MIDI controller to the Chord Dictionary <a href="../Loose_ends/MIDI_target_list.htm">MIDI target</a>.
+
+</body>

@@ -1,0 +1,393 @@
+open	close	type	description	rev	user
+08/19/13	08/29/13	done	comp should correct to nearest tetrachord tone instead of nearest scale tone	1.0.00.000	
+08/19/13	09/01/13	done	wrap system MIDI API to avoid leaks	1.0.00.000	
+08/19/13	09/01/13	done	support Unicode just in case	1.0.00.000	
+08/19/13	09/12/13	done	refactor Robogonzi.cpp into engine	1.0.00.001	
+08/19/13	09/14/13	done	make settings persistent	1.0.00.005	
+08/31/13	09/14/13	done	handle multiple MIDI ports	1.0.00.016	
+09/14/13	09/16/13	done	property page scroll bars	1.0.00.016	
+09/12/13	09/17/13	done	open/save patch file	1.0.00.020	
+09/12/13	09/17/13	done	stop engine during song read	1.0.00.020	
+09/18/13	09/19/13	done	dynamically generate spin controls	1.0.00.024	
+09/18/13	09/19/13	done	show voicing names in start case	1.0.00.025	
+09/12/13	10/03/13	done	insert/delete part	1.0.00.039	
+09/12/13	10/03/13	done	part properties	1.0.00.039	
+09/12/13	10/03/13	done	parts list	1.0.00.039	
+09/18/13	10/03/13	done	clipboard; part cut/copy/paste	1.0.00.039	
+09/18/13	10/03/13	done	rename parts	1.0.00.039	
+09/18/13	10/03/13	done	next/previous pane via F6/Shift+F6	1.0.00.040	
+09/18/13	10/03/13	done	part list context menu	1.0.00.040	
+09/20/13	10/03/13	done	persistence of selected page in properties and parts bars	1.0.00.040	
+09/19/13	10/04/13	done	drag reorder parts	1.0.00.042	
+09/19/13	10/04/13	done	enable parts via parts list checkbox	1.0.00.043	
+09/23/13	10/04/13	done	previous comp state must be stored per part; engine needs a part state array	1.0.00.043	
+09/18/13	10/05/13	done	part patch number, volume	1.0.00.044	
+09/20/13	10/05/13	done	only open devices actually in use, to avoid needlessly slowing engine run/stop	1.0.00.044	
+09/20/13	10/05/13	done	handle device change message	1.0.00.044	
+10/06/13	10/06/13	done	midiOutReset is too slow; silence mapped notes instead	1.0.00.046	
+09/12/13	10/10/13	done	undo	1.0.00.049	
+09/18/13	10/10/13	done	patch doc modify flag; related to undo	1.0.00.049	
+10/10/13	10/10/13	done	in .NET, SerializeElements not specialized for CPart; template<> is required	1.0.00.049	
+10/10/13	10/10/13	done	64-bit version; passes undo test	1.0.00.049	
+08/19/13	10/12/13	done	GUI	1.0.00.050	
+09/18/13	10/12/13	done	show chord chart in view and indicate current position; update on transpose	1.0.00.050	
+09/18/13	10/12/13	done	start playing at specified chart position	1.0.00.050	
+10/12/13	10/12/13	done	chart should use highlight color only when view has focus	1.0.00.050	
+10/11/13	10/13/13	done	constrain PPQ to multiples of 24; use combo instead of edit	1.0.00.051	
+10/12/13	10/13/13	done	options dialog for non-engine settings	1.0.00.051	
+09/17/13	10/14/13	done	make song looping optional	1.0.00.051	
+09/18/13	10/14/13	done	pause/resume/rewind	1.0.00.051	
+10/12/13	10/15/13	done	song meter denominator	1.0.00.052	
+10/15/13	10/15/13	done	chart font antialiasing	1.0.00.052	
+09/19/13	10/17/13	done	duration control	1.0.00.053	
+09/19/13	10/17/13	done	per-part harmonic anticipation	1.0.00.053	
+08/31/13	10/18/13	done	arpeggiated comp	1.0.00.054	
+10/14/13	10/18/13	done	in comp, add setting to control alternation behavior: A only, B only, A to B, B to A	1.0.00.054	
+10/14/13	10/18/13	done	in comp, add checkbox for chord change resets alternation	1.0.00.054	
+10/18/13	10/18/13	done	arpeggiation order: default, ascending, descending, random	1.0.00.054	
+10/18/13	10/18/13	done	optionally repeat arpeggio while key held	1.0.00.054	
+09/18/13	10/19/13	done	sustain pedal	1.0.00.054	
+09/18/13	10/19/13	done	local off	1.0.00.054	
+09/18/13	10/19/13	done	part velocity offset	1.0.00.054	
+10/18/13	10/19/13	done	check for duplicate chord type names when loading dictionary	1.0.00.054	
+10/06/13	10/21/13	done	layering; play multiple parts with one input instrument (port/channel)	1.0.00.055	
+10/19/13	10/21/13	done	if two parts have same input port/channel, early out in OnNoteOff causes stuck notes	1.0.00.055	
+10/20/13	10/21/13	done	if keyboard is split between two parts, sustain pedal only affects first one	1.0.00.055	
+10/19/13	10/22/13	done	prevent system from sleeping while playing, via SetThreadExecutionState	1.0.00.056	
+10/26/13	10/26/13	done	on PPQ change, compensate clock to maintain position	1.0.00.057	
+10/12/13	10/28/13	done	show song meter, key, and position in status bar	1.0.00.057	
+09/18/13	11/09/13	done	device bar	1.0.00.059	
+10/21/13	11/09/13	done	store device identifiers in patch; report missing devices and update ports if devices move	1.0.00.059	
+11/12/13	11/14/13	done	algorithm combo doesn't generate undo notification	1.0.00.059	
+11/10/13	11/15/13	done	enforce bass lowest note by raising output note up an octave if needed	1.0.00.059	
+11/16/13	11/16/13	done	in chart, repeated measure of multiple chords shows duplicate repeat symbols	1.0.00.059	
+11/16/13	11/17/13	done	bass octave is incorrect if lowest note is in range [Gb..B]	1.0.00.060	
+10/18/13	11/18/13	done	in chord dictionary, support null chord name, to allow major triad	1.0.00.061	
+11/16/13	11/18/13	done	in song file, missing durations cause song truncation instead of error	1.0.00.061	
+11/17/13	11/18/13	done	use Tokenize for symbol parsing	1.0.00.061	
+11/17/13	11/18/13	done	include line number in song error messages	1.0.00.061	
+09/18/13	11/21/13	done	assign any MIDI controller to any target parameter	1.0.00.062	
+09/18/13	11/21/13	done	allow multiple targets per MIDI controller	1.0.00.062	
+09/20/13	11/21/13	done	persistence of parts list column widths and parts bar splitter position	1.0.00.063	
+11/20/13	11/21/13	done	optionally chase MIDI target events	1.0.00.063	
+11/21/13	11/21/13	done	list MIDI assignments; sortable report	1.0.00.063	
+09/18/13	11/22/13	done	edit song	1.0.00.063	
+10/06/13	11/22/13	done	canceling part name edit via escape key doesn't work; fix in CDragVirtualListCtrl	1.0.00.063	
+11/17/13	11/24/13	done	navigation via editing keys in chart view	1.0.00.064	
+11/24/13	11/24/13	done	next/prev pane must skip hidden windows	1.0.00.064	
+10/12/13	11/25/13	done	auto-scroll chart while playing to keep current position visible	1.0.00.064	
+11/25/13	11/25/13	done	app maximize corrupts main frame normal size; aux doc must no-op InitialUpdateFrame	1.0.00.064	
+11/25/13	11/26/13	done	updating status bar song position flickers in Common Controls 6.0; use double-buffering	1.0.00.065	
+11/25/13	11/26/13	done	threads dialog showing dynamic list of process threads including priority and CPU usage	1.0.00.065	
+10/15/13	11/27/13	done	in chart, unevenly split measures cause improper spacing	1.0.00.065	
+10/24/13	11/27/13	done	Shift shortcuts don't work if edit control has focus	1.0.00.065	
+11/27/13	11/28/13	done	edited song is corrupted during reloading	1.0.00.065	
+11/27/13	11/28/13	done	make threads dialog modeless	1.0.00.065	
+11/27/13	11/28/13	done	in chart, don't draw unused measures on last line	1.0.00.065	
+10/20/13	11/30/13	done	select quantized arpeggio periods via MIDI	1.0.00.066	
+11/27/13	11/30/13	done	auto comp should support arpeggiation, variation, etc.	1.0.00.066	
+11/30/13	11/30/13	done	refactor auto play to be a part page	1.0.00.066	
+12/01/13	12/01/13	done	if comp/lead split, auto comp gets cut off by lead note offs; block channel mode messages	1.0.00.066	
+12/01/13	12/01/13	done	MIDI assignment list causes crash due to incorrect device names	1.0.00.066	
+09/18/13	12/02/13	done	held note correction should be configurable per part	1.0.00.066	
+10/19/13	12/02/13	done	panic button; empty note map, reset all notes	1.0.00.066	
+10/27/13	12/02/13	done	if song is empty, set default harmony so engine can still run	1.0.00.066	
+11/22/13	12/02/13	done	undo song edit	1.0.00.066	
+12/01/13	12/02/13	done	arpeggiation should work even when song isn't playing; timer thread always runs	1.0.00.067	
+12/03/13	12/04/13	done	stop sometimes rewinds to 1:00:001 instead of 1:00:000; Play must cycle timer thread	1.0.00.068	
+12/03/13	12/04/13	done	arpeggiated auto-comp sticks if fixing held notes and engine restarts during anticipation	1.0.00.068	
+12/03/13	12/04/13	done	tempo is broken; changing it has no effect	1.0.00.068	
+10/27/13	12/06/13	done	display MIDI input events	1.0.00.069	
+09/18/13	12/08/13	done	learn MIDI assignments	1.0.00.069	
+08/31/13	12/15/13	done	triads; chord info only allows tetrachords	1.0.00.069	
+10/18/13	12/15/13	done	comp chord voicings must support variable number of notes to allow triads	1.0.00.069	
+12/09/13	12/15/13	done	MIDI input dialog needs filters	1.0.00.069	
+10/15/13	12/16/13	done	print chart	1.0.00.070	
+12/15/13	12/16/13	done	MIDI input dialog should be modeless	1.0.00.070	
+12/16/13	12/21/13	done	printed chart should have appropriately scaled font and reasonable margins	1.0.00.070	
+12/21/13	12/22/13	done	multi-page printed chart	1.0.00.070	
+10/27/13	12/23/13	done	tempo multiplier, ranging from half time to double time	1.0.00.070	
+11/20/13	12/23/13	done	alternate arpeggio style that toggles between ascending and descending	1.0.00.070	
+12/23/13	12/23/13	done	allow metronome accent to output a different MIDI note	1.0.00.070	
+12/24/13	12/24/13	done	harmonizer option to omit melody, allowing harmony via different instrument	1.0.00.070	
+09/19/13	01/07/14	done	harmonizer option for static harmony within specified interval range	1.0.00.071	
+01/07/14	01/18/14	done	in MIDI row, use ellipses style for caption; add SS_ENDELLIPSIS to static style in .rc	1.0.00.072	
+01/17/14	01/18/14	done	metronome accent occurs every other measure in 8/8	1.0.00.072	
+09/18/13	01/30/14	done	bass approach mode; shift scale so C is root of subsequent chord	1.0.00.072	
+12/09/13	01/30/14	done	handle pitch bend, patch change, channel aftertouch	1.0.00.072	
+01/26/14	01/30/14	done	chord format must allow bass note, and esp. triad with bass note	1.0.00.072	
+01/30/14	01/30/14	done	harmonizer should work for bass	1.0.00.072	
+01/30/14	02/03/14	done	allow slash chord bass note to be outside of chord scale	1.0.00.073	
+02/08/14	02/08/14	done	transport commands via MIDI	1.0.00.074	
+02/10/14	02/10/14	done	positive transpose causes spurious slash chords in chart	1.0.00.074	
+10/27/13	02/19/14	done	optionally specify tempo and/or key in song file	1.0.00.075	
+02/19/14	02/21/14	done	status bar should show actual tempo (with multiplier applied)	1.0.00.076	
+10/12/13	03/09/14	done	record output to a MIDI file	1.0.00.077	
+03/06/14	03/13/14	done	display MIDI events should be a dockable bar	1.0.00.078	
+03/13/14	03/13/14	done	in MIDI event dialog, horizontal scrolling doesn't update header	1.0.00.078	
+03/15/14	03/15/14	done	in MIDI file export, sort tracks by port and channel	1.0.00.079	
+03/09/14	03/16/14	done	save recording to binary file that preserves original timestamps	1.0.00.079	
+12/15/13	03/20/14	done	display MIDI output events	1.0.00.080	
+03/20/14	03/20/14	done	docked bars should show captions	1.0.00.080	
+03/21/14	03/21/14	done	splash screen	1.0.00.081	
+03/21/14	03/26/14	done	record options	1.0.00.082	
+01/30/14	04/04/14	done	trigger bass approach via MIDI	1.0.00.083	
+04/05/14	04/05/14	done	wheel affects targets it wasn't assigned to; UpdateMidiTarget must check event type	1.0.00.084	
+04/01/14	04/08/14	done	in MIDI event filters, device and port should stay in sync	1.0.00.085	
+04/05/14	04/08/14	done	during MIDI learn, highlight selected target	1.0.00.085	
+04/05/14	04/08/14	done	during MIDI learn, left-clicking on target name should select row	1.0.00.085	
+04/12/14	04/12/14	done	make installer and portable version	1.0.00.086	
+09/18/13	04/13/14	done	advance to next section on command or control change	1.0.00.086	
+09/18/13	04/13/14	done	song sections w/ repeat	1.0.00.086	
+04/12/14	04/13/14	done	show device name on part input and output pages	1.0.01.000	
+04/12/14	04/13/14	done	patch INI file must be in app data folder, else users need admin privileges	1.0.01.000	
+04/12/14	04/13/14	done	make check for updates optional	1.0.01.000	
+04/13/14	04/13/14	done	status bar record indicator should be red	1.0.01.000	
+04/13/14	04/13/14	done	Ctrl+L should be MIDI Learn	1.0.01.000	
+04/13/14	04/14/14	done	allow comments in song	1.0.01.000	
+04/13/14	04/15/14	done	section repeat causes bass approach to get stuck; need a monotonically increasing clock	1.0.02.000	
+04/13/14	04/15/14	done	allow song sections be named	1.0.02.000	
+04/13/14	04/16/14	done	harmonic anticipation and bass approach cause wrong notes near end of repeating section	1.0.02.000	
+04/15/14	04/16/14	done	after editing song while playing, if first chord is invalid, app crashes	1.0.02.000	
+04/15/14	04/17/14	done	next section button; should stay pressed during last pass through section	1.0.02.000	
+04/15/14	04/17/14	done	chart should indicate sections	1.0.02.000	
+03/13/14	04/22/14	done	clear MIDI event history via context menu	1.0.02.001	
+04/15/14	04/22/14	done	virtual piano; play notes via mouse or computer's keyboard	1.0.02.001	
+04/19/14	04/22/14	done	on showing MIDI assignments dialog, items aren't correctly sorted	1.0.02.001	
+04/05/14	04/23/14	done	MIDI learn should accept placing cursor on target name	1.0.02.001	
+04/12/14	04/23/14	done	advance to next chord via MIDI while stopped, allowing rubato	1.0.02.001	
+04/14/14	04/23/14	done	tooltips for patch and part controls	1.0.02.001	
+04/23/14	04/23/14	done	set song position via MIDI	1.0.02.001	
+04/21/14	04/25/14	done	show note mapping(s) in piano dialog	1.0.02.001	
+04/26/14	04/26/14	done	input transposition can cause out of range notes, crashing app	1.0.02.001	
+04/26/14	04/26/14	done	output notes shown on piano not accounting for input transposition	1.0.02.001	
+04/26/14	04/26/14	done	commands for rewind, next section, next/prev chord, all need triggers to avoid bounce	1.0.02.001	
+04/26/14	04/27/14	done	piano dialog should show notes played on external instrument	1.0.02.001	
+10/27/13	04/28/14	done	device bar should indicate which devices are open	1.0.03.000	
+04/26/14	04/28/14	done	always do lead-in if specified, regardless of song position	1.0.03.000	
+04/28/14	04/28/14	done	with repeat off, app doesn't stop at end of song; introduced during section refactor	1.0.03.000	
+04/28/14	04/28/14	done	change song file extension from .txt to .ces to avoid conflicts	1.0.03.000	
+04/29/14	04/29/14	done	MIDI note mappings dialog	1.0.03.000	
+04/29/14	04/29/14	done	add data folder path to options dialog	1.0.03.000	
+04/29/14	04/29/14	done	optionally show chord tones on piano keys	1.0.03.000	
+04/30/14	04/30/14	done	dragging patch file from Explorer fails; passing patch file via command line also fails	1.0.04.000	
+04/30/14	04/30/14	done	installer should register patch file type	1.0.04.000	
+12/02/13	05/02/14	done	can't undo song edits after opening patch; song and patch need separate undo histories	1.0.04.000	
+05/02/14	05/04/14	done	disallow zero tempo	1.0.04.000	
+05/03/14	05/05/14	done	show scale tones on piano keys	1.0.04.000	
+04/14/14	05/14/14	done	chart view should allow editing	1.0.04.000	
+05/12/14	05/15/14	done	replace bass chromatic checkbox with non-diatonic notes combo	1.0.05.000	
+05/16/14	05/16/14	done	dragging all chords out of a section fails	1.0.05.000	
+05/16/14	05/16/14	done	patch document has incorrect icon	1.0.05.000	
+05/02/14	05/18/14	done	output notes bar	1.0.05.000	
+05/12/14	05/19/14	done	continuous controller for input note	1.0.05.000	
+03/21/14	05/23/14	done	event dialog should optionally show controller names	1.0.06.000	
+05/23/14	05/23/14	done	Shift+F10 doesn't show context menu in some sizing bars	1.0.06.000	
+05/23/14	05/23/14	done	MIDI input/output event dialogs don't update device names on device change	1.0.06.000	
+05/23/14	05/23/14	done	input note controller doesn't work if its device and/or channel differs from part's	1.0.06.000	
+04/26/14	05/24/14	done	changing song position manually (via next chord and similar) should fix held notes	1.0.06.000	
+04/26/14	05/25/14	done	make auto-rewind optional	1.0.06.000	
+05/22/14	05/25/14	done	add controller target for input note velocity	1.0.06.000	
+05/02/14	05/26/14	done	chart editing removes comments from song file	1.0.06.000	
+05/02/14	05/26/14	done	song properties should allow editing of comments	1.0.06.000	
+04/12/14	05/27/14	done	record while stopped	1.0.06.000	
+05/28/14	05/30/14	done	auto-record uses incorrect title; must store title when auto-record starts	1.0.06.000	
+05/23/14	05/31/14	done	player for MIDI recordings; must handle multiple output devices	1.0.06.000	
+06/02/14	06/02/14	done	undocking control bar crashes app if song is empty; negative chord index in SetCurChord	1.0.06.001	
+06/08/14	06/02/14	done	setting bass approach target crashes app if song is empty	1.0.07.000	
+06/04/14	06/04/14	done	double-clicking patch file in explorer starts app but doesn't load patch	1.0.07.000	
+06/05/14	06/10/14	done	MIDI learn should work for part's input port/channel	1.0.07.000	
+06/07/14	06/10/14	done	MIDI learn directly from page control(s) associated with target parameter	1.0.07.000	
+06/10/14	06/10/14	done	in chart view, renaming repeated measure or multi-chord selection should insert chord	1.0.07.000	
+06/11/14	06/12/14	done	don't merge duplicate chords if they're in different sections	1.0.07.000	
+06/11/14	06/12/14	done	record player's list control should disable drag	1.0.07.000	
+06/11/14	06/12/14	done	refactor MIDI target dialog to use grid control instead of row view	1.0.07.000	
+06/10/14	06/13/14	done	MIDI learn via page control should select corresponding row in MIDI target dialog	1.0.07.000	
+06/10/14	06/14/14	done	MIDI target dialog should show controller value	1.0.07.000	
+06/01/14	06/15/14	done	list control tool tips are incorrectly positioned	1.0.07.000	
+06/17/14	06/20/14	done	chord dictionary should support aliases	1.0.08.000	
+06/17/14	06/20/14	done	IDC_PART_MIDI_ROW is unused	1.0.08.000	
+06/27/14	06/28/14	done	local off isn't sent until a song is loaded; must update patches after initially starting engine	1.0.08.000	
+06/17/14	07/01/14	done	add support for Impro-Visor lead sheet files	1.0.08.000	
+07/06/14	07/07/14	done	showing events dialog resets device/port filter	1.0.08.000	
+07/06/14	07/07/14	done	add reset filters command to events dialog	1.0.08.000	
+07/08/14	07/08/14	done	folder dialogs should set initial directory 	1.0.08.000	
+07/08/14	07/08/14	done	status bar initially doesn't display current position after song is opened	1.0.08.000	
+07/09/14	07/09/14	done	show device names in output notes bar's port popup menu	1.0.08.000	
+07/22/14	07/23/14	done	add go to command; jump to specified song position	1.0.08.000	
+07/22/14	07/23/14	done	in section properties dialog, allow editing of start and length	1.0.08.000	
+08/03/14	08/04/14	done	chart view not updated after loading patch that changes global tranposition	1.0.08.000	
+08/07/14	08/07/14	done	add bass approach trigger button	1.0.08.000	
+08/12/14	08/12/14	done	pasting part leaks memory; LoadFromBuffer must detach CMemFile from buffer and delete buffer	1.0.08.000	
+08/12/14	08/12/14	done	only enable parts list editing if list has focus	1.0.08.000	
+04/13/14	08/26/14	done	context-sensitive help	1.0.08.000	
+09/07/14	09/17/14	done	use default memberwise copy where possible	1.0.09.000	
+09/17/14	09/18/14	done	transpose selected chords	1.0.09.001	
+09/17/14	09/18/14	done	change length of selected chords	1.0.09.001	
+05/14/14	09/20/14	done	changing time signature should update chord durations	1.0.09.001	
+09/17/14	09/20/14	done	time signature pane in status bar is too narrow	1.0.09.001	
+08/29/14	09/24/14	done	find and replace in editor dialog; CEditView is a mess, roll your own	1.0.09.001	
+11/12/13	09/25/14	done	in Vista/7/8, MIDI input callback thread has normal priority, increasing latency; boost priority	1.0.09.001	
+09/26/14	09/26/14	done	threads dialog shows stale data; list only updates on thread count change	1.0.09.001	
+09/30/14	09/30/14	done	bass trigger button isn't highlighted in learn mode; button must specify notify style	1.0.09.001	
+09/18/13	10/07/14	done	sync to external MIDI clocks	1.0.09.002	
+09/18/13	10/07/14	done	output MIDI clocks	1.0.09.002	
+10/01/14	10/07/14	done	metronome page should show output device	1.0.09.002	
+10/11/14	10/13/14	done	mapping function that outputs scale notes in cycle of thirds order	1.0.09.002	
+07/14/14	11/11/14	done	prompt when assigning MIDI controller that's already assigned to other targets	1.0.10.000	
+07/14/14	11/11/14	done	MIDI assignments dialog should indicate shared controllers	1.0.10.000	
+11/02/14	11/15/14	done	custom output piano sizes	1.0.10.000	
+11/11/14	11/17/14	done	if grid control isn't already editing, pressing tab should edit first field on current row	1.0.10.000	
+12/14/14	12/15/14	done	record player seek fails for positions above ~11 minutes due to 32-bit integer wraparound	1.0.10.000	
+12/22/14	12/22/14	done	if help window and piano dialog are visible and piano dialog has focus, exiting app causes crash	1.0.10.000	
+11/02/14	12/23/14	done	exposed enumerations cause backwards compatability issues; add range checks as needed	1.0.10.000	
+11/11/14	12/23/14	done	pressing tab in parts list causes list to lose focus	1.0.10.000	
+12/17/14	12/23/14	done	in record player slider, left/right arrows change position by a millisecond, too little to be useful	1.0.10.000	
+01/11/15	01/11/15	done	tempo shown in status bar isn’t scaled by tempo multiple anymore, as of 1.0.09	1.0.10.000	
+02/14/15	03/05/15	done	if arpeggio ends prematurely, all of its notes are turned off even if they weren't actually on	1.0.11.000	
+09/18/13	03/08/15	done	dynamic looping AKA tags: tag length, tag repeat count, and start tag.	1.0.11.000	
+03/15/15	03/15/15	done	any part edit followed by deselecting all parts and then undoing causes crash	1.0.11.000	
+03/16/15	03/16/15	done	ending a part MIDI target edit by selecting a different part applies the edit to the wrong part	1.0.11.000	
+12/21/14	03/20/15	done	arpeggios that span chord changes can produce wrong notes; optionally prevent this (adaptive)	1.0.11.000	
+04/13/14	03/21/15	done	tap tempo; set tempo via tapping	1.0.11.000	
+03/21/15	03/21/15	done	Ctrl+Enter and Ctrl+Backspace shortcuts don't work if an edit control has focus	1.0.11.000	
+03/23/15	03/23/15	done	MIDI chase should show target page even if target parameter didn't change	1.0.11.000	
+03/23/15	03/23/15	done	MIDI assignments dialog should show current value of each controller	1.0.11.000	
+03/24/15	03/24/15	done	MIDI target dialog's column widths don't persist; introduced in 1.0.07	1.0.11.000	
+01/01/15	04/01/15	done	optionally fix duplicate notes in recording's output MIDI file, by deferring note offs	1.0.11.000	
+04/01/15	04/01/15	done	Alt+A mnemonic doesn't work correctly in property pages; caused by hidden Apply button	1.0.11.000	
+09/12/13	04/05/15	done	if dictionary loaded after song, reread song	1.0.11.000	
+02/03/14	04/05/15	done	edit chord dictionary; custom editing dialog	1.0.11.000	
+04/08/15	04/08/15	done	allow comp chord sizes other than triads and tetrachords	1.0.11.000	
+05/29/15	06/08/15	done	disabling always record option after playing with no song open causes unamed file error	1.0.12.000	
+06/02/15	06/08/15	done	in SetChord, replace MakeHarmony (for all chords) with GetHarmony for specified chord	1.0.12.000	
+06/10/15	06/10/15	done	deleting all chord types from chord dictionary can cause access violation	1.0.12.000	
+06/11/15	06/11/15	done	missing MIDI targets for Bass/Lowest Note, Comp/Chord Resets Alternation	1.0.12.000	
+06/11/15	06/11/15	done	tap tempo button fails to show MIDI learn; change button's extended style to notify parent window	1.0.12.000	
+06/11/15	06/11/15	done	chart view should support navigation via Tab and Shift+Tab	1.0.12.000	
+09/01/14	06/12/15	done	change current chord type and root dynamically via MIDI while stopped	1.0.12.000	
+06/02/15	06/12/15	done	add chord bar, with combos and MIDI targets for current chord's root, type, bass, scale and mode	1.0.12.000	
+06/10/15	06/15/15	done	editing chord dictionary silently reverts all song edits, without updating chart view	1.0.12.000	
+06/11/15	06/15/15	done	after reordering chord dictionary, undoing song edit scrambles song's chord types	1.0.12.000	
+06/11/15	06/15/15	done	after reordering chord dictionary, song chord(s) on clipboard are invalid and pasting them may crash	1.0.12.000	
+06/11/15	06/15/15	done	in chord dictionary dialog, changes should take effect immediately; remove apply button	1.0.12.000	
+06/02/15	06/17/15	done	show and edit properties of multiple MIDI assignments at once; same for note mappings	1.0.12.000	
+10/15/13	06/18/15	done	print preview horizontally squashes each chord symbol; worsens as font size increases	1.0.12.000	
+10/15/13	06/18/15	done	chart's grid lines are too narrow to be visible in printed output; scale line width with font	1.0.12.000	
+06/18/15	06/19/15	done	when printing chart, horizontally center it on page	1.0.12.000	
+06/14/15	06/27/15	done	chord substitution; switch between compatible chord dictionaries	1.0.12.000	
+06/27/15	07/01/15	done	on Win7 laptop, chord bar drop lists clip text due to larger font	1.0.12.000	
+07/05/15	07/11/15	done	next/previous chord commands should respect sections and support tagging	1.0.12.000	
+07/24/15	07/24/15	done	pressing Alt key steals focus from child dialogs	1.0.12.000	
+07/24/15	07/24/15	done	dockbar controls retain focus after bar is hidden	1.0.12.000	
+08/10/15	08/11/15	done	access note mapping properties dialog from parts list's context menu or Alt+Enter shortcut	1.0.13.000	
+08/10/15	08/11/15	done	add part enable to note mapping properties dialog	1.0.13.000	
+08/10/15	08/11/15	done	note mapping properties dialog shows port incorrectly if selected parts differ in terms of port	1.0.13.000	
+06/10/14	08/21/15	done	add grouping of harmony parts to prevent static harmony collisions	1.0.13.000	
+08/24/15	08/23/15	done	previous pane (Shift+F6) gets stuck on chord bar	1.0.13.000	
+08/21/15	08/25/15	done	optionally color keys to show note velocities in piano dialog and output notes bar	1.0.13.000	
+08/21/15	08/25/15	done	optionally show numeric input note velocities on piano dialog's key labels	1.0.13.000	
+08/23/15	08/26/15	done	optionally send bank change in addition to sending patch change	1.0.13.000	
+04/26/14	08/28/15	done	showing piano dialog via main menu mnemonic resets note with P shortcut, if any	1.0.13.000	
+05/18/14	08/28/15	done	piano dialog inconsistently shows auto play notes	1.0.13.000	
+06/26/15	08/28/15	done	optionally color piano dialog keys to show chord tones and tensions; also in cycle of thirds order	1.0.13.000	
+08/28/15	08/28/15	done	in piano dialog, selecting context menu item via mnemonic resets note with corresponding shortcut	1.0.13.000	
+08/28/15	08/28/15	done	showing piano dialog highlights all active notes regardless of whether port and channel match	1.0.13.000	
+08/30/15	08/30/15	done	incorrect key count bounds test in Output Notes bar's AddEvent	1.0.13.000	
+09/19/13	08/31/15	done	optionally constrain harmonizer to nearest chord tone	1.0.13.000	
+11/26/15	12/17/15	done	harmony chord constraint behaves unexpectedly with octaves	1.0.13.000	
+12/19/15	12/19/15	done	static harmony can cross melody; make crossing optional	1.0.13.000	
+12/21/15	12/23/15	done	MIDI devices aren't found if they're present but swapped (plugged into different ports)	1.0.13.000	
+12/21/15	12/23/15	done	MIDI devices with multiple input or output ports are incorrectly mapped when patch is reloaded	1.0.13.000	
+12/21/15	12/23/15	done	missing MIDI devices dialog should specify which devices are missing and allow retries	1.0.13.000	
+12/19/15	01/03/16	done	fix held notes should handle harmony group specially to avoid dropping voices	1.0.13.000	
+12/21/15	01/17/16	done	adaptive arpeggios should support repeat	1.0.13.000	
+01/17/16	01/17/16	done	transpose input note before passing to GetCompChord; eliminates need for bogus octave shift	1.0.13.000	
+01/19/16	01/19/16	done	after copying chords to clipboard, restarting app, and pasting into new song, playback is too fast	1.0.13.000	
+02/29/16	03/01/16	done	in output notes bar, add key label options for intervals and scale tones	1.0.13.000	
+02/29/16	03/01/16	done	output notes bar's rotate labels setting is forced on during startup, regardless of persistent value	1.0.13.000	
+03/01/16	03/02/16	done	UI elements lag behind chord changes due to timer-driven updating; add chord change notification	1.0.13.000	
+08/19/13		hold	MIDI output stream interface with queues, tempo and adjustable latency		
+08/29/13		hold	optionally don't auto-correct black keys; why?		
+09/18/13		hold	improve auto comp and auto bass; band-in-a-box stuff		
+09/18/13		hold	drum patterns		
+09/19/13		hold	drag reorder parts without cycling engine; good luck with that		
+09/19/13		hold	harmonic pitch bend for intervals and/or harmonized notes; requires multiple channels		
+09/19/13		hold	harmonizer ideas: random, delayed by N notes, static with delay, alternate intervals		
+09/19/13		hold	harmonic pitch bend; normalize pitch bend range to one or more scale degrees		
+10/06/13		hold	mouse wheel doesn't work in part function combo box		
+10/11/13		hold	time signature changes		
+10/15/13		hold	rhythmic anticipation and swing		
+10/18/13		hold	in comp, black keys could shift from chord tones to tensions; not sure about this		
+10/18/13		hold	secondary chord variant should be optional in dictionary		
+10/18/13		hold	arpeggio timing should be absolute instead of relative to input note's time; partly solved by auto		
+10/27/13		hold	device bar should show reference counts		
+12/01/13		hold	on port/channel change, remove previous port/channel from note map to avoid stuck notes		
+12/09/13		hold	disabling part doesn't stop repeating auto-arp until next chord change; bug or feature?		
+01/07/14		hold	in row view, header double-click for static column should fit column to text; fussy		
+01/18/14		hold	fractional durations in song format; incompatible with beat map?		
+01/30/14		hold	optionally disable bass octaving, so that output notes are out of order but jump less		
+02/08/14		hold	swap ports; what is this?		
+03/13/14		hold	in MIDI event dialog, if list has many events, filter resizing lags behind list header resizing		
+03/21/14		hold	with common controls 6.0, combos ignore drop height w/o no integral height style; CB_SETMINVISIBLE		
+03/21/14		hold	event dialog filters should allow conditionals; fancy		
+04/07/14		hold	for dialog-based panes, switching panes via F6 resets focus to first control		
+04/13/14		hold	author tag in song; tag value can't contain spaces		
+04/22/14		hold	add modulation and pitch sliders to piano dialog; problems with MIDI mapping if no target device		
+05/02/14		hold	pentatonic mode (play on black keys)?		
+05/02/14		hold	editing song should focus chart view?		
+05/14/14		hold	chart view's drag reorder feedback is confusing when dragging forward		
+05/15/14		hold	extreme part transpose and/or harmonizer settings can output invalid MIDI notes		
+05/26/14		hold	MIDI targets should support toggle and momentary methods for non-configurable controllers		
+06/10/14		hold	resizing status bar shows artifacts if bar is too short; due to compositing?		
+07/14/14		hold	make MIDI controller sharing optional?		
+07/29/14		hold	triad voicings: drop 2, drop 3, drop 2 3		
+08/01/14		hold	option for black keys to all generate non-duplicate notes, so all twelve notes are available		
+08/01/14		hold	learn zone high and zone low and other note settings from note input		
+09/02/14		hold	handle power broadcast message and restart engine on resume? Is it necessary?		
+09/07/14		hold	programmable song generator, random or otherwise		EMF
+09/07/14		hold	parameter tweening and/or parameter automation		EMF
+09/07/14		hold	stagger harmony voices, similar to arpeggiation		EMF
+09/07/14		hold	assign note to MIDI target(s); should handle toggles as well as triggers		EMF
+10/11/14		hold	switch between compatible patches without restarting engine, in response to patch change message		
+12/17/14		hold	in record player, takes are hard to find in long recordings; add next/prev take buttons?		
+12/19/14		hold	cycle of thirds non-diatonic rule only produces thirds if input transposition is zero or multiple of 12		
+01/03/15		hold	dynamically change arpeggio length; similar to repeat but limited to a specified number of notes		
+05/15/15		hold	permutations of note groups; alternate with vocabulary		
+06/11/15		hold	in chart view, undoing single chord edit doesn't restore position; might be a feature		
+06/16/15		hold	in chart view, Alt+Enter should open file properties dialog; not sure		
+06/17/15		hold	parts bar pages should be able to show multiple selected parts; requires indeterminate state		
+08/30/15		hold	optionally show dots on pressed piano keys		
+11/19/15		hold	in harmony group, specify interval between each voice rather than interval relative to melody		
+12/19/15		hold	in harmony group, optionally ignore collisions or resolve them by dropping notes		
+03/13/16		hold	meter changes during song, both spontaneous and prearranged via sections		
+08/31/13		punt	running status; driver-dependent, M-Audio 24/96 does it for closely-spaced messages, but Uno not		
+09/18/13		punt	indicate MIDI input activity; MIDI input/output bars and piano views make this redundant		
+09/20/13		punt	include in/out port/chan in note map, so OnNoteOff doesn't depend on part array; no need		
+10/19/13		punt	intelligent dynamic split that detects hand positions and computes safe split point; hard problem		
+01/30/14		punt	part output transpose; confusing, and easily doable with most MIDI instruments so no need		
+03/17/14		punt	if MIDI event list is empty, resizing docked bar makes header flicker badly in Win7		
+03/20/14		punt	event dialog flickers if events are added quickly; due to scrolling to end of list? double buffer?		
+03/21/14		punt	hiding and reshowing two bars that share a dock gives unexpected sizes; affects all apps		
+04/05/14		punt	parts bar MIDI target row view initially doesn't show scroll bars until resized; can't reproduce it		
+07/09/14		punt	chord type popup menu is inconveniently long; replace with popup drop list? (use chord bar instead)		
+11/11/14		punt	if part MIDI target edit is ended by selecting different part in parts list, wrong part is updated		
+08/31/13		todo	vocabulary with user supplying rhythym		
+08/31/13		todo	continuous vocabulary while key pressed		
+09/18/13		todo	view showing map of keyboard and which are or will be good and/or common tones		
+09/18/13		todo	endings		
+10/05/13		todo	numbers system; four-note octave?		
+11/17/13		todo	correct held notes at fraction of their original velocity, proportional to decay		
+11/29/13		todo	auto play should respect harmonic anticipation		
+12/07/13		todo	auto play hold; create static harmony via held note corrector		
+12/16/13		todo	detect chromatic runs and substitute chromatic scale		
+02/08/14		todo	playlist		
+04/12/14		todo	user-defined scales, in addition to built-in ones		
+04/12/14		todo	manually arpeggiated comp		
+04/13/14		todo	in flat keys, B should be Cb, and in sharp keys, Db should be C#		
+04/13/14		todo	scale shifts by a whole step when key changes from B to Gb or similar cases		
+04/13/14		todo	MIDI setup wizard		
+04/28/14		todo	time bar showing current song position (or elapsed time) in big font		
+06/01/14		todo	hi-res icons		
+11/19/15		todo	fixed bass approach should skip chords with durations less than approach length		
+01/19/16		todo	editing song resets software synth to default patches		

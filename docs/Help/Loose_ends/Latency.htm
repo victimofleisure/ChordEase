@@ -1,0 +1,23 @@
+<title>Latency</title>
+<body>
+
+<h3>Latency</h3>
+
+<p>Latency is the time interval between the performer triggering a note on an instrument and hearing the audio corresponding to that note. The expected latency of a typical ChordEase setup is between 5 and 8 milliseconds. By far the largest share of this latency is incurred by the MIDI hardware protocol itself, which takes between 2 and 3 ms to send a single message. Because each note has to take a roundtrip from the instrument to the computer and then back to the instrument, the latency resulting from MIDI hardware alone is in the range of 4 to 6 ms.
+
+<p>Most modern MIDI interfaces use USB, and this may add an additional delay in both directions, depending on the USB driver's implementation. The MIDI instrument may also introduce delay between pressing a key and sending the corresponding Note On command, and between receiving a Note On command and playing the corresponding audio. ChordEase also has computational overhead, but it's comparatively small and doesn't contribute significantly to latency, provided ChordEase is running on a modern multi-core CPU, with minimal competition from other applications. Here are some things you can do to reduce latency:
+
+<ul>
+<li>Use a good quality MIDI interface. PCI interfaces have the lowest latency but they're increasingly hard to find. USB MIDI interfaces vary in quality, but we've had good results with the M-Audio Uno. You may be able to improve performance by installing the manufacturer's drivers, instead of relying on Microsoft's class compliant drivers.
+
+<li>Avoid daisy-chaining instruments, or merging instruments via MIDI merge devices, as either of these can greatly increase latency. For optimal performance there should be one MIDI interface for each instrument. For larger setups it may be necessary to use a USB hub.
+
+<li>Make sure ChordEase is not facing competition from other applications. Before you run ChordEase, use the Task Manager to verify that your CPU is in fact idle. If it isn't, your Windows installation may need tuning to remove unnecessary background tasks and services. ChordEase is highly multithreaded, and <a href="../Getting_Started/Requirements.htm">requires</a> a dual-core CPU at the minimum; a quad-core CPU with hyper-threading is recommended.
+
+<li>To reduce ChordEase demands on the CPU, hide all of the following user interface elements: <a href="../Dialogs/MIDI_Devices.htm">MIDI Devices</a> bar, <a href="../Menus/MIDI/MIDI_Input.htm">MIDI Input</a> bar, <a href="../Menus/MIDI/MIDI_Output.htm">MIDI Output</a> bar, virtual <a href="../Menus/View/Piano.htm">Piano</a> dialog, and <a href="../Menus/View/Output_Notes.htm">Output Notes</a> bar.
+
+</ul>
+
+<p>Note that using a software synthesizer as your output MIDI device may increase latency, sometimes drastically. The Microsoft GS Wavetable Synth that ships with Windows is particularly bad: it exhibits latency on the order of 250 milliseconds, which makes it unusable except for testing.
+
+</body>

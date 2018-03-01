@@ -1,0 +1,28 @@
+<title>Durations</title>
+<body>
+
+<h3>Durations</h3>
+
+<p>Several ChordEase parameters are relative durations that scale with <a href="../Patch_bar/General.htm#Tempo">tempo</a>, just like note durations. The unit of a duration is whole notes, i.e. a duration of one equals a whole note. Durations are usually expressed as fractions of a whole note. Duration parameters include <a href="../Parts_bar/Part_Output.htm#Harmonic_Anticipation">harmonic anticipation</a>, <a href="../Parts_bar/Comp.htm#Arpeggio_Period">arpeggio period</a>, and bass <a href="../Parts_bar/Bass.htm#Approach_length">approach length</a>.
+
+<p>A special type of combo box is provided for specifying durations. Common values are selectable via the drop list. Alternatively a fraction or a floating-point value can be typed in the edit box. Triplet values can be specified by preceding the fraction with the letter T, e.g. T1/4 for a triplet quarter note. Dotted notation is also supported: the first dot increases the value by half, a second dot increases it by an additional quarter, and so on. For example 1/2. equals 3/4, 1/2.. equals 7/8, etc. Negative values may be accepted, depending on the parameter. For triplet values, the minus sign must precede the T, e.g. &minus;T1/4. The table below lists some common durations.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>1/1</td><td>whole</td></tr>
+<tr><td>T1/1</td><td>triplet whole (2/3)</td></tr>
+<tr><td>1/2</td><td>half</td></tr>
+<tr><td>T1/2</td><td>triplet half (1/3)</td></tr>
+<tr><td>1/4</td><td>quarter</td></tr>
+<tr><td>T1/4</td><td>triplet quarter (1/6)</td></tr>
+<tr><td>1/8</td><td>eighth</td></tr>
+<tr><td>T1/8</td><td>triplet eighth (1/12)</td></tr>
+<tr><td>1/16</td><td>sixteenth</td></tr>
+<tr><td>T1/16</td><td>triplet sixteenth (1/24)</td></tr>
+<tr><td>1/32</td><td>thirty-second</td></tr>
+<tr><td>T1/32</td><td>triplet thirty-second (1/48)</td></tr>
+<tr><td>1/64</td><td>sixty-fourth</td></tr>
+</table>
+
+<p>Durations are displayed as fractions if they can be represented using a denominator that's a reasonably small power of two, otherwise they're shown in floating-point notation. Durations can be specified very precisely, but the resulting actual durations may be considerably less precise; the achievable resolution depends on the current <a href="../Patch_bar/General.htm#Tempo">tempo</a> and <a href="../Patch_bar/General.htm#PPQ">PPQ</a>.
+
+</body>

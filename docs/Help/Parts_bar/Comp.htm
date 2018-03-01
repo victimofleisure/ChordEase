@@ -1,0 +1,103 @@
+<title>Comp</title>
+<body>
+
+<h3>Comp</h3>
+
+<p>This page contains comping-related settings for the current <a href="../Concepts/Part.htm">part</a>. Comping is an abbreviation for <em>accompanying</em>. Comping is enabled by selecting the Comp <a href="../Concepts/Mapping_functions.htm">mapping function</a> in the <a href="../Parts_bar/Parts_list.htm">parts list</a>. In the Comp function, playing a single note on the <a href="../Parts_bar/Part_Input.htm">input</a> device produces a chord on the <a href="../Parts_bar/Part_Output.htm">output</a> device, specifically a tetrachord or a triad. The current <a href="../Concepts/Song.htm#Song_position">song position</a> determines the <a href="../Loose_ends/Chord_types.htm">chord type</a>. Which note is played determines the frequency range of the chord, i.e. higher notes result in higher chords. Specifically, the input note is used as the bottom of a one-octave window within which the output chord is voiced. The chord is inverted as needed to keep it within the specified window. The output notes all have the same velocity as the input note. The chord <a href="../Parts_bar/Comp.htm#Voicing">voicing</a> and <a href="../Parts_bar/Comp.htm#Variation">variation</a> are configurable, and the chords can also be <a href="../Parts_bar/Comp.htm#Arpeggio_Period">arpeggiated</a>.
+
+<p>The performer's input to the Comp function is primarily <em>rhythmic</em>. An effective chordal accompaniment can be achieved by playing a single note with suitable rhythm. It may be desirable to vary the input note (and thereby vary the frequency range of the output chords) for dramatic effect and to account for the range of the soloist or other performers.
+
+<p>The Comp function is also useful for self-accompaniment, e.g. on a keyboard instrument. This is achieved by creating a <em>split</em> consisting of two parts, one set to Comp and the other set to <a href="../Parts_bar/Lead.htm">Lead</a>. Both parts receive their input from the same device, but occupy different <a href="../Parts_bar/Part_Input.htm#Zone_Low">zones</a> of the input device. For example to play Lead with the right hand and Comp with the left hand, assuming a split point of C4, you might give the Lead part a zone of C4 to G9 and the Comp part a zone of C&minus;1 to B3.
+
+<p>The Comp part is normally played with only one input note at time. Multiple input notes at once are permitted, and may create interesting effects, but at the risk of too many simultaneous output notes exceeding the polyphony of the output device.
+
+<a name="Voicing"><p><b>Voicing</b></a>
+<p>This setting determines the chord voicing. For close voicing, the chord is inverted as needed to fit within a one-octave window, the bottom of which is determined by the input note, as explained above. For other voicings, the close voicing is still computed, but serves as a preliminary stage: one or more notes of the close voicing are then dropped an octave, as shown in the table below. Drop 2 and drop 3 voicings are characteristic of guitar. Note that this setting only affects tetrachords; triads always use close voicing.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Voicing</th><th>Notes dropped</th><th>Cmaj7</th></tr>
+<tr><td>Close</td><td>None</td><td>C4 E4 G4 B4</td></tr>
+<tr><td>Drop 2</td><td>2nd from top</td><td>G3 C4 E4 B4</td></tr>
+<tr><td>Drop 3</td><td>3rd from top</td><td>E3 C4 G4 B4</td></tr>
+<tr><td>Drop 4</td><td>4th from top</td><td>C3 E4 G4 B4</td></tr>
+<tr><td>Drop 2 3</td><td>2nd and 3rd from top</td><td>E3 G3 C4 B4</td></tr>
+<tr><td>Drop 2 4</td><td>2nd and 4th from top</td><td>C3 G3 E4 B4</td></tr>
+<tr><td>Drop 3 4</td><td>3rd and 4th from top</td><td>C3 E3 G4 B4</td></tr>
+<tr><td>Drop 2 3 4</td><td>2nd, 3rd and 4th from top</td><td>C3 E3 G3 B4</td></tr>
+</table>
+
+<a name="Variation"><p><b>Variation</b></a>
+<p>This setting determines if and how chords vary. Two variations are defined for each <a href="../Loose_ends/Chord_types.htm">chord type</a>. The variations are referred to as A and B. Typically A is a more conventional spelling, whereas B alters one or more chord tones, e.g. for the major seventh chord type, A is 1 3 5 7 and B is 2 3 5 6, effectively substituting a 69 chord. The variations are a matter of taste, and may be customized by editing the <a href="../Loose_ends/Chord_dictionary.htm">chord dictionary</a>. The variation schemes are shown below. The "A to B" and "B to A" schemes are only distinguishable if <a href="../Parts_bar/Comp.htm#Chord_change_resets_alternation">Chord change resets alternation</a> is enabled.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Scheme</th><th>Behavior</th></tr>
+<tr><td>A only</td><td>Only the A variation of the chord is output.</td></tr>
+<tr><td>B only</td><td>Only the B variation of the chord is output.</td></tr>
+<tr><td>A to B</td><td>The output chord alternates between the A and B variations. If "Chord change resets alternation" is enabled, a change of chord resets the alternation to A.</td></tr>
+<tr><td>B to A</td><td>The output chord alternates between the B and A variations. If "Chord change resets alternation" is enabled, a change of chord resets the alternation to B.</td></tr>
+</table>
+
+<a name="Chord_change_resets_alternation"><p><b>Chord change resets alternation</b></a>
+<p>This setting determines whether a change of chord resets the alternation state for the "A to B" and "B to A" <a href="../Parts_bar/Comp.htm#Variation">variation schemes</a>. In these schemes, successive input notes alternate the output chord between the two variations defined for the current <a href="../Loose_ends/Chord_types.htm">chord type</a>.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Disabled</td><td>The alternation is never reset. This lets the performer create arbitrary patterns of chord variation. This option is more challenging, but also more expressive. Note that in this case, the "A to B" and "B to A" schemes are indistinguishable.</td></tr>
+<tr><td>Enabled</td><td>The alternation is reset to a known state at the start of each new chord. This makes it easy to maintain a consistent pattern of variation.</td></tr>
+</table>
+
+<a name="Arpeggio_Period"><p><b>Arpeggio Period</b></a>
+<p>The notes of a chord can be played in sequence instead of simultaneously, forming an arpeggio. The speed of the arpeggio is determined by the arpeggio period, i.e. the duration of the pause between successive arpeggio notes, expressed as a fraction of a whole note. Because it's a period, not a frequency, smaller values result in faster arpeggios. If the period is zero, arpeggiation is disabled. The drop list lets you select common fractional values, e.g. an 1/8 note. You can also type a fraction or floating-point value in the edit box; see <a href="../Loose_ends/Durations.htm">durations</a>.
+
+<p>The arpeggio speed can be varied at any time, including during an arpeggio. With precise timing, an arpeggio can be gradually sped up or slowed down. This technique lets you realistically emulate strumming, e.g. on guitar. It's easier to achieve the needed precision via a physical remote control, assigned to the Comp Arp Period <a href="../Concepts/MIDI_targets.htm">MIDI target</a>. In some cases it may be preferable to control the arpeggio period in a quantized manner instead of continuously. In this case the Comp Arp Period Quant MIDI target should be used instead. It selects the arpeggio period from the following list of durations:
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>1/1</td><td>whole</td></tr>
+<tr><td>1/2</td><td>half</td></tr>
+<tr><td>T1/2</td><td>triplet half (1/3)</td></tr>
+<tr><td>1/4</td><td>quarter</td></tr>
+<tr><td>T1/4</td><td>triplet quarter (1/6)</td></tr>
+<tr><td>1/8</td><td>eighth</td></tr>
+<tr><td>T1/8</td><td>triplet eighth (1/12)</td></tr>
+<tr><td>1/16</td><td>sixteenth</td></tr>
+<tr><td>T1/16</td><td>triplet sixteenth (1/24)</td></tr>
+<tr><td>1/32</td><td>thirty-second</td></tr>
+<tr><td>T1/32</td><td>triplet thirty-second (1/48)</td></tr>
+<tr><td>1/64</td><td>sixty-fourth</td></tr>
+</table>
+
+<a name="Arpeggio_Order"><p><b>Arpeggio Order</b></a>
+<p>This setting determines the order of the notes when a chord is <a href="../Parts_bar/Comp.htm#Arpeggio_Period">arpeggiated</a>. The options are listed in the table below.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Order</th><th>Description</th></tr>
+<tr><td>Default</td><td>The chord's notes are played in their default order, which is determined by the <a href="../Loose_ends/Chord_types.htm">chord type</a>, <a href="../Parts_bar/Comp.htm#Voicing">voicing</a>, and <a href="../Parts_bar/Comp.htm#Variation">variation</a>.</td></tr>
+<tr><td>Ascending</td><td>The chord's notes are played in ascending order, from lowest to highest.</td></tr>
+<tr><td>Descending</td><td>The chord's notes are played in descending order, from highest to lowest.</td></tr>
+<tr><td>Alternate</td><td>The arpeggio alternates between ascending and descending order. This is useful for emulating guitar strumming.</td></tr>
+<tr><td>Random</td><td>The chord's notes are played in random order, avoiding repeated notes. This is useful for emulating guitar fingerpicking.</td></tr>
+</table>
+
+<a name="Arpeggio_Repeat"><p><b>Arpeggio Repeat</b></a>
+<p>This setting determines whether chord <a href="../Parts_bar/Comp.htm#Arpeggio_Period">arpeggios</a> are repeated.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Disabled</td><td>The arpeggio stops when all of the chord's notes have been played, after which continuing to hold the input note has no effect.</td></tr>
+<tr><td>Enabled</td><td>The arpeggio repeats for as long as the input note remains pressed.</td></tr>
+</table>
+
+<p>Arpeggio repeat can be combined with <a href="../Parts_bar/Auto.htm#Auto_Play">auto play</a>, resulting in continuous automated arpeggiation. The effect is similar to a music box. It's more interesting if the <a href="../Parts_bar/Comp.htm#Arpeggio_Order">arpeggio order</a> is random.
+
+<a name="Arpeggio_Adapt"><p><b>Arpeggio Adapt</b></a>
+<p>This setting causes arpeggios that span a chord change to <em>adapt</em> to the change. Ordinarily an arpeggio's notes are determined solely by the chord during which it begins, and remain constant. Consequently if an ordinary arpeggio spans two chords, it may clash with the latter chord. Adaptive arpeggios avoid this potential clash. When the chord changes, any unplayed arpeggio note that's not found in the new chord is replaced with the nearest unused note from the new chord.
+
+<p>In the following example, an arpeggio is evenly split between two chords, i.e. its first two notes occur during Cmaj7 and its remaining notes occur during Dbmaj7. In the ordinary case, G and B clash with Dbmaj7, whereas in the adaptive case, they're replaced with the nearest notes of Dbmaj7's arpeggio. Notice that the adapted arpeggio spells C+(b9) rather than Cmaj7. Adaptive arpeggios combine chords, resulting in <em>hybrids</em> which may be nonstandard and/or dissonant.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Adapt</th><th>Cmaj7</th><th>Dbmaj7</th></tr>
+<tr><td>No</td><td>C4 E4</td><td>G4 B4</td></tr>
+<tr><td>Yes</td><td>C4 E4</td><td>Ab4 Db5</td></tr>
+</table>
+
+<p>For adaptive arpeggios to work properly, the <a href="../Parts_bar/Part_Output.htm#Fix_held_notes">fix held notes</a> feature must be disabled, because otherwise it would correct the entire arpeggio, preventing hybrids. Adaptation takes <a href="../Parts_bar/Part_Output.htm#Harmonic_Anticipation">harmonic anticipation</a> into account, i.e. a given <a href="../Concepts/Part.htm">part</a> can update its arpeggios early (or late) relative to other parts.
+
+</body>

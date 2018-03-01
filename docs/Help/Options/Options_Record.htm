@@ -1,0 +1,35 @@
+<title>Record</title>
+<body>
+
+<h3>Record</h3>
+
+<p>This <a href="../Menus/Edit/Options.htm">Options</a> dialog page contains preferences related to <a href="../Concepts/Recording.htm">recording</a>.
+
+<a name="Always_record"><p><b>Always record</b></a>
+<p>This setting enables or disables the continuous <a href="../Concepts/Recording.htm">recording</a> feature. Normally, recordings are explicitly started via the <a href="../Menus/Transport/Record.htm">record</a> command. However if this setting is enabled, ChordEase automatically starts recording as soon as it's launched, and continues to record until it exits. This prevents performances from being accidentally lost due to operator error. Because recording is automatic, the user is not prompted for the file names of the recordings. Instead, the file names are generated automatically from the song title, date and time, just as if <a href="../Options/Options_Record.htm#Prompt_for_filename">prompt for filename</a> were unchecked. The <a href="../Concepts/Recording.htm#Record_output_files">recording files</a> are saved in the record <a href="../Options/Options_Record.htm#Output_folder">output folder</a>. The performance is automatically broken up into songs: opening a new song closes the current recording and begins a new one. Note that if continuous recording is enabled, the Record command is superfluous and gives the error message "Locked to always record."
+
+<a name="Prompt_for_filename"><p><b>Prompt for filename</b></a>
+<p>This setting determines whether the <a href="../Menus/Transport/Record.htm">record</a> command prompts the user for a filename. If it's checked, the record command displays a file dialog, which allows the user to specify the file name and folder for the <a href="../Concepts/Recording.htm">recording</a>. If it's unchecked, the file name is generated automatically from the song title, date and time, and the recording files are saved in the record <a href="../Options/Options_Record.htm#Output_folder">output folder</a>. Unchecking this option enables "one touch" recording, i.e. the record command starts recording immediately. Note that if <a href="../Options/Options_Record.htm#Always_record">always record</a> is enabled, filename prompting is implicitly disabled.
+
+<a name="Buffer_size"><p><b>Buffer size</b></a>
+<p>This is the size of the record buffer, in events. The default value should be adequate for most scenarios. If you wish to increase the buffer size, note that each event occupies 16 bytes, so the amount of memory required equals the buffer size in events &times; 16.
+
+<a name="MIDI_file_resolution"><p><b>MIDI file resolution</b></a>
+<p>This is the timing resolution of the output MIDI file, in pulses per quarter note (PPQ). Higher values allow more precision for capturing the rhythmic subtleties of performances. The default value of 960 should be compatible with most applications. The most commonly used PPQ values are integer multiples of 24. Note that this setting is unrelated to the patch <a href="../Patch_bar/General.htm#PPQ">PPQ</a> setting.
+
+<p>When ChordEase saves a <a href="../Concepts/Recording.htm">recording</a>, in addition to creating a standard MIDI file, ChordEase also creates a <a href="../Concepts/Recording.htm#Record_output_files">.cemr</a> file, which has much better timing resolution than a MIDI file. If the PPQ of a recorded MIDI file is later deemed unsatisfactory, the corresponding .cemr file can be converted to a new MIDI file with a different PPQ, via the <a href="../Dialogs/Record_Player_dialog.htm">Record Player dialog</a>. The procedure is as follows:
+
+<ol>
+<li>First set the desired PPQ in the Record Options.
+<li>Display the Record Player dialog, via <span class="cmd">View/Record Player</span>.
+<li>Press the Open button, navigate to the recording's .cemr file, and press OK.
+<li>Press the Export button, change the filename if needed, and press OK to save the recording as a MIDI file.
+</ol>
+
+<a name="Fix_duplicate_notes"><p><b>Fix duplicate notes</b></a>
+<p>This setting determines whether <a href="../Loose_ends/Duplicate_notes.htm">duplicate notes</a> are fixed when a <a href="../Concepts/Recording.htm">recording</a> is exported as a MIDI file. If you need to play your MIDI files with an instrument or software synth that can't handle duplicate notes, you should enable this setting. Enabling it only affects subsequent recordings and exports. To fix duplicate notes in an <em>existing</em> recording, first enable this setting and then reexport the recording, by opening its <a href="../Concepts/Recording.htm#Record_output_files">.cemr</a> file in the <a href="../Dialogs/Record_Player_dialog.htm">Record Player</a> and using the dialog's Export button.
+
+<a name="Output_folder"><p><b>Output folder</b></a>
+<p>This is the destination folder for recording files if <a href="../Options/Options_Record.htm#Prompt_for_filename">filename prompting</a> is disabled, or <a href="../Options/Options_Record.htm#Always_record">continuous recording</a> is enabled. By default, it's a subfolder called Recordings within the <a href="../Options/Other.htm#Application_data_folder">application data folder</a>. To specify a different location, left-click the Custom radio button, and then either type the desired path in the edit box, or press the Browse button to display a folder dialog, navigate to the desired folder, and press OK.
+
+</body>

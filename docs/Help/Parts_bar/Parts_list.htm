@@ -1,0 +1,21 @@
+<title>Parts list</title>
+<body>
+
+<h3>Parts list</h3>
+
+<p>This control contains a list of the existing <a href="../Concepts/Part.htm">parts</a>. The parts list selection determines which part's settings are shown and editable. The parts list also lets you create new parts, remove existing parts, enable, disable and rename parts, and select <a href="../Concepts/Mapping_functions.htm">mapping functions</a>. When the parts list has focus, the standard <a href="../Menus/Edit/Editing.htm">editing</a> commands are supported, e.g. <a href="../Menus/Edit/Copy.htm">copy</a>, <a href="../Menus/Edit/Cut.htm">cut</a>, <a href="../Menus/Edit/Paste.htm">paste</a>, etc. The parts can also be reordered by dragging and dropping their list control items.
+
+<p>The settings shown in the <a href="../Menus/View/Parts_bar.htm">parts bar</a>'s tabbed pages correspond to whichever part is currently selected in the parts list. The parts list supports multiple selection, i.e. multiple parts can be selected at once. Note however that since the tabbed pages can only show one part at a time, if multiple parts are selected, the part pages correspond to the focused part, indicated by a dotted rectangle around the list item.
+
+<p>Before editing part settings, make sure the intended part is selected in the parts list. To select a single part, left-click its name in the Part column. To select a contiguous range of parts, left-click the first part in the range, and then while holding down the <span class="key">Shift</span> key, left-click the last part in the range. To select multiple non-contiguous parts, left-click each part while holding down the <span class="key">Ctrl</span> key. To unselect all parts, left-click the list control's background.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Column</th><th>Description</th></tr>
+<tr><td>Checkbox</td><td>This checkbox enables or disables the part. If it's checked, the part is enabled, otherwise it's disabled. A disabled part doesn't generate any MIDI output.</td></tr>
+<tr><td>Part</td><td>This is the name of the part. To change the name, assuming the part is already selected, left-click the name to display a popup edit control. You can also begin editing the name via <span class="cmd">Edit/Rename</span> on the main menu, <span class="cmd">Rename</span> on the list's context menu, or the <span class="key">F2</span> shortcut. After making your changes, save them by pressing <span class="key">Enter</span> or clicking anywhere outside the edit control. To cancel, press <span class="key">Esc</span>. If the part isn't selected, left-click its name once to select the part, wait a second, and then left-click its name again to display the popup edit control.</td></tr>
+<tr><td>Function</td><td>This is the part's <a href="../Concepts/Mapping_functions.htm">mapping function</a>. To change it, left-click it to display a popup drop list, and select the desired function from the list.</td></tr>
+</table>
+
+<p>Certain part settings can be displayed and edited for multiple parts at once, via the <a href="../Dialogs/MIDI_Note_Mappings.htm#MIDI_Note_Mapping_Properties">Note Mapping Properties</a> dialog. To display this dialog, select the desired parts and then choose <span class="cmd">Properties</span> from the list's context menu, or press <span class="key">Alt+Enter</span>.
+
+</body>

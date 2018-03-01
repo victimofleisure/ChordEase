@@ -1,0 +1,75 @@
+<title>MIDI target list</title>
+<body>
+
+<h3>MIDI target list</h3>
+
+<table border=1 cellpadding=2 cellspacing=0>
+<tr><th colspan=3>Patch Targets</th></tr>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>Tempo</td><td>Fader</td><td>Tempo, in beats per minute</td></tr>
+<tr><td>Tempo Multiple</td><td>Fader</td><td>Tempo multiplier</td></tr>
+<tr><td>Tap Tempo</td><td>Momentary</td><td>Set tempo via tapping</td></tr>
+<tr><td>Transpose</td><td>Fader</td><td>Key transposition, in semitones</td></tr>
+<tr><td>Lead-in</td><td>Fader</td><td>Lead-in length, in measures</td></tr>
+<tr><td>Tag Length</td><td>Fader</td><td>Length of tag, in measures</td></tr>
+<tr><td>Tag Repeat</td><td>Fader</td><td>Tag repeat count, or zero for indefinite</td></tr>
+<tr><td>Metro. Enable</td><td>Toggle</td><td>Enable metronome</td></tr>
+<tr><td>Metro. Volume</td><td>Fader</td><td>Output volume, or -1 if none</td></tr>
+<tr><td>Play</td><td>Toggle</td><td>Play or stop song</td></tr>
+<tr><td>Pause</td><td>Toggle</td><td>Pause or resume song</td></tr>
+<tr><td>Rewind</td><td>Momentary</td><td>Rewind to start of song</td></tr>
+<tr><td>Repeat</td><td>Toggle</td><td>Repeat song</td></tr>
+<tr><td>Next Section</td><td>Momentary</td><td>Continue to next section</td></tr>
+<tr><td>Next Chord</td><td>Momentary</td><td>Skip forward to next chord</td></tr>
+<tr><td>Previous Chord</td><td>Momentary</td><td>Skip backward to previous chord</td></tr>
+<tr><td>Song Position</td><td>Fader</td><td>Song position, in chords</td></tr>
+<tr><td>Start Tag</td><td>Momentary</td><td>Start a tag ending on the current measure</td></tr>
+<tr><td>Chord Root</td><td>Fader</td><td>Current chord's root</td></tr>
+<tr><td>Chord Type</td><td>Fader</td><td>Current chord's type</td></tr>
+<tr><td>Chord Bass</td><td>Fader</td><td>Current chord's bass note if any</td></tr>
+<tr><td>Chord Scale</td><td>Fader</td><td>Current chord's scale</td></tr>
+<tr><td>Chord Mode</td><td>Fader</td><td>Current chord's mode</td></tr>
+<tr><td>Chord Dictionary</td><td>Fader</td><td>Select substitute chord dictionary</td></tr>
+<tr><th colspan=3>Part Targets</th></tr>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>Part Enable</td><td>Toggle</td><td>Enable this part</td></tr>
+<tr><td>Part Function</td><td>Fader</td><td>Part mapping function</td></tr>
+<tr><td>Input Zone Low</td><td>Fader</td><td>Lowest note of input range</td></tr>
+<tr><td>Input Zone High</td><td>Fader</td><td>Highest note of input range</td></tr>
+<tr><td>Input Transpose</td><td>Fader</td><td>Input transposition, in semitones</td></tr>
+<tr><td>Input Vel. Offset</td><td>Fader</td><td>Input note velocity offset</td></tr>
+<tr><td>Input Non-Diatonic</td><td>Fader</td><td>Handling for non-diatonic input notes</td></tr>
+<tr><td>Input CC Note</td><td>Fader</td><td>Note input via continuous controller</td></tr>
+<tr><td>Input CC Note Velocity</td><td>Fader</td><td>Velocity of note input via continuous controller</td></tr>
+<tr><td>Output Patch</td><td>Fader</td><td>Patch number, or -1 if none</td></tr>
+<tr><td>Output Volume</td><td>Fader</td><td>Output volume, or -1 if none</td></tr>
+<tr><td>Output Harm. Anticipation</td><td>Fader</td><td>Harmonic anticipation, as fraction of whole note</td></tr>
+<tr><td>Output Fix Held Notes</td><td>Toggle</td><td>Correct held notes that become non-diatonic</td></tr>
+<tr><td>Bank Select MSB</td><td>Fader</td><td>Most significant byte of bank select, or -1 if none</td></tr>
+<tr><td>Bank Select LSB</td><td>Fader</td><td>Least significant byte of bank select, or -1 if none</td></tr>
+<tr><td>Harmonizer Interval</td><td>Fader</td><td>Generic harmony interval, in diatonic steps</td></tr>
+<tr><td>Harmonizer Omit Melody</td><td>Toggle</td><td>True if harmonizer should omit melody note</td></tr>
+<tr><td>Harmonizer Crossing</td><td>Toggle</td><td>True if harmony can cross melody</td></tr>
+<tr><td>Harmonizer Static Min</td><td>Fader</td><td>Minimum static harmony interval, in semitones</td></tr>
+<tr><td>Harmonizer Static Max</td><td>Fader</td><td>Maximum static harmony interval, in semitones</td></tr>
+<tr><td>Harmonizer Chord Degree</td><td>Fader</td><td>Constrain harmony to chord of this diatonic degree</td></tr>
+<tr><td>Harmonizer Chord Size</td><td>Fader</td><td>Constrain harmony to chord of this size, in notes</td></tr>
+<tr><td>Comp Voicing</td><td>Fader</td><td>Chord voicing type</td></tr>
+<tr><td>Comp Variation</td><td>Fader</td><td>Chord variation scheme</td></tr>
+<tr><td>Chord Resets Alternation</td><td>Toggle</td><td>True if chord change resets variant alternation</td></tr>
+<tr><td>Comp Arp Period</td><td>Fader</td><td>Time between arpeggio notes, in whole notes</td></tr>
+<tr><td>Comp Arp Period Quant</td><td>Fader</td><td>Time between arpeggio notes, in quantized units</td></tr>
+<tr><td>Comp Arp Order</td><td>Fader</td><td>Arpeggio note order</td></tr>
+<tr><td>Comp Arp Repeat</td><td>Toggle</td><td>True if arpeggio repeats; false for one-shot</td></tr>
+<tr><td>Comp Arp Adapt</td><td>Toggle</td><td>Adapt arpeggio to chord changes</td></tr>
+<tr><td>Bass Lowest Note</td><td>Fader</td><td>Lowest bass note allowed</td></tr>
+<tr><td>Bass Slash Chords</td><td>Toggle</td><td>Respect slash chord bass notes</td></tr>
+<tr><td>Bass Approach Length</td><td>Fader</td><td>Fixed bass approach length, as fraction of whole note</td></tr>
+<tr><td>Bass Approach Trigger</td><td>Momentary</td><td>Trigger bass approach to target chord</td></tr>
+<tr><td>Bass Target Alignment</td><td>Fader</td><td>Alignment of triggered bass approach target, in measures</td></tr>
+<tr><td>Auto Play</td><td>Toggle</td><td>Play part automatically</td></tr>
+<tr><td>Auto Window</td><td>Fader</td><td>Start of auto-play pitch window</td></tr>
+<tr><td>Auto Velocity</td><td>Fader</td><td>Auto-play note velocity</td></tr>
+</table>
+
+</body>

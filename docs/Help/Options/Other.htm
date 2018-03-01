@@ -1,0 +1,31 @@
+<title>Other</title>
+<body>
+
+<h3>Other</h3>
+
+<p>This <a href="../Menus/Edit/Options.htm">Options</a> dialog page contains miscellaneous preferences.
+
+<a name="Automatically_check_for_updates"><p><b>Automatically check for updates</b></a>
+<p>This option determines whether ChordEase automatically checks for updates when it launches. If a newer version is available, you will be prompted with the message "A newer version of ChordEase is available. Do you want to download and install it?" The options are as follows:
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Yes</td><td>Download and install</td><td>The newer version is downloaded and installed.</td></tr>
+<tr><td>No</td><td>Skip this version</td><td>The newer version is NOT downloaded, and no further notifications are given <em>for this version</em>, though you'll continue to be notified of subsequent versions.</td></tr>
+<tr><td>Later</td><td>Defer the update</td><td>The newer version is NOT downloaded, but you'll be notified about it again the next time you launch ChordEase.</td></tr>
+</table>
+
+<p>To disable automatically checking for updates, uncheck this option. Note that automatic checking costs you nothing in terms of performance, because it's done from a worker thread. Regardless of whether automatic checking is enabled, you can always manually check for a newer version via <a href="../Menus/Help/Check_for_updates.htm">Check for Updates</a>.
+
+<p>ChordEase must exit before it can be reinstalled. The update procedure attempts to close ChordEase, however if there's an unsaved document, the update stalls until you respond to the "Save changes" dialog. In this case a console window will be visible, repeatedly displaying the message "Waiting for ChordEase to exit...".
+
+<a name="Show_tooltips"><p><b>Show tooltips</b></a>
+<p>This option enables or disables tooltips throughout the entire application. The only exception is <a href="../Menus/View/Toolbar.htm">toolbar</a> tooltips, which are always shown.
+
+<a name="Application_data_folder"><p><b>Application data folder</b></a>
+<p>This option lets you customize the location of the folder in which ChordEase expects to find its data files, including the <a href="../Loose_ends/Chord_dictionary.htm">chord dictionary</a> and the current <a href="../Concepts/Patch.htm">patch</a>. The default location depends on whether you're using the <a href="../Getting_Started/Installing.htm">installed</a> or portable version of ChordEase. For the installed version, it's a subfolder called ChordEase within your profile's local AppData folder, e.g. <span class="path">C:\Users\foo\AppData\Local\ChordEase</span>, where foo is a placeholder for your user name. For the portable version, it's the folder that contains the ChordEase executable. To specify a different location, left-click the Custom radio button, and then either type the desired path in the edit box, or press the Browse button to display a folder dialog, navigate to the desired folder, and press OK.
+
+<p>If you change the location of the data folder, you must copy the chord dictionary (ChordDictionary.txt) to the new location, otherwise the next time you run ChordEase it will display a file not found error for the dictionary, and will be unable to read <a href="../Concepts/Song.htm">song</a> files. You should also copy the current patch (ChordEasePatch.ini) to avoid losing your settings. Also note that the <a href="../Options/Options_Record.htm#Output_folder">record output folder</a> defaults to a subfolder of the data folder. Consequently if you relocate the data folder, you may also be relocating the record output folder.
+
+
+
+</body>

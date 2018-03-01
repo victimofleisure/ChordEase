@@ -1,0 +1,43 @@
+<title>Metronome</title>
+<body>
+
+<h3>Metronome</h3>
+
+<p>ChordEase expects the performer(s) to stay in sync with it, and provides a metronome to facilitate this. For practicing, it may be acceptable to route the metronome and the musical output to the same MIDI instrument and output speakers. For performances however, it's probably undesirable for the audience to hear the metronome. In this case it's recommended to route the metronome to a separate MIDI instrument, such as a drum machine, so that the performer(s) can listen to it privately via headphones. A headphone distribution amplifier may be useful for ensembles.
+
+<p>The metronome can be configured to start before the song actually begins, via the <a href="../Patch_bar/General.htm#Lead-in">lead-in</a> setting. Some performers may be able to stay in sync with ChordEase without relying on the metronome. In an ensemble, it may be possible for only one member (e.g. the drummer) to listen to the metronome. It's also possible to play in free time, advancing the chord manually via the <a href="../Menus/Transport/Next_Chord.htm">next chord</a> command, in which case the metronome is irrelevant.
+
+<a name="Enable"><p><b>Enable</b></a>
+<p>This check box enables or disables the metronome.
+
+<a name="Metronome_Port"><p><b>Port</b></a>
+<p>This is the device index of the MIDI output device to be used as a metronome. For a list of the available output devices, see the right-hand pane of the <a href="../Menus/MIDI/Devices.htm">devices</a> bar. Note that unlike MIDI channels, ports are zero-origin.
+
+<a name="Metronome_Channel"><p><b>Channel</b></a>
+<p>This is the MIDI channel number to which metronome messages will be sent. MIDI channels range from 1 to 16. The user must ensure that the desired output device is listening on the specified channel. If necessary, the output messages can be examined using the <a href="../Menus/MIDI/MIDI_Output.htm">MIDI output</a> bar. In typical MIDI setups channel 10 is reserved for drums.
+
+<a name="Metronome_Patch"><p><b>Patch</b></a>
+<p>This is the optional patch number to send to the metronome instrument. If this setting is &minus;1 (shown as N/A), no patch change message is sent. If this setting is greater than or equal to zero, the corresponding patch is set during startup, and whenever a <a href="../Concepts/Song.htm">song</a> is loaded.
+
+<a name="Metronome_Volume"><p><b>Volume</b></a>
+<p>This is the optional volume level to send to the metronome instrument. If this setting is &minus;1 (shown as N/A), no volume message is sent. If this setting is greater than or equal to zero, the corresponding volume is set during startup, and whenever a <a href="../Concepts/Song.htm">song</a> is loaded.
+
+<a name="Normal_Note"><p><b>Normal Note</b></a>
+<p>This is the MIDI note sent for normal (non-accented) metronome beats. In typical MIDI setups, Eb3 on channel 10 gives good results.
+
+<a name="Normal_Velocity"><p><b>Normal Velocity</b></a>
+<p>This is the velocity of normal (non-accented) metronome beats.
+
+<a name="Accent_Note"><p><b>Accent Note</b></a>
+<p>This is the MIDI note sent for accented metronome beats. The first beat of each measure is accented. This setting is only applicable if <a href="../Patch_bar/Metronome.htm#Use_same_note">use same note</a> is unchecked.
+
+<a name="Accent_Velocity"><p><b>Accent Velocity</b></a>
+<p>This is the velocity of accented metronome beats. It should typically be greater than the <a href="../Patch_bar/Metronome.htm#Normal_Velocity">normal velocity</a>, particularly if normal and accented metronome beats share the same note.
+
+<a name="Use_same_note"><p><b>Use same note</b></a>
+<p>If this setting is enabled, the same MIDI note is used for both normal and accented metronome beats, in which case they must have different velocities to be distinguishable.
+
+<a name="Metronome_device_name"><p><b>Device name</b></a>
+<p>This is the name of the MIDI output device to which metronome notes will be sent. To change the output device, edit the <a href="../Patch_bar/Metronome.htm#Metronome_Port">metronome port</a>.
+
+</body>

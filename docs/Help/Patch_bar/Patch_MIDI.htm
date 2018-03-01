@@ -1,0 +1,41 @@
+<title>MIDI</title>
+<body>
+
+<h3>MIDI</h3>
+
+<p>This page lists the patch <a href="../Concepts/MIDI_targets.htm">MIDI targets</a>. Each row corresponds to a <a href="../Concepts/Patch.htm">patch</a> parameter or command that can be remotely controlled via MIDI. In order to remotely control a MIDI target, you must first assign a MIDI message to it. MIDI assignments can be created by editing the items on this page, though it's usually easier to have ChordEase <a href="../Menus/MIDI/Learn.htm">learn</a> the assignments. This page also lets you change or delete existing MIDI assignments. <a href="../Parts_bar/Part_MIDI.htm">Part</a> MIDI targets have a similar page. For information about each target, see the <a href="../Loose_ends/MIDI_target_list.htm">MIDI target list</a>.
+
+<p>To create a MIDI assignment manually, you need to know what message your MIDI device is sending, and what port and channel it's sending it on. For example, suppose you want to assign a keyboard's modulation wheel to the <a href="../Patch_bar/General.htm#Tempo">tempo</a> parameter, and you happen to know that the wheel sends a continuous controller message for controller number one, and that the message will be received on port zero and channel two. In this case you could make the assignment as follows:
+
+<ol>
+<li>Find the row named "Tempo".
+<li>Left-click the port and change it to zero.
+<li>Left-click the channel and change it to two.
+<li>Left-click the event type and change it to "Control".
+<li>Left-click the controller number and change it to one.
+</ol>
+
+<p>To delete an existing assignment, right-click within the corresponding row to display its context menu, and select <span class="cmd">Reset</span>. This resets all of the target's properties to their default state. To disable a target without resetting all its properties, just set its event type to "None".
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th colspan=2>MIDI target columns</th></tr>
+<tr><td>Target</td><td>The name of the MIDI target this row corresponds to.</td></tr>
+<tr><td>Port</td><td>The input port on which the assigned MIDI message is expected to arrive. This is equivalent to a MIDI input device index. See the <a href="../Dialogs/MIDI_Devices.htm">MIDI Devices</a> bar for a list of MIDI input devices. Note that unlike channels, ports are zero-origin.</td></tr>
+<tr><td>Chan</td><td>The channel on which the assigned MIDI message is expected to arrive. Note that unlike ports, channels are one-origin.</td></tr>
+<tr><td>Event</td><td>The event type of the assigned MIDI message. The supported event types are: None, Control (continuous controller), Wheel (pitch bend), Program Change, and Channel Aftertouch.</td></tr>
+<tr><td>Control</td><td>The controller number of the assigned MIDI message. This parameter only applies to the continuous controller event type.</td></tr>
+<tr><td>Start</td><td>The start of the <a href="../Patch_bar/Patch_MIDI.htm#Normalized_controller_range">normalized controller range</a>; see below.</td></tr>
+<tr><td>End</td><td>The end of the normalized controller range; see below.</td></tr>
+<tr><td>Value</td><td>The current value of the assigned MIDI message. The value is read-only, and is updated dynamically. Note that this is the raw MIDI value, ranging from 0 to 127, not the normalized value.</td></tr>
+</table>
+
+<a name="Normalized_controller_range"><p><b>Normalized controller range</b></a>
+<p>Each target has a normalized controller range, defined by the values in the Start and End columns. This range determines how the assigned MIDI message is mapped to the target parameter. The default normalized range is from 0 to 1, which maps the raw MIDI value (ranging from 0 to 127) to the target parameter's entire range (which varies depending on the parameter). In some cases you may want your control to cover only a subset of the target parameter's range. You can accomplish this by adjusting the normalized range.
+
+<p>For example, suppose you've assigned a MIDI message to the <a href="../Patch_bar/General.htm#Transpose">Transpose</a> parameter, which ranges from 0 to 11. By default, your MIDI control covers this entire range, i.e. 0 maps to 0, and 127 maps to 11. Let's say you want your MIDI control to cover only the middle of this range. In the Transpose row, set Start to 0.25, and End to 0.75. Now 0 maps to 3, and 127 maps to 8. Or suppose you want your control to transpose up or down a tritone, with zero in the middle. Set Start to &minus;0.5, and End to 0.5. Now 0 maps to &minus;6, and 127 maps to 6.
+
+<p>The normalized range can be reversed, i.e. Start can be greater than End, in which case the target parameter moves backwards. Since a MIDI message can be assigned to <a href="../Concepts/MIDI_targets.htm#Shared_assignments">multiple targets</a>, it's possible to set up a crossfader. For example, suppose you assign a controller to the output volume of two different parts, and then for one of the parts, reverse the normalized range, so that Start is 1 and End is 0. Moving the assigned control now changes both output volumes, but in opposite directions. This could be useful if you're layering two parts, and want a single control that adjusts the mix between them.
+
+
+
+</body>

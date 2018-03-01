@@ -1,0 +1,42 @@
+<title>Piano</title>
+<body>
+
+<h3>Piano</h3>
+
+<p>This modeless dialog is a virtual piano that lets you play ChordEase via your computer's mouse or keyboard. This allows you to try out ChordEase even if you don't have a MIDI instrument. To display the dialog, use <span class="cmd">View/Piano</span>. To play notes, left-click the piano keys, or press letter keys on your computer keyboard. Note that the letter keys only play notes while the piano dialog has focus. If you don't hear any output, ChordEase may be configured incorrectly; you may want to try the <a href="../Menus/Help/Demo.htm">demo</a>. To see if output notes are being generated, show the <a href="../Dialogs/Output_Notes_bar.htm">output notes bar</a> and/or the <a href="../Dialogs/MIDI_Output_bar.htm">MIDI output bar</a>. The dialog will also display notes played on an external MIDI device, provided the notes are transmitted on the appropriate port and channel. The dialog has various settings, which are described below.
+
+<a name="Piano_port"><p><b>Port</b></a>
+<p>This drop list lets you select which <a href="../Parts_bar/Part_Input.htm#Input_Port">input port</a> notes will be sent to. This setting, in combination with the piano's <a href="../Dialogs/Piano_dialog.htm#Piano_channel">channel</a> setting (see below) determines which part(s) will receive the notes. Since multiple parts can have the same input port and channel, it's possible to layer parts, i.e. play several parts at once. Keyboard splits are also possible if the part <a href="../Parts_bar/Part_Input.htm#Zone_Low">input zones</a> are configured correctly. For a list of the ports, channels, and zones used by all parts, see the <a href="../Dialogs/MIDI_Note_Mappings.htm">MIDI note mappings</a> dialog.
+
+<a name="Piano_channel"><p><b>Channel</b></a>
+<p>This drop list lets you select which <a href="../Parts_bar/Part_Input.htm#Input_Channel">input channel</a> notes will be sent to. This setting, in combination with the piano's <a href="../Dialogs/Piano_dialog.htm#Piano_port">port</a> setting (see above) determines which part(s) will receive the notes.
+
+<a name="Start_note"><p><b>Start note</b></a>
+<p>This drop list lets you specify the virtual piano's lowest note. In combination with the <a href="../Dialogs/Piano_dialog.htm#Key_count">key count</a> setting (see below), it lets you emulate the layout of any standard or nonstandard piano. Standard layouts can also be selected via the <a href="../Dialogs/Piano_dialog.htm#Piano_context_menu">context menu</a>'s Piano Size submenu.
+
+<a name="Key_count"><p><b>Key count</b></a>
+<p>This drop list lets you specify how many keys the virtual piano should have. It's usually used in combination with the <a href="../Dialogs/Piano_dialog.htm#Start_note">start note</a> setting (see above).
+
+<a name="Piano_velocity"><p><b>Velocity</b></a>
+<p>This slider sets the velocity of notes played via the piano dialog.
+
+<a name="Piano_context_menu"><p><b>Context menu</b></a>
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Piano Size</td><td colspan=2>This submenu lets you select a standard piano size. For nonstandard sizes, use the <a href="../Dialogs/Piano_dialog.htm#Start_note">start note</a> and <a href="../Dialogs/Piano_dialog.htm#Key_count">key count</a> drop lists.</td></tr>
+<tr><td rowspan=7>Key Labels</td><td>None</td><td>No labels are shown on the piano keys.</td></tr>
+<tr><td>Shortcuts</td><td>The labels show keyboard shortcuts, i.e. the correspondence between your computer keyboard and the piano keys.</td></tr>
+<tr><td>Input Notes</td><td>The labels show the names of the input notes, i.e. for each key, what note is input to the <a href="../Concepts/Mapping_functions.htm">mapping function</a>. The labels are unaffected by chord changes, transposition, etc.</tr>
+<tr><td>Output Notes</td><td>The labels show the names of the output notes, i.e. for each key, what note is output by the <a href="../Concepts/Mapping_functions.htm">mapping function</a>. The labels vary depending on the current chord scale, and are updated dynamically as the chords change. The labels are also affected by various settings including global <a href="../Patch_bar/General.htm#Transpose">transposition</a> and the part's <a href="../Parts_bar/Part_Input.htm#Input_Transpose">input transposition</a>. Note that a forward slash shown on a key indicates that the key is mapped to the <a href="../Parts_bar/Comp.htm">comp</a> function.</td></tr>
+<tr><td>Intervals</td><td>The labels show the intervals created by each piano key, e.g. relative to the root of the current chord. The labels are updated dynamically, as described above.</td></tr>
+<tr><td>Scale Tones</td><td>The labels show the scale tones created by each piano key, as numbers from 1 to 7. Keys that don't generate a scale tone are left blank. The labels are updated dynamically, as described above.</td></tr>
+<tr><td>Velocities</td><td>The labels show the velocities of the input notes numerically.</td></tr>
+<tr><td rowspan=4>Key Colors</td><td>Input Notes</td><td>Color the keys to show which input notes are currently on.</td></tr>
+<tr><td>Velocities</td><td>Color the keys to show the velocities of the input notes. The colors range spectrally from blue (softest) to red (loudest).</td></tr>
+<tr><td>Scale Tones</td><td>Color the keys so that scale tones are linearly mapped to a rainbow palette: 1=red, 2=orange, 3=yellow, 4=green, 5=blue, 6=indigo, 7=violet.</td></tr>
+<tr><td>Thirds</td><td>Color the keys so that scale tones are mapped to a rainbow palette in thirds: 1=red, 3=orange, 5=yellow, 7=green, 2=blue, 4=indigo, 6=violet.</td></tr>
+<tr><td>Rotate Labels</td><td colspan=2>This setting rotates the key labels 90° counterclockwise, so that they're vertical instead of horizontal. This may allow the labels to use a larger font.</td></tr>
+<tr><td>Show Octaves</td><td colspan=2>This setting determines whether note names displayed on the piano keys include the octave number. Including the octave lengthens the labels, which may reduce the font size and thereby make the labels harder to read. Only key label types that show notes are affected.</td></tr>
+<tr><td>Vertical Keyboard</td><td colspan=2>This setting rotates the entire piano keyboard 90° counterclockwise, so that it's oriented vertically instead of horizontally. This may allow the key labels to use a larger font. The Rotate Labels setting has no effect in this case.</td></tr>
+</table>
+
+</body>

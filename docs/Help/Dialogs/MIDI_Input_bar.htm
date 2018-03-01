@@ -1,0 +1,14 @@
+<title>MIDI Input</title>
+<body>
+
+<h3>MIDI Input</h3>
+
+<p>This dockable bar displays input MIDI events in real time, which can be useful for debugging your MIDI setup. By default, the bar shows all input received from all MIDI input devices. To filter the data, so that only a subset of the events are shown, use the drop lists above the column headings. The filtering is non-destructive, i.e. if you remove a filter, any events that were rejected by that filter reappear. Each column's filter is initially set to a wildcard (shown as an asterisk), which means filtering is disabled for that column. Multiple filters can be applied simultaneously, in which case an event must pass all filters to be displayed. To reset all filters to wildcards and show all events, select <span class="cmd">Reset Filters</span> on the bar's context menu.
+
+<p>For example, to only see events on channel 10, select 10 in the Chan column's drop list. To only see Note On messages, select "Note On" in the Message column's drop list. Note that for the Message column, two special wildcards are available: "Channel *" shows only channel messages, and "System *" shows only system messages.
+
+<p>To pause the display, set the Timestamp column's drop list to "Pause" or select <span class="cmd">Pause</span> in the bar's context menu. Events continue to accumulate while paused, so you will not miss any. To resume the display, set the Timestamp column's drop list back to * or reselect <span class="cmd">Pause</span> in the context menu. The context menu also allows you to clear the event history, via <span class="cmd">Clear History</span>. It's also possible to show controllers by name instead of only by number, again via the context menu.
+
+<p>To show or hide the bar, use <span class="cmd">MIDI/Input</span>. To display output events, use the <a href="../Dialogs/MIDI_Output_bar.htm">MIDI Output bar</a>, which works similarly.
+
+</body>

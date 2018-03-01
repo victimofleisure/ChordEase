@@ -1,0 +1,23 @@
+<title>Recording</title>
+<body>
+
+<h3>Recording</h3>
+
+<p>ChordEase allows performances to be recorded as MIDI data. To record a performance, select the <a href="../Menus/Transport/Record.htm">Record</a> command, via <span class="cmd">Transport/Record</span> or <span class="key">Ctrl+R</span>. A recording can be started at any time: a <a href="../Concepts/Song.htm">song</a> needn't be open, and if it is open, it needn't be <a href="../Menus/Transport/Play-Stop.htm">playing</a>, thus introductions, interludes, and endings can all be recorded. By default, you're prompted for an output filename, but if you prefer "one touch" recording, uncheck the <a href="../Options/Options_Record.htm#Prompt_for_filename">prompt for filename</a> option. It's also possible to <a href="../Options/Options_Record.htm#Always_record">always record</a>, and thereby avoid data loss due to failure to press record. To play back the completed recording, use the <a href="../Dialogs/Record_Player_dialog.htm">Record Player dialog</a>, or play the MIDI file in a suitable application; also see <a href="../Concepts/Recording.htm#Record_output_files">record output files</a> below. Recording a performance as MIDI is often more convenient than recording the audio, for the following reasons:
+
+<ul>
+<li>MIDI data is extremely compact compared to audio.
+<li>The recording can't be ruined by incorrect levels.
+<li>The MIDI data can be imported into a Digital Audio Workstation (DAW), edited, played through higher quality instruments, and properly mixed like a studio recording.
+</ul>
+
+<a name="Record_output_files"><p><b>Record output files</b></a>
+<p>Recording creates two output files: a standard MIDI file, and a .cemr file. The .cemr file is unique to ChordEase, and has some important advantages over the MIDI file, detailed below. It's recommended that you keep both files, even though they contain similar data. Note that a .cemr can be converted to a MIDI file, whereas the reverse is not true.
+
+<ul>
+<li>The .cemr file has superior timing resolution compared to a standard MIDI file, and thus captures rhythmic subtleties more faithfully. The timestamps in a .cemr file are accurate to within tenths of a microsecond.
+<li>Unlike a MIDI file, the .cemr file preserves the port information, i.e. which output device each <a href="../Concepts/Part.htm">part</a> is associated with. Consequently if a .cemr file is played back via the <a href="../Dialogs/Record_Player_dialog.htm">Record Player dialog</a>, assuming the output MIDI setup is unchanged, the performance should sound exactly as it did originally.
+<li>The .cemr file can be exported as a standard MIDI file via the Record Player dialog, and the resulting MIDI file can have a different PPQ than the original MIDI file had, without loss of precision; for instructions, see <a href="../Options/Options_Record.htm#MIDI_file_resolution">MIDI file resolution</a>.
+</ul>
+
+</body>

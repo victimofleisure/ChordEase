@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>ChordEase - Release Notes</title>
+<meta content="text/html; charset=windows-1252" http-equiv=Content-Type>
+<link href="./style.css" rel=stylesheet title=default type=text/css>
+</head>
+<body>
+<div class=menu>
+<a href="./index.html"><img src="./images/ChordEase-32.png" width="32" height="32" alt="icon"></a>
+<div class=title>ChordEase</div><p>
+<div class=menuitem0 title="Overview"><a href="./index.html">Home</a></div>
+<div class=menuitem0 title="Screenshots"><a href="./screenshots.html">Screenshots</a></div>
+<div class=menuitem0 title="Features"><a href="./features.html">Features</a></div>
+<div class=menuitem0 title="Download"><a href="./download.html">Download</a></div>
+<div class=menuitem0 title="Documentation"><a href="./helpframe.html">Documentation</a></div>
+<div class=menuitem0 title="Development"><a href="./development.html">Development</a></div>
+<div class=menuitem0 title="FAQ"><a href="./faq.html">FAQ</a></div>
+<div class=menuitem0 title="Videos"><a href="./videos.html">Videos</a></div>
+<div class=menuitem0 title="Forums"><a href="./forums.html">Forums</a></div>
+<div class=menuitem0 title="Links"><a href="./links.html">Links</a></div>
+<div class=menuitem0 title="Contact"><a href="./contact.html">Contact</a></div><br>
+</div>
+<div id=body>
+<!--  content goes HERE  -->
+
+<h1>Release Notes</h1>
+
+<h3>1.0.13.000</h3>
+
+<ol>
+<li>Parts can be grouped to prevent voice collisions in multi-part harmonizations.
+<li>The harmonizer can optionally be constrained to a variable set of chord tones.
+<li>A part can now send Bank Select messages in addition to a Patch Change message.
+<li>The Piano dialog's keys can optionally be colored to show input note velocities, or to show scale tones mapped to a rainbow palette linearly or in thirds.
+<li>The Piano dialog's key labels can optionally show numeric input note velocities.
+<li>The Output Notes bar's keys can optionally be colored to show output note velocities.
+<li>The Note Mapping Properties dialog now includes the part's enable setting.
+<li>Note Mapping Properties are accessible via the Parts List's context menu or Alt+Enter.
+<li>The Note Mapping Properties dialog could display negative port values; fixed.
+<li>The Output Notes bar was potentially exceeding the bounds of the key array; fixed.
+<li>The Piano dialog was inconsistently showing auto play notes; fixed.
+<li>Showing the Piano dialog highlighted all active notes, instead of only those notes that matched the dialog's input port and channel settings; fixed.
+<li>Showing the Piano dialog via its main menu mnemonic reset the note corresponding to the shortcut 'P', if any; fixed.
+<li>In the Piano dialog, selecting a context menu item via its mnemonic reset the note corresponding to that mnemonic, if any; fixed.
+<li>The Previous Pane (Shift+F6) command was getting stuck on the Chord Bar; fixed.
+<li>MIDI devices with multiple input or output ports are handled better, and devices which are present but swapped (e.g. plugged into different USB ports) are now located.
+<li>Adaptive arpeggios now support repeat.
+<li>The Output Notes bar now has key label options to display intervals or scale tones.
+<li>The Output Notes bar's Rotate Labels setting wasn't persisting correctly; fixed.
+<li>The user interface was lagging behind chord changes by up to 50ms; fixed.
+</ol>
+
+<h3>1.0.12.000</h3>
+
+<ol>
+<li>Chord substitution is now supported, via switching between different chord dictionaries.
+<li>A chord toolbar was added, with drop lists and MIDI targets for the current chord's root, type, bass, scale and mode.
+<li>In the MIDI Assignments dialog, a "Properties" command was added that lets you edit the properties of multiple MIDI assignments at once; it's accessible via the context menu or Alt+Enter. A similar properties command was added to the MIDI Note Mappings dialog.
+<li>MIDI targets were added for Bass/Lowest Note and Comp/Chord Resets Alternation.
+<li>The tap tempo button wasn't being highlighted during MIDI learn; fixed.
+<li>The Next and Previous Chord commands now respect sections and support tagging.
+<li>The chord dictionary dialog no longer has an Apply button, because dictionary changes now take effect immediately.
+<li>Deleting all chord types from the chord dictionary could cause an access violation; fixed.
+<li>Editing the chord dictionary was silently reverting all song edits, without updating the chart view; fixed.
+<li>After reordering the chord dictionary, undoing a song edit could scramble the song's chord types; fixed.
+<li>Reordering the chord dictionary could cause song chords previously copied to the clipboard to become invalid, and pasting them could crash the app; fixed.
+<li>The chart view now supports navigation via the Tab and Shift+Tab keys.
+<li>In the print preview, chord symbols had incorrect character spacing and appeared horizontally squashed, drastically so for larger font sizes; fixed.
+<li>In a printed chart, the grid lines were too narrow to be reliably visible; fixed.
+<li>In a printed chart, the chart is now horizontally centered on the printed page.
+<li>Disabling the "Always record" option caused an "unamed file" error after recording MIDI data with no song open; fixed.
+<li>Pressing the Alt key was stealing focus from child dialogs; fixed.
+<li>Dockbar controls were retaining focus after the bar was hidden; fixed.
+</ol>
+
+<h3>1.0.11.000</h3>
+
+<ol>
+<li>Add dynamic looping AKA tagging: tag length, tag repeat count, and start tag. 
+<li>Add tap tempo; set the tempo via tapping. 
+<li>Add option to adapt arpeggios to chord changes; fix unplayed arpeggio notes that would otherwise clash with the new chord. 
+<li>Add a chord dictionary editor, supporting the standard editing commands. 
+<li>Allow comp chord sizes other than triads and tetrachords. 
+<li>Optionally fix duplicate notes in a recording's output MIDI file, by deferring note off commands until the note has zero instances. 
+<li>MIDI chase now shows the target page even if the target parameter is unchanged. 
+<li>In the MIDI assignments dialog, add a column to show the controller's current value, updated dynamically. 
+<li>Prematurely ending a one-shot arpeggio turns off notes that weren't played; fixed. 
+<li>Next chord and previous chord commands have the same mnemonic; fixed. 
+<li>Ending a part MIDI target edit by selecting a different part applies the edit to the wrong part; fixed. 
+<li>Any part edit followed by deselecting all parts and then undoing causes a crash; fixed. 
+<li>Ctrl+Enter and Ctrl+Backspace shortcuts don't work if an edit control has focus; fixed. 
+<li>MIDI target dialog's column widths don't persist; introduced in 1.0.07, fixed. 
+<li>Alt+A mnemonic doesn't work correctly in property pages; fixed. 
+</ol>
+
+<h3>1.0.10.000</h3>
+
+<ol>
+<li>Attempting to assign a MIDI controller that's already assigned now triggers a warning.
+<li>A column was added to the MIDI assignments dialog to indicate shared controllers.
+<li>The output notes bar now supports custom piano sizes, via its context menu.
+<li>If a grid control isn't already editing, pressing Tab now edits the first item within the grid control's current row.
+<li>Pressing Tab in the parts list was causing the list to lose focus; fixed.
+<li>The record player's position slider didn't work for positions greater than approximately 11 minutes; fixed.
+<li>In the record player's position slider, the left/right arrows now change the position by 1% of the recording's length, instead of a millisecond which was too little to be useful.
+<li>If the help window and the piano dialog were visible, and the piano dialog had focus, exiting the app would cause a crash; fixed.
+<li>Since version 1.0.09, the tempo shown in the status bar wasn't being scaled by the tempo multiple anymore; fixed.
+</ol>
+
+<h3>1.0.09.002</h3>
+
+<ol>
+<li>ChordEase can now synchronize to MIDI clocks from an external device.
+<li>ChordEase can now output MIDI clocks and sequencer control messages.
+<li>A non-diatonic notes rule was added that outputs scale tones in cycle of thirds order.
+<li>A command was added to transpose the selected chords (Edit/Transpose).
+<li>A command was added to change the length of the selected chords (Edit/Length).
+<li>Changing the time signature via File/Properties now updates the chord durations.
+<li>The song text editor (File/Edit) now supports find and replace.
+<li>In Vista/7/8, the MIDI input callback thread's priority is now raised to reduce latency.
+<li>The threads dialog was failing to update itself and showing stale data; fixed.
+<li>The bass trigger button wasn't being highlighted in MIDI learn mode; fixed.
+<li>The metronome page now shows the output device name.
+</ol>
+
+<h3>1.0.08.000</h3>
+
+<ol>
+<li>The context-sensitive help is complete.
+<li>Impro-Visor lead sheet (.ls) files are supported.
+<li>The chord dictionary supports aliases.
+<li>A Reset Filters command was added to the MIDI Input/Output dialog's context menu.
+<li>A Go To command was added to the Transport menu; it jumps to the specified position.
+<li>The Section Properties dialog now allows the section's Start and Length to be edited.
+<li>The various folder dialogs now set the initial directory.
+<li>The Output Notes bar's Port popup menu now shows the output device names.
+<li>Local off wasn't sent until a song was opened; fixed.
+<li>Showing the MIDI Input/Output dialog was resetting the device/port filter; fixed.
+<li>The status bar initially didn't show the song position after a song was opened; fixed.
+<li>The chart view didn't update after opening a patch that changed global tranpose; fixed.
+<li>Parts list editing commands are now enabled only when the parts list has focus.
+</ol>
+
+<h3>1.0.07.000</h3>
+
+<ol>
+<li>The MIDI target lists were refactored to use a standard grid control.
+<li>The MIDI target lists now show the current controller values for assigned targets.
+<li>A MIDI learn target can now be selected by clicking its dialog control if it has one.
+<li>MIDI learn now supports learning a part's input port and channel, simplifying setup.
+<li>Setting a bass approach target crashed the app if the song was empty; fixed.
+<li>Double-clicking a patch file in Explorer started the app but didn't load the patch; fixed.
+<li>Renaming a measure repeat or a multi-chord selection behaved unexpectedly; fixed.
+<li>Duplicate chords were being merged even if they were in different sections; fixed.
+<li>List control tool tips were incorrectly positioned; fixed.
+</ol>
+
+<h3>1.0.06.001</h3>
+
+<ol>
+<li>Recording now works while stopped, allowing rubato performances to be recorded.
+<li>Added built-in player for MIDI recordings, with support for multiple output devices.
+<li>Added controller target for input note velocity.
+<li>MIDI Input/Output bars now optionally show controller names; enable via context menu.
+<li>Auto-rewind is now optional; it's set via Transport menu.
+<li>Changing song position via Next Chord and similar now optionally corrects held notes.
+<li>Shift+F10 wasn't showing context menu in some sizing bars; fixed.
+<li>MIDI Input/Output bars weren't updating device names on device change; fixed.
+<li>Input note controller failed if its device and/or channel differed from part's; fixed.
+<li>Song editing via chart view was removing comments from song file; fixed.
+<li>Song properties dialog now allows entry and editing of comments.
+<li>Auto-record was sometimes generating incorrect titles; fixed.
+<li>Undocking a control bar could crash app if song was empty; fixed.
+</ol>
+
+<h3>1.0.05.000</h3>
+
+<ol>
+<li>Added output notes bar.
+<li>Added continuous controller for input note.
+<li>Replace bass chromatic checkbox with non-diatonic notes combo.
+<li>Dragging all chords out of a section fails; fixed.
+<li>Patch document has incorrect icon; hopefully fixed.
+</ol>
+
+<h3>1.0.04.000</h3>
+
+<ol>
+<li>The song can now be editing directly in the chart view, instead of editing it as text.
+<li>The song and the patch now have separate undo histories.
+<li>Dragging a patch file from Explorer failed, as did specifying it via the command line; fixed.
+<li>The installer now registers the patch file type.
+<li>The piano can now show scale tones only.
+</ol>
+
+<h3>1.0.03.000</h3>
+
+<p>Note that the auto-update feature will not work for this version. Please completely uninstall the previous version, and then install this one. Apologies for the inconvenience.
+
+<ol>
+<li>The piano keys can now show chord tones and tensions; set via context menu.
+<li>The MIDI Device bar now includes the state (open or closed) of each device.
+<li>A MIDI Note Mappings dialog was added; it shows how input is mapped to output.
+<li>The song file extension was changed from .txt to .ces to avoid conflicts.
+<li>The data folder path can now be changed, via the options dialog.
+<li>The lead-in was only being done if the song was at the beginning; fixed.
+<li>With repeat off, the app wasn't stopping at the end of the song; fixed.
+</ol>
+
+<h3>1.0.02.001</h3>
+
+<ol>
+<li>Added virtual piano, so notes can be triggered via mouse or computer's keyboard.
+<li>Optionally display current note mapping on virtual piano.
+<li>Added tool tips for all patch and part controls.
+<li>Added commands for next and previous chord, allowing rubato playing.
+<li>Chart view now indicates sections.
+<li>Song position can now be set via MIDI.
+<li>Section repeat was causing bass approach to get stuck; fixed.
+<li>Added toolbar button for next section command.
+<li>Harmonic anticipation and bass approach caused wrong notes near end of section; fixed.
+<li>In MIDI Input and Output views, added context menu item to clear MIDI event history.
+<li>In MIDI assignments dialog, items initially weren't correctly sorted; fixed.
+<li>After editing song while playing, if first chord was invalid, app would crash; fixed.
+</ol>
+
+<h3>1.0.01.000</h3>
+
+<p>This update fixes a chord dictionary not found error and some other issues.
+
+<ol>
+<li>Non-admin users were getting a chord dictionary not found error. Fixed.
+<li>The MIDI device name is now shown on part's Input and Output pages.
+<li>The check for updates feature is now optional.
+<li>Comments are now allowed in song files.
+</ol>
+
+<h3>1.0.00.086</h3>
+
+<p>This is the initial release.
+
+<!--  content stops HERE  -->
+</div>
+</body>
+</html>

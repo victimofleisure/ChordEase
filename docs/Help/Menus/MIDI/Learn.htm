@@ -1,0 +1,31 @@
+<title>Learn</title>
+<body>
+
+<h3>Learn</h3>
+
+<p>The <span class="cmd">MIDI/Learn</span> command enables or disables MIDI learn mode. Many ChordEase parameters can be changed remotely via a MIDI device, e.g. a MIDI control surface, and certain commands can also be triggered remotely. The parameters and commands that can be remotely controlled are called <a href="../../Concepts/MIDI_targets.htm">MIDI targets</a>. In order to remotely control a MIDI target, you must first assign a MIDI message to it. MIDI assignments can be entered manually, but it's usually easier to have ChordEase learn them, because in learn mode you don't need to know what MIDI messages your controller sends, or what port and channel it sends them on. The following example shows how to learn a MIDI assignment, for the <a href="../../Patch_bar/General.htm#Tempo">tempo</a> parameter in this case.
+
+<ol>
+<li>Enable learn mode, via <span class="cmd">MIDI/Learn</span> in the menus or the <a href="../../Menus/View/Toolbar.htm">toolbar</a>, or the <span class="key">Ctrl+L</span> shortcut.
+<li>Select the page containing the target parameter, in this case the <a href="../../Menus/View/Patch_bar.htm">patch bar</a>'s General page.
+<li>Left-click the dialog control associated with the target parameter, in this case the Tempo edit box. A green outline appears around the dialog control, indicating that it's ready to learn a MIDI assignment.
+<li>On your MIDI device, move the physical control (e.g. knob, slider or button) that you want to assign. The target parameter (tempo in this case) should now change as you move the control.
+<li>Disable learn mode, the same way you enabled it. The green outline disappears.
+</ol>
+
+<p>Assignments can also be learned via the <a href="../../Patch_bar/Patch_MIDI.htm">patch MIDI page</a> and the <a href="../../Parts_bar/Part_MIDI.htm">part MIDI page</a>. This method is <em>required</em> for targets that don't have dialog controls associated with them, e.g. <a href="../../Menus/Transport/Play-Stop.htm">play/stop</a> and similar transport-related targets. The following example shows how to learn a MIDI assignment via the part MIDI page, for the <a href="../../Parts_bar/Part_Input.htm#Velocity_Offset">velocity offset</a> parameter in this case.
+
+<ol>
+<li>Enable learn mode.
+<li>Select the appropriate <a href="../../Concepts/Part.htm">part</a> in the <a href="../../Parts_bar/Parts_list.htm">parts list</a>.
+<li>Select the <a href="../../Menus/View/Parts_bar.htm">parts bar</a>'s MIDI page.
+<li>Within the MIDI page, left-click the target parameter's name, "Input Vel. Offset" in this case. The corresponding row is highlighted in green, indicating that it's ready to learn a MIDI assignment.
+<li>On your MIDI device, move the physical control (e.g. knob, slider or button) that you want to assign. The target row's port, channel, event type, and controller number should snap to the appropriate settings.
+<li>Disable learn mode. The green highlight disappears.
+</ol>
+
+<p>If you're making multiple assignments, it's not necessary to enable and disable learn mode each time. Instead you can enable it once, learn the assignments, and then disable it. Be careful to always disable learn mode when you're done assigning, to avoid inadvertently creating spurious assignments. Each part has its own MIDI targets, so before learning part assignments, make sure the appropriate part is selected in the parts list. Note that a MIDI message can be assigned to <a href="../../Concepts/MIDI_targets.htm#Shared_assignments">multiple targets</a>.
+
+<p>The part's input port and channel can also be learned, even though they don't appear in the list of part MIDI targets; for details, see <a href="../../Parts_bar/Part_Input.htm#Input_Port">input port</a>.
+
+</body>

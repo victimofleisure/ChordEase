@@ -1,0 +1,14 @@
+<title>Patch</title>
+<body>
+
+<h3>Patch</h3>
+
+<p>ChordEase uses two types of documents: <a href="../Concepts/Song.htm">songs</a> and patches. A song contains data that's unique to each song, e.g. the song's chord progression, whereas a patch contains <em>settings</em> that determine how songs are handled. All of the settings found in the <a href="../Menus/View/Patch_bar.htm">patch bar</a> and the <a href="../Menus/View/Parts_bar.htm">parts bar</a> are stored in the patch. Patches allow you to save useful configurations of these settings and recall them easily.
+
+<p>ChordEase effectively has two file menus, one for <a href="../Concepts/Song.htm">songs</a> and one for patches. The standard File menu operates on songs, whereas the Patch menu operates on patches. The Patch menu contains commands to create a <a href="../Menus/Patch/Patch_New.htm">new</a> patch, <a href="../Menus/Patch/Patch_Open.htm">open</a> an existing patch, and <a href="../Menus/Patch/Patch_Save.htm">save</a> the current patch. Note that ChordEase also has two <a href="../Menus/Edit/Undo-Redo.htm">undo</a> histories, one for the current song and one for the current patch.
+
+<p>If you change any patch settings, you will be prompted to save your changes when you exit ChordEase. Even if you don't save your changes, your most recent patch will be restored the next time you run ChordEase. The most recent patch is stored in a special file called ChordEasePatch.ini, located in the <a href="../Options/Other.htm#Application_data_folder">application data folder</a>. ChordEase can initially open either a song or a patch, specified via the command line. The <a href="../Getting_Started/Installing.htm">installed</a> version of ChordEase automatically associates itself with both the song and patch file extensions, but for the portable version, these associations must be created manually.
+
+<p>A patch is a plain text file that uses standard Windows INI file format. Patches normally have a file extension of .cep (ChordEase Patch). The patch excludes certain user preferences such as <a href="../Menus/Edit/Options.htm">options</a> and window positions: these are stored in the registry for the installed version, or in ChordEase.ini for the portable version.
+
+</body>

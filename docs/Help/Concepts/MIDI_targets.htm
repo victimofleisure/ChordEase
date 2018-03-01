@@ -1,0 +1,27 @@
+<title>MIDI targets</title>
+<body>
+
+<h3>MIDI targets</h3>
+
+<p>Many ChordEase parameters can be changed remotely via a MIDI device, e.g. a MIDI control surface, and certain commands can also be triggered remotely. The parameters and commands that can be remotely controlled are called <em>MIDI targets</em>. For information about each target, see the <a href="../Loose_ends/MIDI_target_list.htm">MIDI target list</a>. In order to remotely control a MIDI target, you must first assign a MIDI message to it. This process of assigning messages to targets is sometimes known as <em>MIDI mapping</em>.
+
+<p>MIDI assignments can be edited manually, or <a href="../Menus/MIDI/Learn.htm">learned</a>. Learning is usually easier. The <a href="../Concepts/Patch.htm">patch</a> and the <a href="../Concepts/Part.htm">part</a> have different MIDI targets, and they're edited in different places. To edit patch MIDI assignments, use the <a href="../Patch_bar/Patch_MIDI.htm">patch MIDI page</a>. To edit a part's MIDI assignments, use the <a href="../Parts_bar/Part_MIDI.htm">part MIDI page</a>. Each part has its own MIDI targets, so be sure the correct part is selected in the <a href="../Parts_bar/Parts_list.htm">parts list</a>. To see a summary of the current MIDI mapping, use the <a href="../Dialogs/MIDI_Assignments.htm">MIDI Assignments</a> dialog. It lists all MIDI targets to which controllers are currently assigned, for the patch and all parts.
+
+<p>When a parameter is changed remotely, the corresponding control in the user interface is updated. However this update is only apparent if that control's parent page is visible. ChordEase can automatically show the appropriate page; see <a href="../Menus/MIDI/Chase_Events.htm">Chase Events</a>.
+
+<p>An assignment can be deleted by right-clicking the corresponding target's row in the appropriate <a href="../Patch_bar/Patch_MIDI.htm">MIDI page</a>, and choosing <span class="cmd">Reset</span> in the context menu. Assignments can also be deleted via the MIDI Assignments dialog, by selecting one or more rows and choosing <span class="cmd">Delete</span> in the context menu. To delete all MIDI assignments at once, use the <a href="../Menus/MIDI/Reset_All_Targets.htm">Reset All Targets</a> command.
+
+<a name="Shared_assignments"><p><b>Shared assignments</b></a>
+<p>A MIDI message can be assigned to multiple targets at once. This is known as a <em>shared assignment</em>, and while it's occasionally useful, it can also cause confusion. If you assign a message to a target, and then assign the same message to a different target, it now controls both targets. If that's undesirable, you must manually delete the unwanted assignment, using one of the methods described above. Shared assignments are indicated in the <a href="../Dialogs/MIDI_Assignments.htm">MIDI Assignments</a> dialog, via the "Shared" column.
+
+<p>If you attempt to create a shared assignment, whether manually or via <a href="../Menus/MIDI/Learn.htm">learn</a>, a warning dialog is displayed. The dialog asks if you want to remove the previous assignments, and lists the target(s) to which the message is already assigned. The possible responses are as follows:
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Yes</td><td>The message's previous assignments are removed, and the message is then reassigned to the new target. This is the default behavior.</td></tr>
+<tr><td>No</td><td>The message is assigned to the new target, without removing the message's previous assignments. This results in a shared assignment, i.e. the message controls multiple targets.</td></tr>
+<tr><td>Cancel</td><td>The current assignment is canceled, leaving the previous assignments unchanged.</td></tr>
+</table>
+
+
+
+</body>

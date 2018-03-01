@@ -1,0 +1,70 @@
+<title>Bass</title>
+<body>
+
+<h3>Bass</h3>
+
+<p>This page contains settings related to the Bass <a href="../Concepts/Mapping_functions.htm">mapping function</a> for the current <a href="../Concepts/Part.htm">part</a>. The purpose of the bass function is to make it easy to find chord tones, particularly the root. In the bass function, the chord tones remain stationary on the input device, i.e. each note of the input diatonic scale has a fixed harmonic role. For example C is always the root of the current chord, G is always the fifth of the current chord, etc. The following table shows the mapping for two arbitrary chords.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th rowspan=2>Input</th><th rowspan=2>Role</th><th colspan=2>Output</th></tr>
+<tr><th>A-7</th><th>F-7</th></tr>
+<tr><td>C</td><td>Root</td><td>A</td><td>F</td></tr>
+<tr><td>D</td><td>Second</td><td>B</td><td>G</td></tr>
+<tr><td>E</td><td>Third</td><td>C</td><td>Ab</td></tr>
+<tr><td>F</td><td>Fourth</td><td>D</td><td>Bb</td></tr>
+<tr><td>G</td><td>Fifth</td><td>E</td><td>C</td></tr>
+<tr><td>A</td><td>Sixth</td><td>F#</td><td>D</td></tr>
+<tr><td>B</td><td>Seventh</td><td>G</td><td>Eb</td></tr>
+</table>
+
+<p>The table above assumes the default setup, in which the output chord scale maps to the C major scale (i.e. the white keys) on the input device. Note that this is only the case when <a href="../Parts_bar/Part_Input.htm#Input_Transpose">input transpose</a> is zero or a multiple of twelve.
+
+<p>The bass function lets you effortlessly maintain a constant harmonic relationship to changing chords. For example, to play the roots of all the chords, simply play C throughout the entire <a href="../Concepts/Song.htm">song</a>. To play a simple Latin bass line, just switch between C and G: this is equivalent to playing the root and the fifth of each chord. For swing, you may also want to use <a href="../Parts_bar/Bass.htm#Approach_mode">approach</a>.
+
+<p>Unlike the <a href="../Parts_bar/Lead.htm">Lead</a> function, which transposes in position, the bass function transposes by shifting, and can therefore produce drastic pitch changes. For example if the chord changes from a C to a G, the bass note corresponding to any given input note leaps a fifth. The bass function doesn't necessarily preserve the input's shape, and consequently the lead function may be more useful for soloing.
+
+<a name="Lowest_note"><p><b>Lowest note</b></a>
+<p>This setting determines the lowest output note the <a href="../Parts_bar/Bass.htm">bass</a> function will generate. Output notes below this limit are shifted up as many octaves as needed to stay above the limit. This helps prevent the inadvertent playing of extremely low notes that might otherwise damage audio equipment.
+
+<p>The setting can be used to model actual bass instruments. The default value (E1) models a typical four-string bass. Other common values are D1, C1, or B0 for a typical five-string bass. These values assume middle C is C4 per the MIDI specification, and may need to be adjusted by one or more octaves for non-compliant instruments.
+
+<p>This setting also affects the transposition direction, i.e. for a given chord root, whether input notes are transposed up or down to produce the corresponding output notes. For example if the lowest note is an E, for chord roots C, Db, D, and Eb, the input is transposed up, whereas for all other roots, the input is transposed down.
+
+<a name="Slash_chords"><p><b>Slash chords</b></a>
+<p>This setting determines whether the <a href="../Parts_bar/Bass.htm">bass</a> function respects alternate bass notes appended to chord symbols. Chord symbols may be followed by a slash and a bass note, indicating that the bass should play a different note instead of the chord's root, e.g. Cmaj7/G indicates that the bass should play G instead of C. Such symbols are known as <em>slash chords</em>.
+
+<p>If this setting is enabled, slash chords are respected: the current chord scale is shifted so that C maps to the chord's bass note instead of its root. The bass note may not belong to the scale, in which case the bass note is substituted for the root, potentially resulting in a non-standard scale. If this setting is disabled, slash chords have no effect on the bass function.
+
+<a name="Approach_mode"><p><b>Approach mode</b></a>
+<p>The <a href="../Parts_bar/Bass.htm">bass</a> function features an approach mode. An approach is a melodic line that proceeds predictably towards a chord tone of a subsequent chord, known as the <em>target chord</em>. The target note is usually the root or the fifth of the target chord. A well-executed approach is timed so as to arrive at the target note just as the target chord begins. An approach anticipates both the target chord and the target note, and creates an expectation that they will coincide.
+
+<p>The bass function normally maps C to the current chord's root. This makes it trivial to locate the root and other chord tones of the <em>current</em> chord, but isn't necessarily helpful for <em>future</em> chords. Approach mode solves this problem by shifting the current chord's scale so that C maps to the target chord's root, or as close as possible. In approach mode, you approach the target root by simply approaching C, regardless of what the target chord actually is. To approach the target fifth, just approach G instead of C. Thus you can make accurate approaches without knowing the song's chords at all.
+
+<p>Approach can be automatic or manually triggered. Automatic approach is enabled by setting a non-zero <a href="../Parts_bar/Bass.htm#Approach_length">approach length</a>. For manual operation, specify the desired <a href="../Parts_bar/Bass.htm#Target_alignment">target alignment</a>, and then manually <a href="../Parts_bar/Bass.htm#Approach_trigger">trigger</a> approach mode before each approach. It's possible to combine automatic and manual approaches, in which case the manual approach takes precedence.
+
+<a name="Approach_length"><p><b>Approach length</b></a>
+<p>This setting determines the length of automatic <a href="../Parts_bar/Bass.htm#Approach_mode">approach</a> in the <a href="../Parts_bar/Bass.htm">bass</a> function. Setting this length non-zero enables automatic approach. The length is specified via a duration combo box; see <a href="../Loose_ends/Durations.htm">durations</a> for details. For example if the approach length is 1/2 (a half note), assuming 4/4 time, approach mode is automatically enabled halfway through each measure. In other words, during the second half of each measure, if you play a melodic line that converges on C, you will be approaching the root of the following measure's chord. The approach length can be varied dynamically via remote control, using the Bass Approach Length <a href="../Concepts/MIDI_targets.htm">MIDI target</a>.
+
+<a name="Target_alignment"><p><b>Target alignment</b></a>
+<p>This setting determines the alignment of the target chord for manually triggered <a href="../Parts_bar/Bass.htm#Approach_mode">approach</a> in the <a href="../Parts_bar/Bass.htm">bass</a> function. The available alignments are shown in the table below. Alignments are relative to the start of the <a href="../Concepts/Song.htm">song</a>. In addition to specifying the desired alignment, a manual approach must also be <a href="../Parts_bar/Bass.htm#Approach_trigger">triggered</a>. Triggering a manual approach immediately shifts the current chord's scale so that C maps to the root of the target chord, or as close as possible. The target may be further away than the next chord, in which case the chords between the current and target chords also have their scales similarly shifted.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Alignment</th><th>Target chord</th>
+<tr><td>1/4</td><td>First chord of the next quarter-measure.</td></tr>
+<tr><td>1/2</td><td>First chord of the next half-measure.</td></tr>
+<tr><td>1</td><td>First chord of the next measure.</td></tr>
+<tr><td>2</td><td>First chord of the next measure that's aligned on a two-measure boundary.</td></tr>
+<tr><td>4</td><td>First chord of the next measure that's aligned on a four-measure boundary.</td></tr>
+</table>
+
+<p>For example suppose approach is triggered halfway through the first measure of the following song. If the alignment is 1, the target chord is A7b9, if it's 2, the target is C-7, and if it's 4, the target is F-7.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>E-7b5</td><td>A7b9</td><td>C-7</td><td>F7</td></tr>
+<tr><td>F-7</td><td>Bb7</td><td>Ebmaj7</td><td>Ab7#4</td></tr>
+</table>
+
+<a name="Approach_trigger"><p><b>Approach trigger</b></a>
+<p>This button triggers a manual <a href="../Parts_bar/Bass.htm#Approach_mode">approach</a> in the <a href="../Parts_bar/Bass.htm">bass</a> function. The target of a manual approach depends on the current <a href="../Concepts/Song.htm#Song_position">song position</a> and the <a href="../Parts_bar/Bass.htm#Target_alignment">target alignment</a>, as explained above. For best results, trigger approach mode slightly before playing the approach. It's usually more convenient to trigger manual approaches via the Bass Approach Trigger <a href="../Concepts/MIDI_targets.htm">MIDI target</a>.
+
+</body>

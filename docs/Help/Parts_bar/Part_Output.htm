@@ -1,0 +1,50 @@
+<title>Output</title>
+<body>
+
+<h3>Output</h3>
+
+<p>This page contains output-related settings for the current <a href="../Concepts/Part.htm">part</a>, including which MIDI port and channel the part should send its output to.
+
+<a name="Output_Port"><p><b>Port</b></a>
+<p>This is the device index of the MIDI output device to which the <a href="../Concepts/Part.htm">part</a>'s output will be sent. For a list of the available output devices, see the right-hand pane of the <a href="../Menus/MIDI/Devices.htm">devices</a> bar. Note that unlike MIDI channels, ports are zero-origin.
+
+<a name="Output_Channel"><p><b>Channel</b></a>
+<p>This is the MIDI channel number on which the <a href="../Concepts/Part.htm">part</a>'s output will be sent. MIDI channels range from 1 to 16. The user must ensure that the desired output device is listening on the specified channel. If necessary, the output messages can be examined using the <a href="../Menus/MIDI/MIDI_Output.htm">MIDI output</a> bar.
+
+<a name="Output_Patch"><p><b>Patch</b></a>
+<p>This is the optional patch number to send to the output instrument. If this setting is &minus;1 (shown as N/A), no Program Change message is sent. If this setting is greater than or equal to zero, the corresponding patch is set during startup, and whenever a <a href="../Concepts/Song.htm">song</a> is loaded. To access more than 128 patches, <a href="../Parts_bar/Part_Output.htm#Bank_Select">Bank Select</a> must also be specified.
+
+<a name="Output_Volume"><p><b>Volume</b></a>
+<p>This is the optional volume level to send to the output instrument. If this setting is &minus;1 (shown as N/A), no volume message is sent. If this setting is greater than or equal to zero, the corresponding volume is set during startup, and whenever a <a href="../Concepts/Song.htm">song</a> is loaded.
+
+<a name="Harmonic_Anticipation"><p><b>Harmonic Anticipation</b></a>
+<p>This setting determines the time relationship between the <a href="../Concepts/Part.htm">part</a>'s harmony and the chord changes. If harmonic anticipation is greater than zero, the part switches to the next chord's scale early. This creates a time window before each chord change, during which the part's input notes are mapped to the next chord's scale instead of the current chord's scale. Depending on the length of the anticipation, the chords involved, and the timing of the accompanying parts, this may be perceived as more or less dissonant. The usual application is for the soloist to be out in front of, or <em>leading</em> the accompaniment, harmonically speaking. Harmonic anticipation is expressed as a fraction of a whole note; see <a href="../Loose_ends/Durations.htm">durations</a>. Typical values range from an eighth note to a quarter note. Negative harmonic anticipation is also permitted, in which case the part is behind (dragging) the changes.
+
+<p>Note that harmonic anticipation affects the behavior of the <a href="../Parts_bar/Part_Output.htm#Fix_held_notes">fix held notes</a> feature. Without harmonic anticipation, if a note is struck just before a chord change and held, and the chord changes in such a way as to make that note invalid, the note gets corrected. However if harmonic anticipation is in effect, and the note is struck within the harmonic anticipation window, it's mapped using the coming chord's scale. This ensures that the note will remain valid when the chord change arrives, and avoids the possibility of a correction. For example if harmonic anticipation is set to an eighth note, notes can be struck and held up to an eighth note ahead of a chord change without any risk that they will become invalid. Even if held note correction is disabled, it's still recommended to use a small amount of harmonic anticipation, to provide "slack" for notes played slightly early.
+
+<a name="Fix_held_notes"><p><b>Fix held notes</b></a>
+<p>This setting enables or disables held note correction for the <a href="../Concepts/Part.htm">part</a>. If a note is held over a chord change, the held note may become invalid, i.e. it may not be a member of the new chord's scale. ChordEase can optionally correct the invalid note, by replacing it with the new chord's nearest scale tone. The effect is more obvious when playing a sound that doesn't decay, e.g. an organ. Held note correction is supported for <a href="../Parts_bar/Comp.htm">comp</a>, but works slightly differently: notes that become invalid are corrected to the nearest tetrachord tone, instead of the nearest scale tone. This can result in interesting chord evolution and unusual voicings. Held note correction interacts with <a href="../Parts_bar/Part_Output.htm#Harmonic_Anticipation">harmonic anticipation</a>.
+
+<a name="Bank_Select"><p><b>Bank Select</b></a>
+<p>This optional setting selects a bank of patches on the output device. The <a href="../Parts_bar/Part_Output.htm#Output_Patch">Patch</a> setting by itself can only access 128 patches, but when combined with Bank Select, as many as two million patches can potentially be accessed, depending on the device (up to 16,384 banks, each containing 128 patches).
+
+<p>Bank Select is divided into two values, Coarse (MSB) and Fine (LSB). It's possible to specify one value but not the other. Devices having less than 128 banks may only use the MSB. If a value is &minus;1 (shown as N/A), it's unspecified. If the value is greater than or equal to zero, the corresponding Bank Select message is sent during startup, and whenever a <a href="../Concepts/Song.htm">song</a> is loaded.
+
+<p>If you change Bank Select, your device likely won't switch patches until you also change the patch setting. This is in accordance with the MIDI specification. When a device receives Bank Select, it stores the selection in anticipation of a Program Change. When the device subsequently receives a Program Change, it then switches to the specified patch within the selected bank.
+
+<a name="Controllers_thru"><p><b>Controllers thru</b></a>
+<p>This setting determines whether MIDI controllers are passed through to the output device or not. In addition to controller messages, it also affects all other non-note MIDI messages, e.g. patch change, pitch wheel, and channel aftertouch messages. This setting should normally be enabled, so that the input instrument's controls are forwarded to the output device. Common controls affected by this setting include sustain, modulation, pitch bend, and volume. Note that MIDI messages that are <a href="../Concepts/MIDI_targets.htm">assigned</a> to ChordEase parameters will never be passed through, regardless of this setting.
+
+<p>This setting should be considered carefully in some cases. Suppose you have a split, consisting of two parts, both of which receive input from different <a href="../Parts_bar/Part_Input.htm#Zone_Low">zones</a> of the same device, and both of which send output to the same device. By default, the output device will receive two copies of every controller message, one from each part. This may or may not be appropriate, depending on how the device is set up. If the output device is multi-timbral, and the two parts are being output to two different instruments via two different <a href="../Parts_bar/Part_Output.htm#Output_Channel">MIDI channels</a>, you probably want to pass the controllers through to both instruments, so that they both respond to sustain, pitch bend, etc. However if the two parts are being output to the same instrument, you may want to disable controllers thru for one of them, because sending two copies of every controller message to the same instrument wastes MIDI bandwidth and may confuse the instrument. To see what exactly controllers are being sent, use the <a href="../Dialogs/MIDI_Output_bar.htm">MIDI output bar</a>.
+
+<a name="Local_control"><p><b>Local control</b></a>
+<p>This setting enables or disables local control on the MIDI input device. For normal operation this setting should be unchecked, in order to disable local control. If the setting is checked, the "local on" message is sent to the device, otherwise the "local off" message is sent. ChordEase sends the local control message whenever this setting is changed, as well as during startup and whenever a <a href="../Concepts/Song.htm">song</a> is opened. The "local off" message is controller number 122, with a parameter of zero.
+
+<p>Local control only matters if you're using the same device for both input and output. If your input device doesn't generate audio, or you're using a different device for output, local control is irrelevant. Disabling local control disconnects the instrument's user interface (e.g. its keyboard) from its audio generator. The usual symptom of failing to disable local control is that when you play a note on the instrument, you hear two notes. The notes may or may not differ, and if they're the same, the audio may sound "thin" due to acoustic cancellations. This occurs because the instrument is sending notes to ChordEase, and receiving (possibly different) notes back, but the audio generator is playing the local notes in addition to the notes received from ChordEase.
+
+<p>Note that not all MIDI instruments respond to the local control message. In this case you should consult your instrument's user manual to determine whether it's possible to disable local control, and if so how to do it.
+
+<a name="Output_device_name"><p><b>Device name</b></a>
+<p>This is the name of the MIDI output device associated with the current <a href="../Concepts/Part.htm">part</a>. To change the output device, edit the <a href="../Parts_bar/Part_Output.htm#Output_Port">output port</a>. For a list of output devices, see the <a href="../Dialogs/MIDI_Devices.htm">devices</a> bar.
+
+</body>

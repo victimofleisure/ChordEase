@@ -1,0 +1,26 @@
+<title>Auto</title>
+<body>
+
+<h3>Auto</h3>
+
+<p>This page contains settings related to auto-accompaniment. ChordEase is primarily oriented towards live performance and thus has very limited support for auto-accompaniment. Each <a href="../Concepts/Mapping_functions.htm">mapping function</a> handles auto-accompaniment differently, as shown in the table below.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Mapping function</th><th>Auto-accompaniment</th></tr>
+<tr><td><a href="../Parts_bar/Lead.htm">Lead</a></td><td>Not supported.</td></tr>
+<tr><td><a href="../Parts_bar/Comp.htm">Comp</a></td><td>At each chord change boundary, the new chord is played once, using the current <a href="../Parts_bar/Comp.htm#Voicing">voicing</a> and <a href="../Parts_bar/Comp.htm#Variation">variation</a>. The chord can be <a href="../Parts_bar/Comp.htm#Arpeggio_Period">arpeggiated</a>.</td></tr>
+<tr><td><a href="../Parts_bar/Bass.htm">Bass</a></td><td>At each chord change boundary, the new chord's root is played once.</td></tr>
+</table>
+
+<p>ChordEase implements auto-accompaniment by sending itself an input note, using the <a href="../Concepts/Part.htm">part</a>'s <a href="../Parts_bar/Part_Input.htm#Input_Port">input port</a> and <a href="../Parts_bar/Part_Input.htm#Input_Channel">input channel</a>. The <a href="../Parts_bar/Auto.htm#Window">window</a> setting determines which note is sent. In effect, the part generates its own input, and thereby triggers itself. In addition to triggering itself, an auto-accompaniment part also triggers any other part having the same input port and channel. This allows layering, but it can also cause unexpected behavior. Interesting effects can be achieved by having multiple auto-accompaniment parts, but be careful to give each part a unique input channel, otherwise each part triggers all the others, resulting in spurious and/or <a href="../Loose_ends/Duplicate_notes.htm">duplicate notes</a>.
+
+<a name="Auto_Play"><p><b>Auto Play</b></a>
+<p>This setting enables auto-accompaniment for the current <a href="../Concepts/Part.htm">part</a>.
+
+<a name="Window"><p><b>Window</b></a>
+<p>This setting specifies the bottom note of a one-octave pitch window within which auto-accompaniment occurs. Increasing this setting to a higher note raises the overall pitch of the auto-accompaniment. For <a href="../Parts_bar/Comp.htm">comp</a> parts, the specified note is input directly to the comp function. For <a href="../Parts_bar/Bass.htm">bass</a> parts, the nearest C above the specified note is input to the bass function, in order to play the root of the current chord. In either case, the function behaves as if it had received the note from a MIDI <a href="../Parts_bar/Part_Input.htm">input</a> device. The note must be within the part's <a href="../Parts_bar/Part_Input.htm#Zone_Low">zone</a>, otherwise the note is ignored and no output is generated.
+
+<a name="Velocity"><p><b>Velocity</b></a>
+<p>This setting specifies the velocity of auto-accompaniment notes. The velocities are also affected by the part's <a href="../Parts_bar/Part_Input.htm#Velocity_Offset">velocity offset</a>, if any.
+
+</body>

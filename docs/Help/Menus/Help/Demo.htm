@@ -1,0 +1,14 @@
+<title>Demo</title>
+<body>
+
+<h3>Demo</h3>
+
+<p>Use this command to run the demo. The demo lets you try out ChordEase, even if you don't have a MIDI instrument. The demo loads an example <a href="../../Concepts/Song.htm">song</a> and begins playing it. You should hear the chords of the song, along with a <a href="../../Patch_bar/Metronome.htm">metronome</a> click. If not, make sure the volume is turned up on your computer, and on your audio equipment if any. Otherwise see below.
+
+<p>The demo also displays the <a href="../../Menus/View/Piano.htm">piano</a> dialog. To play notes, left-click the keys within the piano dialog. Alternatively, you can play notes via the letter keys on your computer keyboard. Play only the white keys at first. The notes you hear are not necessarily the same as the notes you play. This isn't a bug, it's the whole point of ChordEase! Your notes are being <a href="../../Concepts/Mapping_functions.htm">translated</a> to fit the song's chord progression.
+
+<p>The demo uses the Microsoft GS Wavetable Synth, which is built into Windows. This software synth is normally the first MIDI output device, with a device index of zero. If it has a different device index, the demo won't work, unless you change the <a href="../../Parts_bar/Part_Output.htm#Output_Port">output port</a> for each <a href="../../Concepts/Part.htm">part</a>. Use the <a href="../../Dialogs/MIDI_Devices.htm">MIDI devices</a> bar to see what output devices are available and what indices they have. If the Microsoft synth isn't listed at all, it may have been removed or disabled, in which case you'll need a MIDI instrument.
+
+<p>There may be significant <a href="../../Loose_ends/Latency.htm">latency</a>, i.e. delay between pressing a key and hearing the corresponding note. This is the fault of the Microsoft synth, and it shouldn't occur when a proper MIDI instrument is used.
+
+</body>

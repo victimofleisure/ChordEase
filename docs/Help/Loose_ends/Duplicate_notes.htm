@@ -1,0 +1,20 @@
+<title>Duplicate notes</title>
+<body>
+
+<h3>Duplicate notes</h3>
+
+<p>Duplicates notes describes a situation where multiple instances of the exact same MIDI note exist simultaneously on a single channel of an instrument. This situation can easily arise when using ChordEase, and some instruments don't handle it correctly, resulting in glitches due to notes being cut off prematurely. To determine whether an instrument handles duplicates notes correctly, use the following procedure:
+
+<ol>
+<li>Select the <a href="../Parts_bar/Lead.htm">Lead</a> mapping function.
+<li>Make sure the <a href="../Parts_bar/Part_Input.htm#Non-diatonic_notes">Non-diatonic notes</a> setting is "Allow".
+<li>Make sure the current scale is something other than C major.
+<li>Find a pair of adjacent keys (one white, one black) that map to the same note. The easiest way to do this is by playing the chromatic scale. If you don't find any duplicates, <a href="../Patch_bar/General.htm#Transpose">transpose</a> to a different key signature and try again.
+<li>Depress both keys simultaneously, and then quickly release one but not the other. If the note gets cut off, the instrument isn't handling duplicate notes correctly.
+</ol>
+
+<p>It's recommended to only use instruments that handle duplicate notes correctly. However it is possible to <a href="../Options/Options_Record.htm#Fix_duplicate_notes">fix duplicate notes</a> when exporting a <a href="../Concepts/Recording.htm">recording</a> to a MIDI file. This is useful if you need to play your MIDI files with an instrument or software synth that can't handle duplicate notes.
+
+<p>Duplicate notes are properly handled via reference counting. The instrument maintains a counter for each MIDI note, which reflects how many instances of that note currently exist. Note On commands increment the appropriate count, Note Off commands decrement it, and the note is sustained until its count drops to zero.
+
+</body>

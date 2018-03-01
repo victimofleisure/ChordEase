@@ -1,0 +1,21 @@
+<title>Chord bar</title>
+<body>
+
+<h3>Chord bar</h3>
+
+<p>This command shows or hides the Chord bar. This toolbar lets you quickly edit chords within the current <a href="../../Concepts/Song.htm">song</a>, or change the default chord if no song is open. You can also use the chord bar to change which <a href="../../Loose_ends/Scales.htm">scale</a> and <a href="../../Loose_ends/Scales.htm#Modes">mode</a> are associated with a given chord, but note that this affects <em>all instances</em> of that <a href="../../Loose_ends/Chord_types.htm">chord type</a> in <em>all songs</em>, because you're effectively editing the corresponding definition in the <a href="../../Loose_ends/Chord_dictionary.htm">chord dictionary</a>. The chord bar's properties are further explained in the table below. Note that "current chord" refers either to the chord at the current <a href="../../Concepts/Song.htm#Song_position">song position</a>, or if no song is open, to the default chord.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Root</td><td>This changes the current chord's root.</td></tr>
+<tr><td>Type</td><td>This changes the current chord's type.</td></tr>
+<tr><td>Bass</td><td>This changes the current chord's bass note. Note that if '*' is selected, the bass note is the same as the root.</td></tr>
+<tr><td>Key</td><td>This displays the current chord's key, which depends on its type, scale and mode.</td></tr>
+<tr><td>Scale</td><td>This changes the scale in the chord dictionary definition corresponding to the current chord.</td></tr>
+<tr><td>Mode</td><td>This changes the mode in the chord dictionary definition corresponding to the current chord.</td></tr>
+</table>
+
+<p><a href="../../Menus/Edit/Undo-Redo.htm">Undo/redo</a> is supported within the chord bar, but note that since the bar can modify two different documents (the song and the chord dictionary), the behavior of undo/redo depends on which of the bar's drop lists has focus. If you've changed the scale or mode of a chord type, you'll be prompted to save your chord dictionary changes when you exit the application.
+
+<p>Chord bar properties have corresponding <a href="../../Concepts/MIDI_targets.htm">MIDI targets</a> which allow them to be remotely controlled via MIDI. This is particularly useful for creating a song spontaneously (with no song open) by changing the default chord while you play. Note that the chord bar supports MIDI <a href="../../Menus/MIDI/Learn.htm">learn</a>; while learn is enabled, you can assign a MIDI message to a chord bar property by selecting its corresponding drop list and then moving the desired MIDI control.
+
+</body>

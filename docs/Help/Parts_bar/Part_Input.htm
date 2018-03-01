@@ -1,0 +1,80 @@
+<title>Input</title>
+<body>
+
+<h3>Input</h3>
+
+<p>This page contains input-related settings for the current <a href="../Concepts/Part.htm">part</a>, including which MIDI port and channel the part should receive its input from.
+
+<a name="Input_Port"><p><b>Port</b></a>
+<p>This is the device index of the MIDI input device from which the <a href="../Concepts/Part.htm">part</a> expects to receive its input. For a list of the available input devices, see the left-hand pane of the <a href="../Menus/MIDI/Devices.htm">devices</a> bar. Note that unlike MIDI channels, ports are zero-origin. The input port and <a href="../Parts_bar/Part_Input.htm#Input_Channel">channel</a> can also be <a href="../Menus/MIDI/Learn.htm">learned</a>, as follows:
+
+<ol>
+<li>Enable learn mode, via <span class="cmd">MIDI/Learn</span> in the menus or the <a href="../Menus/View/Toolbar.htm">toolbar</a>, or the <span class="key">Ctrl+L</span> shortcut.
+<li>Select the Input page in the <a href="../Menus/View/Parts_bar.htm">parts bar</a>, and select the intended part in the <a href="../Parts_bar/Parts_list.htm">parts list</a>.
+<li>Left-click in either the port or channel edit box. A green outline appears around the edit box, indicating that it's ready to learn. Note that the port and channel are learned simultaneously, regardless of which one you select.
+<li>Play a note on your MIDI device. The input port and channel should snap to appropriate values.
+<li>Disable learn mode, the same way you enabled it. The green outline disappears.
+</ol>
+
+<a name="Input_Channel"><p><b>Channel</b></a>
+<p>This is the MIDI channel number on which the <a href="../Concepts/Part.htm">part</a> listens for its input. MIDI channels range from 1 to 16. To discover which channel the input device is sending on, the input messages can be examined using the <a href="../Menus/MIDI/MIDI_Input.htm">MIDI input</a> bar. The input port and channel can also be <a href="../Menus/MIDI/Learn.htm">learned</a>, in which case it's not necessary to know their values; for instructions, see <a href="../Parts_bar/Part_Input.htm#Input_Port">input port</a> above.
+
+<a name="Zone_Low"><p><b>Zone Low</b></a>
+<p>Each <a href="../Concepts/Part.htm">part</a> responds to a range of input notes, also known as the part's <em>zone</em>. This setting specifies the zone's lowest note. The highest note is specified via <a href="../Parts_bar/Part_Input.htm#Zone_High">Zone High</a>. By default the zone is C&minus;1 to G9, which covers the entire 128-note range of MIDI.
+
+<p>Zones let you play multiple parts from the same instrument, using different ranges of notes. The usual case is self-accompaniment on a keyboard instrument, using two non-overlapping zones, one for each hand. This is known as a <em>split</em>. Normally the right-hand zone is used for soloing, while the left-hand zone is used for playing chords. To set up a typical split, create two parts, both receiving on the same input port and channel. Assuming a split point of C4, for the right-hand part, select the <a href="../Parts_bar/Lead.htm">Lead</a> <a href="../Concepts/Mapping_functions.htm">function</a> and a zone of C4 to G9. For the left-hand part, select the <a href="../Parts_bar/Comp.htm">Comp</a> function and a zone of C&minus;1 to B3.
+
+<p>It's also possible to play multiple parts from the same instrument, using the <em>same</em> range of notes. This is called <em>layering</em>. In this case the parts may have partially or completely overlapping zones.
+
+<a name="Zone_High"><p><b>Zone High</b></a>
+<p>This setting is the upper limit of the range of notes the <a href="../Concepts/Part.htm">part</a> responds to; see <a href="../Parts_bar/Part_Input.htm#Zone_Low">Zone Low</a>.
+
+<a name="Input_Transpose"><p><b>Transpose</b></a>
+<p>This setting is the amount of transposition to apply to input notes, in semitones. The transposition is applied <em>before</em> the notes are passed to the part's <a href="../Concepts/Mapping_functions.htm">mapping function</a>. For normal operation, it should be zero. To transpose by a number of octaves, it should be a multiple of 12, e.g. 12 for up an octave, 24 for up two octaves, &minus;12 for down an octave, etc.
+
+<p>This setting also lets you play in a diatonic scale other than C. This may be useful for MIDI instruments on which playing in C would be inconvenient. To use an input scale other than C, specify a non-octave input transposition, i.e. an input transposition that isn't a multiple of 12. For example, if you prefer to play in the key of Bb, set input transposition to 2 (or &minus;10). For other examples, see the table below.
+
+<p>Note that the terms "white keys" and "black keys" are used as shorthand for diatonic and non-diatonic notes respectively, but this no longer holds true if a non-octave input transposition is applied. For example, if input transposition is 2, the notes of the Bb major scale are the "white keys" in the sense that they map to the notes of the current chord scale. The remaining input notes are "black keys" and their behavior is determined by the <a href="../Parts_bar/Part_Input.htm#Non-diatonic_notes">non-diatonic notes</a> setting.
+
+<p>Input transposition is unrelated to the global <a href="../Patch_bar/General.htm#Transpose">transpose</a> function, which affects output notes, not input notes.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Key</th><th>Up</th><th>Down</th></tr>
+<tr><td>C</td><td>12</td><td>&minus;12</td></tr>
+<tr><td>Db</td><td>11</td><td>&minus;1</td></tr>
+<tr><td>D</td><td>10</td><td>&minus;2</td></tr>
+<tr><td>Eb</td><td>9</td><td>&minus;3</td></tr>
+<tr><td>E</td><td>8</td><td>&minus;4</td></tr>
+<tr><td>F</td><td>7</td><td>&minus;5</td></tr>
+<tr><td>Gb</td><td>6</td><td>&minus;6</td></tr>
+<tr><td>G</td><td>5</td><td>&minus;7</td></tr>
+<tr><td>Ab</td><td>4</td><td>&minus;8</td></tr>
+<tr><td>A</td><td>3</td><td>&minus;9</td></tr>
+<tr><td>Bb</td><td>2</td><td>&minus;10</td></tr>
+<tr><td>B</td><td>1</td><td>&minus;11</td></tr>
+</table>
+
+<a name="Velocity_Offset"><p><b>Velocity Offset</b></a>
+<p>This setting is an offset which is added to each input note's velocity. The offset ranges from &minus;127 to 127. For normal operation, it should be zero. Specify a positive offset to increase velocity, or a negative offset to decrease velocity. In either direction, compression may occur, i.e. dynamic range may be reduced. Note that extreme negative values may effectively mute the part. Altering note velocities may cause timbral changes in addition to or instead of volume changes, depending on the output MIDI instrument. To change a part's volume without affecting its timbre, use <a href="../Parts_bar/Part_Output.htm#Output_Volume">output volume</a> instead.
+
+<a name="Non-diatonic_notes"><p><b>Non-diatonic notes</b></a>
+<p>This setting determines how non-diatonic input notes (also known as black keys) are handled. The terms "white keys" and "black keys" are used loosely here to mean diatonic and non-diatonic notes respectively, but bear in mind that ChordEase can accept diatonic scales other than C as input; see <a href="../Parts_bar/Part_Input.htm#Input_Transpose">input transpose</a>. By default, non-diatonic input notes are allowed, and may generate non-scale output notes. To see the effect of these modes, show the <a href="../Dialogs/Piano_dialog.htm">piano dialog</a> and set its key label style to "Output Notes" (via its context menu). The effect can also be seen on the <a href="../Dialogs/Output_Notes_bar.htm">output notes bar</a>.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Allow</td>
+<td>Black keys are allowed, and <em>may</em> create non-scale tones, i.e. "out" notes. The uncertainty results from the fact that remapping can reduce the interval between two adjacent white keys from a whole step to a half step. In such cases the black key between them generates a <a href="../Loose_ends/Duplicate_notes.htm">duplicate note</a>. This means that a given chromaticism may or may not generate unique notes, depending on the chord. Playing a complete chromatic scale is only consistently possible when the <a href="../Concepts/Mapping_functions.htm">mapping function</a> is "Bypass".
+</td></tr>
+<tr><td>Quantize</td>
+<td>All black keys are quantized to the nearest scale tone and therefore generate duplicate notes. This may be useful on inherently sloppy instruments, e.g. MIDI guitars.
+</td></tr><tr><td>Disable</td>
+<td>The black keys do nothing.</td></tr>
+<tr><td>Skip</td>
+<td>The diatonic scale is compressed onto the chromatic scale, so that all keys are active and output unique scale tones. This is useful when inputting notes via a continuous controller, theremin, or similar device, because it ensures that the scale tones are linearly mapped to controller coordinates, i.e. any two adjacent scale tones are always separated by the same increment of physical motion. Interval distances are greatly reduced, e.g. playing a fifth yields an octave. The mapping is aligned so that middle C (C4) remains constant, but all other notes are shifted.</td></tr>
+<tr><td>Thirds</td>
+<td>Input notes are mapped to output notes in such a way that successive white keys form the cycle of thirds. This makes it much easier to play arpeggios. Adjacent white keys output scale tones separated by two scale degrees instead of one. Each black key outputs the scale tone that its white neighbors step over. Non-scale notes are inaccessible. Interval distances are greatly reduced: each input octave spans two output octaves.</td></tr>
+</table>
+
+<a name="Input_device_name"><p><b>Device name</b></a>
+<p>This is the name of the MIDI input device associated with the current <a href="../Concepts/Part.htm">part</a>. To change the input device, edit the <a href="../Parts_bar/Part_Input.htm#Input_Port">input port</a>. For a list of input devices, see the <a href="../Dialogs/MIDI_Devices.htm">devices</a> bar.
+
+</body>

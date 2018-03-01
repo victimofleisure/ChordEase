@@ -1,0 +1,28 @@
+<title>Chord Dictionary</title>
+<body>
+
+<h3>Chord Dictionary</h3>
+
+<p>This dialog lets you edit the <a href="../Loose_ends/Chord_dictionary.htm">chord dictionary</a>, using a tabular interface. To display the dialog, use the <span class="cmd">View/Chord Dictionary</span> <a href="../Menus/View/Chord_Dictionary_Editor.htm">command</a>. Each row defines a <a href="../Loose_ends/Chord_types.htm">chord type</a>, by associating a unique chord symbol with a scale and mode, along with other properties, as shown in the table below. All the usual <a href="../Menus/Edit/Editing.htm">editing</a> commands are supported, including unlimited undo/redo. The chord types can also be reordered by dragging and dropping one or more rows.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Name</td><td>The chord symbol to define.</td></tr>
+<tr><td>Scale</td><td>The <a href="../Loose_ends/Scales.htm">scale</a> to associate with this chord symbol.</td></tr>
+<tr><td>Mode</td><td>The <a href="../Loose_ends/Scales.htm#Modes">mode</a> to associate with this chord symbol.</td></tr>
+<tr><td>Comp A</td><td>The chord's primary spelling for <a href="../Parts_bar/Comp.htm">comping</a>, as a comma-separated list of chord tone numbers, each of which ranges from 1 to 7, e.g. 1,3,5,7. The list can contain from zero to seven tones, though triads and tetrachords are typical. Spaces can be used as separators instead of commas.
+</td></tr>
+<tr><td>Comp B</td><td>The chord's secondary spelling. This <a href="../Parts_bar/Comp.htm#Variation">variation</a> typically substitutes one or more tensions for chord tones, e.g. 2,3,5,6.</td></tr>
+<tr><td>Alias Of</td><td>Which chord type this symbol is an alias of, or "None" if it's not an alias.</td></tr>
+</table>
+
+<p>To rename a chord type, select the corresponding row and then left-click the chord name, or press <span class="key">F2</span>; alternatively you can select <span class="cmd">Rename</span> from the dialog's Edit menu or context menu. To edit a chord type's other properties, left-click the property to display a popup drop list or edit box. After making the desired change, save it by pressing <span class="key">Enter</span>, or by left-clicking outside of the popup control. You can also press <span class="key">Tab</span> or <span class="key">Shift+Tab</span> to save your change and then proceed to the next or previous column. To cancel an edit, press <span class="key">Esc</span>.
+
+<p>It's often useful to define multiple symbols for a given chord type, e.g. maj7 and M7 for a major seventh chord. The additional symbols are <em>aliases</em>. A chord type and its aliases form a group, the members of which stay synchronized with each other; any change made to the properties of one member is automatically propagated to the others. To create a new alias for a chord type, copy and paste it, and then rename the copy. To convert an existing chord type into an alias, left-click its Alias Of property, and then select the desired chord type from the drop list.
+
+<p>You can use any symbols you like, so long as every symbol is unique, but remember that songs are restricted to the chord symbols defined in the dictionary. If you edit the dictionary while a song is open, and you attempt to undefine a symbol used by the song or its undo history, you will get an error message.
+
+<p>The chord types can be sorted via the dialog's <span class="cmd">Edit/Sort</span> submenu, but note that the sort commands reorder the dictionary itself, as opposed to merely changing its presentation. Consequently you should avoid using the sort commands if you've put effort into a custom ordering.
+
+<p>You can have multiple chord dictionaries providing different definitions for the same chord types, and seamlessly switch between dictionaries while performing; see <a href="../Loose_ends/Chord_substitution.htm">chord substitution</a> for details. When it's set up correctly, the names of your chord dictionaries appear in the dialog's <span class="cmd">Subs</span> menu.
+
+</body>

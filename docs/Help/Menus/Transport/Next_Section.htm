@@ -1,0 +1,10 @@
+<title>Next Section</title>
+<body>
+
+<h3>Next Section</h3>
+
+<p>This command tells ChordEase to stop repeating the current <a href="../../Concepts/Sections.htm">section</a>, i.e. when the end of the current section is reached, continue to the next section instead of returning to the beginning of the current section. The command doesn't immediately affect the <a href="../../Concepts/Song.htm#Song_position">song position</a>, rather it effectively clears a repeat flag. It works for sections that specify a <a href="../../Dialogs/Section_Properties_dialog.htm#Section_Repeat">repeat count</a> as well as sections that repeat indefinitely.
+
+<p>The command is only accepted during a repeating section, and doesn't accumulate, so once it's been given, any additional next section commands are ignored until the section advances. The command should be given as soon as possible, i.e. near the beginning of the last pass through the repeating section. If the command is received too late, the section may unexpectedly repeat again, and even if the section advances, the <a href="../../Parts_bar/Part_Output.htm#Harmonic_Anticipation">harmonic anticipation</a> may be incorrect. Though it's possible to give this command via the menus or <a href="../../Menus/View/Toolbar.htm">toolbar</a>, it's usually more convenient to give it via remote control, by assigning a button or foot pedal to the Next Section <a href="../../Concepts/MIDI_targets.htm">MIDI target</a>.
+
+</body>

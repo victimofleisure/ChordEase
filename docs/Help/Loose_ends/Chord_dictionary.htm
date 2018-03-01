@@ -1,0 +1,32 @@
+<title>Chord dictionary</title>
+<body>
+
+<h3>Chord dictionary</h3>
+
+<p>The chord dictionary defines the <a href="../Loose_ends/Chord_types.htm">chord types</a> permitted in a <a href="../Concepts/Song.htm">song</a>. Each line of the dictionary is either a definition, or an alias. A definition must contain the following items, all separated by one or more spaces:
+
+<ol>
+<li>The chord symbol to be defined.
+<li>The name of the scale to use for this chord type.
+<li>The name of the mode to use for this chord type.
+<li>The two chord variations (A and B) to use for <a href="../Parts_bar/Comp.htm">comping</a>. Each variation consists of a comma-separated list of chord tone numbers, enclosed in square brackets. Valid chord tone numbers range from 1 to 7.
+</ol>
+
+<p>The names of the <a href="../Loose_ends/Scales.htm">scales</a> and <a href="../Loose_ends/Scales.htm#Modes">modes</a> must be upper case, with words separated by underscores. Here's a sample dictionary definition, defining the symbol maj7 as the Lydian mode of the major scale:
+
+<p>maj7 MAJOR LYDIAN [1,3,5,7] [2,3,5,6]
+
+<p>Aliases let you equate a chord symbol with another chord symbol. An alias consists of a chord symbol, followed by an equals sign, followed by the chord symbol to which the alias refers. These items must be separated by one or more spaces. Note that forward references are not permitted, i.e. an alias can't refer to a symbol that hasn't been defined yet. Here's a sample alias, defining the symbol M7 to be the same as maj7:
+
+<p>M7 = maj7
+
+<p>Chord symbols may consist of any number of non-whitespace printable characters. Spaces are not permitted within chord symbols. To create an empty symbol, use the special keyword NULL. The empty symbol is normally reserved for the major triad.
+
+<a name="Editing_the_chord_dictionary"><p><b>Editing the chord dictionary</b></a>
+<p>The recommended way to edit the <a href="../Loose_ends/Chord_dictionary.htm">chord dictionary</a> is via the <a href="../Dialogs/Chord_Dictionary_dialog.htm">chord dictionary dialog</a>, because it provides a convenient tabular interface and restricts you to syntactically correct choices. It's also possible to edit the chord dictionary with an ordinary text editor such as Notepad, but you should familiarize yourself with the dictionary's syntax before attempting this, and you may encounter permissions problems as explained below.
+
+<p>The chord dictionary normally resides in same folder as the ChordEase application, and if you're using the <a href="../Getting_Started/Installing.htm">installed</a> version of ChordEase, you may lack sufficient privileges to modify the dictionary file. This can be solved by running as administrator, but if that isn't an option, you may instead override the default dictionary, by copying ChordDictionary.txt from the application folder to your user profile. The profile folder path is typically <span class="path">C:\Users\foo\AppData\Roaming\ChordEase</span>, where foo is a placeholder for your user name. The copy of ChordDictionary.txt in your profile can be modified as needed, and will take precedence so long as you continue to log in as the same user.
+
+<p>Another option which may be more convenient is to change the location of the <a href="../Options/Other.htm#Application_data_folder">application data folder</a> to something other than your profile, but in this case be careful to also copy ChordEasePatch.ini, otherwise you'll lose your default patch settings. Note that ChordEase only reads the chord dictionary once during initialization, so if you edit it while ChordEase is running, your changes won't take effect until you exit and restart ChordEase. All of these complications can be avoided by using the chord dictionary dialog instead of directly editing the dictionary file.
+
+</body>

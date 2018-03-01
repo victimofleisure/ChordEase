@@ -1,0 +1,44 @@
+<title>Song file format</title>
+<body>
+
+<h3>Song file format</h3>
+
+<p>A <a href="../Concepts/Song.htm">song</a> file consists of tokens, separated by whitespace (spaces, tabs or newlines). There are two mandatory tokens which must appear in order at the beginning of a song: the time signature, and the key signature. These must be followed by one or more chord tokens. A chord token consists of three mandatory elements (chord duration, root, type) and one optional element (bass note). A chord token must not contain any embedded spaces.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Duration</td><td>An integer specifying the duration of the chord in beats.</td></tr>
+<tr><td>Root</td><td>The root of the chord, as a note name, e.g. C, Bb, F#, etc.</td></tr>
+<tr><td>Type</td><td>The chord type, e.g. maj7, -7, etc. Only <a href="../Loose_ends/Chord_types.htm">chord types</a> defined in the <a href="../Loose_ends/Chord_dictionary.htm">chord dictionary</a> are permitted.</td></tr>
+<tr><td>Bass</td><td>A slash followed by a bass note name, e.g. /E. This element is optional. The <a href="../Parts_bar/Bass.htm">bass</a> function only respects alternate bass notes if the <a href="../Parts_bar/Bass.htm#Slash_chords">slash chords</a> setting is enabled.</td></tr>
+</table>
+
+<p>The simplest possible song file is given below. It's in 4/4 time and the key of C, and consists of a single measure of C major.
+
+<p>4/4 C
+<br>4C
+
+<p>Here's a slightly more complicated song. It's in 4/4 time and the key of Bb, and consists of II, V, I, followed by a minor turnaround back into II. Note that the final measure is split into two chords. The total length is four measures or 16 beats.
+
+<p>4/4 Bb
+<br>4C-7 4F7 4Bbmaj7 2D-7b5 2G7b9
+
+<p>Comments are permitted, though only comments at the start of the file are guaranteed to be preserved. The single-line comment delimiter is two consecutive slashes. Property assignments may also be specified at the start of the file, after the time and key signatures but before the first chord token. Currently the only properties supported are T (tempo) and K (transposition to the specified key). Here's an example showing comments, property assignments, and an alternate bass note.
+
+<p>// this song specifies a tempo of 140
+<br>// and transposition to the key of Eb
+<br>4/4 Bb T=140 K=Eb
+<br>4C-7 4F7/C 4Bbmaj7 2D-7b5 2G7b9
+
+<p>Songs can contain <a href="../Concepts/Sections.htm">sections</a>, which repeat a specific number of times or indefinitely. A section is defined by enclosing one or more chords in square brackets. The brackets must be separated from the chord symbol(s) they enclose by one or more spaces. The section's closing bracket can optionally specify a repeat count. The repeat count must be an integer greater than zero, and must immediately follow the closing bracket. If no repeat count is specified, the section is repeated indefinitely, or until the section is advanced via the <a href="../Menus/Transport/Next_Section.htm">Next Section</a> command. Here's an example that demonstrates sections. The first section repeats indefinitely, whereas the second section repeats twice.
+
+<p>4/4 C
+<br>[ 4D-7 4G7 ]
+<br>[ 4E-7b5 4A7b9 ]2
+
+<p>Sections can optionally be named. To create a named section, the section's opening bracket must be immediately preceded by the section name, which must not contain any spaces. The following example demonstrates named sections.
+
+<p>4/4 C
+<br>vamp[ 4D-7 4G7 ]
+<br>break[ 4E-7b5 4A7b9 ]2
+
+</body>

@@ -1,0 +1,14 @@
+<title>MIDI Devices</title>
+<body>
+
+<h3>MIDI Devices</h3>
+
+<p>This dockable bar contains two lists, one showing all available MIDI input devices, and the other showing all available MIDI output devices. Inputs are on the left, and outputs are on the right. The device indices shown in these lists are synonymous with <em>ports</em> in ChordEase. Throughout ChordEase, input ports correspond to MIDI input devices, and output ports correspond to MIDI output devices.
+
+<p>Device indices are zero-origin, i.e. the first device is always device zero, unlike MIDI channel numbers which start at one. Devices indices are unique and contiguous within each list, but not between lists, i.e. there can be an input device zero and an output device zero.
+
+<p>The device lists are updated automatically when MIDI devices are inserted or removed. In this case Windows will renumber the MIDI devices as needed to keep them contiguous, and ChordEase will attempt to similarly renumber all ports referenced in the current <a href="../Concepts/Patch.htm">patch</a>. However if a device that was in use is removed, ChordEase will be unable to correct the situation, and will issue a warning.
+
+<p>To show or hide the bar, use <span class="cmd">MIDI/Devices</span>.
+
+</body>

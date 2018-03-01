@@ -1,0 +1,19 @@
+<title>Mapping functions</title>
+<body>
+
+<h3>Mapping functions</h3>
+
+<p>Each <a href="../Concepts/Part.htm">part</a> has a mapping function, which determines how that part <em>maps</em> input to output, i.e. translates input notes to output notes. To change a part's mapping function, find the corresponding row in the <a href="../Parts_bar/Parts_list.htm">parts list</a>, left-click within the Function column to display a popup drop list, and then select the desired function. The supported functions are briefly summarized in the table below. For more information about a function, click on the function's name.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td>Bypass</td><td>No operation: the output is identical to the input regardless of the current chord.</td></tr>
+<tr><td><a href="../Parts_bar/Lead.htm">Lead</a></td><td>Input notes are transposed in position by adding accidentals as needed, so that the output notes remain as close as possible to the input notes. This function is useful for soloing because it minimizes differences between chords and preserves the input's shape.</td></tr>
+<tr><td><a href="../Parts_bar/Comp.htm">Comp</a></td><td>A single input note triggers a chord, with user control over <a href="../Parts_bar/Comp.htm#Voicing">voicings</a>, <a href="../Parts_bar/Comp.htm#Variation">variations</a>, and <a href="../Parts_bar/Comp.htm#Arpeggio_Period">arpeggiation</a>. The input note's pitch determines the pitch window within which the output chord is voiced.</td></tr>
+<tr><td><a href="../Parts_bar/Bass.htm">Bass</a></td><td>Input notes are transposed via shifting, so that C is always the chord root, E is always the third, G is always the fifth, etc. This function also supports <a href="../Parts_bar/Bass.htm#Approach_mode">approach</a>, which shifts the current scale so that C is the root of the chord being approached (or as close as possible).</td></tr>
+<tr><td><a href="../Parts_bar/Lead.htm#Numbers">Numbers</a></td><td>Input notes are mapped to a tonal palette consisting of four scale tones, chosen to facilitate melodious intervals. Seven palettes are available, and they gradate smoothly from mostly chord tones to mostly tensions, allowing dissonance to be managed consistently.</td></tr>
+</table>
+
+<p>Depending on which function is used, the relationship between input and output notes can be one to one, or one to many. The Comp function is one to many, i.e. one input note generates multiple output notes, whereas the melodic functions (Lead and Bass) are one to one, unless the <a href="../Parts_bar/Harmonizer.htm">harmonizer</a> is active.
+
+</body>

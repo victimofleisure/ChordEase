@@ -1,0 +1,45 @@
+<title>Sync</title>
+<body>
+
+<h3>Sync</h3>
+
+<p>This <a href="../Concepts/Patch.htm">patch</a> page contains settings related to synchronizing ChordEase with external devices. Timing synchronization is implemented via MIDI clock messages, combined with the Start, Stop, Continue, and Song Position MIDI messages. ChordEase can be a slave or a master.
+
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>To make ChordEase a slave:</td><td>Enable <a href="../Patch_bar/Sync.htm#Sync_to_MIDI_clock">Sync to MIDI clock</a>, and set the <a href="../Patch_bar/Sync.htm#Sync_input_port">From port</a> to the input device from which ChordEase should receive synchronization messages.</td></tr>
+<tr><td>To make ChordEase a master:</td><td>Enable <a href="../Patch_bar/Sync.htm#Output_MIDI_clock">Output MIDI clock</a>, and set the <a href="../Patch_bar/Sync.htm#Sync_output_port">To port</a> to the output device to which ChordEase should send synchronization messages.</td></tr>
+</table>
+
+<p>ChordEase can be both slave and master simultaneously, i.e. it can synchronize to clocks from a master device while also sending clocks to a slave device. However since daisy-chaining increases <a href="../Loose_ends/Latency.htm">latency</a>, it's preferable to route the master clock to all slaves in parallel, via a hardware MIDI splitter.
+
+<a name="Sync_to_MIDI_clock"><p><b>Sync to MIDI clock</b></a>
+<p>If this setting is enabled, ChordEase expects to receive MIDI clocks and sequencer control messages from the input device specified by the <a href="../Patch_bar/Sync.htm#Sync_input_port">From port</a> setting. This is useful for synchronizing ChordEase to a device, so that the device is the master, and ChordEase is the slave. During playback, be careful to avoid touching any ChordEase controls that affect the song position or transport state, otherwise synchronization may be lost. Commands to avoid include <a href="../Menus/Transport/Play-Stop.htm">Play/Stop</a>, <a href="../Menus/Transport/Pause.htm">Pause</a>, <a href="../Menus/Transport/Rewind.htm">Rewind</a>, <a href="../Menus/Transport/Next_Chord.htm">Next Chord</a>, <a href="../Menus/Transport/Previous_Chord.htm">Previous Chord</a>, <a href="../Menus/Transport/Go_To.htm">Go To</a>, and the <a href="../Concepts/Chart_view.htm">chart view</a>'s positioning shortcuts.
+
+<p>Enabling this setting disables the internal timer that normally drives playback. Consequently if MIDI clocks aren't received from the specified device, ChordEase will be incapable of playback, and other timer-dependent features such as <a href="../Parts_bar/Comp.htm#Arpeggio_Period">arpeggiation</a> won't work either. Note that some devices only send MIDI clocks while they're playing. If ChordEase is slaved to such a device, arpeggiation will only work during playback, so it's preferable to use a device that sends MIDI clocks all the time.
+
+<p>In addition to sending MIDI clocks, the device must also send the following sequencer control messages: Start, Stop, Continue, and Song Position. The device may have a separate setting to enable sending sequencer control messages. If necessary, use the <a href="../Dialogs/MIDI_Input_bar.htm">MIDI input bar</a> to verify that these messages are being received.
+
+<p>ChordEase must use a <a href="../Patch_bar/General.htm#PPQ">PPQ</a> of 24 in order to synchronize to external MIDI clocks. This is because MIDI clocks have a fixed PPQ of 24, and ChordEase isn't capable of interpolating between them. If sync is enabled and the PPQ isn't already 24, ChordEase automatically changes it to 24 after displaying a warning. This may affect the precision of various <a href="../Loose_ends/Durations.htm">durations</a>.
+
+<p>While ChordEase is slaved to an external device, tempo is entirely controlled by the external device. To indicate this, the <a href="../Patch_bar/General.htm#Tempo">tempo</a> and <a href="../Patch_bar/General.htm#Tempo_Multiple">tempo multiple</a> controls are disabled, and the <a href="../Menus/View/Status_bar.htm">status bar</a> displays "SYNC" instead of the current tempo.
+
+<a name="Sync_input_port"><p><b>From port</b></a>
+<p>This is the device index of the MIDI input device from which ChordEase expects to receive synchronization messages if <a href="../Patch_bar/Sync.htm#Sync_to_MIDI_clock">Sync to MIDI clock</a> is enabled. Note that port numbers are zero-origin, unlike MIDI channels. For a list of the available input devices, see the left-hand pane of the <a href="../Dialogs/MIDI_Devices.htm">devices</a> bar.
+
+<a name="Sync_input_device_name"><p><b>Input device name</b></a>
+<p>This is the name of the MIDI input device from which ChordEase expects to receive synchronization messages if <a href="../Patch_bar/Sync.htm#Sync_to_MIDI_clock">Sync to MIDI clock</a> is enabled. To change the input device, edit the <a href="../Patch_bar/Sync.htm#Sync_input_port">From port</a> setting, as explained above.
+
+<a name="Output_MIDI_clock"><p><b>Output MIDI clock</b></a>
+<p>Enabling this setting causes ChordEase to send MIDI clocks and sequencer control messages to the output device specified by the <a href="../Patch_bar/Sync.htm#Sync_output_port">To port</a> setting. This is useful for synchronizing a device to ChordEase, so that ChordEase is the master, and the device is the slave. ChordEase sends the <a href="../Concepts/Song.htm#Song_position">song position</a> to the slave device, and also remotely executes the <a href="../Menus/Transport/Play-Stop.htm">play/stop</a> and <a href="../Menus/Transport/Pause.htm">pause</a> commands. During playback, be careful to avoid touching any controls on the slave device that affect the song position or transport state, otherwise synchronization may be lost.
+
+<p>Some devices automatically detect and synchronize to an external clock, but it's often necessary to explicitly configure the device to recognize an external clock. In addition to receiving MIDI clocks, the device must also support receiving the following sequencer control messages: Start, Stop, Continue, and Song Position. The device may have a separate setting to enable receiving sequencer control messages. Not all devices are capable of synchronizing to an external clock. When in doubt, check your device's MIDI implementation chart.
+
+<p>Note that ChordEase only supports sending MIDI clocks to a single device. To synchronize multiple devices to ChordEase, use a hardware MIDI splitter to distribute the MIDI clock from ChordEase to the devices. Avoid daisy-chaining if possible, as this may cause timing discrepancies due to <a href="../Loose_ends/Latency.htm">latency</a>.
+
+<a name="Sync_output_port"><p><b>To port</b></a>
+<p>This is the device index of the MIDI output device to which ChordEase sends synchronization messages if <a href="../Patch_bar/Sync.htm#Output_MIDI_clock">Output MIDI clock</a> is enabled. Note that port numbers are zero-origin, unlike MIDI channels. For a list of the available output devices, see the right-hand pane of the <a href="../Dialogs/MIDI_Devices.htm">devices</a> bar.
+
+<a name="Sync_output_device_name"><p><b>Output device name</b></a>
+<p>This is the name of the MIDI output device to which ChordEase sends synchronization messages if <a href="../Patch_bar/Sync.htm#Output_MIDI_clock">Output MIDI clock</a> is enabled. To change the output device, edit the <a href="../Patch_bar/Sync.htm#Sync_output_port">To port</a> setting, as explained above.
+
+</body>

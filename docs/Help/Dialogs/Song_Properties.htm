@@ -1,0 +1,14 @@
+<title>Song Properties</title>
+<body>
+
+<h3>Song Properties</h3>
+
+<p>This dialog lets you edit certain properties of the current <a href="../Concepts/Song.htm">song</a>, including its time signature and key signature. To display the dialog, use the <span class="cmd">File/Properties</span> <a href="../Menus/File/Properties.htm">command</a>. You can also specify optional properties such as tempo, transposition to a different key, and comments. If tempo is zero, the song is played at the current <a href="../Patch_bar/General.htm#Tempo">tempo</a> specified by the <a href="../Concepts/Patch.htm">patch</a>.
+
+<p>If the song's time signature is changed, the chord durations are automatically scaled, in an attempt to preserve each chord's length in terms of measures. This scaling can potentially cause rounding errors, because ChordEase uses integers to represent chord durations. If applying the specified time signature to the current song would cause rounding errors, a warning is displayed. In some cases the user is offered a different but equivalent time signature that would avoid the rounding errors.
+
+<p>For example, converting a song from 4/4 to 3/4 involves scaling each chord's duration by 75%. If the song doesn't contain split measures, the scaling can be accomplished without rounding errors. However if the song does contain split measures, since each half-measure chord has a duration of 2 in 4/4, and 75% of 2 isn't an integer, rounding errors would result. In this case the user is given the opportunity to convert to 6/8 instead, which achieves the same effect as 3/4 but avoids the rounding errors.
+
+
+
+</body>

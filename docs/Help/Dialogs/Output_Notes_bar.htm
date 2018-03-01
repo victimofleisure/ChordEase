@@ -1,0 +1,24 @@
+<title>Output Notes</title>
+<body>
+
+<h3>Output Notes</h3>
+
+<p>This dockable bar dynamically displays the output notes on a virtual piano keyboard. To show or hide the bar, use <span class="cmd">View/Output Notes</span>. The piano keyboard's orientation can be horizontal or vertical, depending on whether the bar is docked horizontally or vertically. This bar is useful for examining the behavior of the <a href="../Concepts/Mapping_functions.htm">mapping functions</a>. To monitor MIDI output messages other than notes, e.g. controllers, use the <a href="../Dialogs/MIDI_Output_bar.htm">MIDI Output bar</a> instead. To display input notes, use the <a href="../Dialogs/Piano_dialog.htm">Piano dialog</a>.
+
+<p>By default, output notes are displayed for all ports and all channels, except the port and channel used by the <a href="../Patch_bar/Metronome.htm">metronome</a>. To restrict the display to a particular port and/or channel, use the port and channel submenus of the bar's context menu. The context menu also lets you to change the size of the piano keyboard, show or hide the key labels, rotate the key labels, and enable or disable the display of metronome notes.
+
+<a name="Output_Notes_context_menu"><p><b>Context menu</b></a>
+<p><table border=1 cellpadding=2 cellspacing=0>
+<tr><td>Port</td><td colspan=2>To restrict the display to a particular port, select the corresponding submenu item, or select "All" to show notes from all ports.</td></tr>
+<tr><td>Channel</td><td colspan=2>To restrict the display to a particular channel, select the corresponding submenu item, or select "All" to show notes from all channels.</td></tr>
+<tr><td>Piano Size</td><td colspan=2>To resize the keyboard, select a standard piano size from the submenu, or select "Custom" to specify a custom size.</td></tr>
+<tr><td rowspan=4>Key Labels</td><td>None</td><td>No labels are shown on the piano keys.</td></tr>
+<tr><td>Output Notes</td><td>Display output note names (including octave) on the piano keys. If the labels are too small, rotate them via the Rotate Labels option (see below).</td></tr>
+<tr><td>Intervals</td><td>Show intervals on the piano keys, relative to the root of the current chord. The labels are updated dynamically as the chords change.</td></tr>
+<tr><td>Scale Tones</td><td>Show scale tones on the piano keys, using numbers from 1 to 7. Keys that aren't scale tones are left blank. The labels are updated dynamically as the chords change.</td></tr>
+<tr><td>Rotate Labels</td><td colspan=2>Rotate the key labels 90° counterclockwise, so that they're vertical instead of horizontal. This may allow the labels to use a larger font. This option is only supported when the bar is docked horizontally.</td></tr>
+<tr><td>Metronome</td><td colspan=2>Display metronome notes, which are normally hidden.</td></tr>
+<tr><td>Color Velocities</td><td colspan=2>Color the keys to show the velocities of the output notes. The colors range spectrally from blue (softest) to red (loudest).</td></tr>
+</table>
+
+</body>

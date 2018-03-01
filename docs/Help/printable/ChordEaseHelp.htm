@@ -765,9 +765,9 @@
 <tr><th rowspan=2>Input</th><th colspan=2>Output</th></tr>
 <tr><th>Origin=0</th><th>Origin=1</th></tr>
 <tr><td>C4</td><td>C#4</td><td>E4</td></tr>
-<tr><td>D4</td><td>E4 &nbsp;&#x02197;</td><td>A4</td></tr>
-<tr><td>E4</td><td>A4 &nbsp;&#x02197;</td><td>B4</td></tr>
-<tr><td>F4</td><td>B4 &nbsp;&#x02197;</td><td>C#5</td></tr>
+<tr><td>D4</td><td>E4 &nbsp;&nearr;</td><td>A4</td></tr>
+<tr><td>E4</td><td>A4 &nbsp;&nearr;</td><td>B4</td></tr>
+<tr><td>F4</td><td>B4 &nbsp;&nearr;</td><td>C#5</td></tr>
 </table>
 
 <p>Alignment matters most when switching from a heptatonic function such as <a href="#Lead">Lead</a> to the numbers system or vice versa. If you're playing near the origin when you switch, the transition is smooth, but if you're playing significantly above or below the origin, a jump in pitch occurs. If this jump is undesirable, you can avoid it by adjusting the numbers origin to suit the range of your instrument. You can also change the numbers origin during a performance as a kind of pitch-shifting effect.
@@ -884,7 +884,7 @@
 <tr><td>Enabled</td><td>The arpeggio repeats for as long as the input note remains pressed.</td></tr>
 </table>
 
-<p>Arpeggio repeat can be combined with <a href="#Auto_Play">auto play</a>, resulting in continuous automated arpeggios. The effect is similar to a music box. It's more interesting if the <a href="#Arpeggio_Order">arpeggio order</a> is random.
+<p>Arpeggio repeat can be combined with <a href="#Auto_Play">auto play</a>, resulting in continuous automated arpeggiation. The effect is similar to a music box. It's more interesting if the <a href="#Arpeggio_Order">arpeggio order</a> is random.
 
 <a name="Arpeggio_Adapt"><h2>Arpeggio Adapt</h2></a>
 
@@ -898,7 +898,7 @@
 <tr><td>Yes</td><td>C4 E4</td><td>Ab4 Db5</td></tr>
 </table>
 
-<p>Note that for adaptive arpeggios to work properly, the <a href="#Fix_held_notes">fix held notes</a> feature must be disabled, because otherwise it would correct the entire arpeggio, preventing hybrids. Adaptation takes <a href="#Harmonic_Anticipation">harmonic anticipation</a> into account, i.e. a given <a href="#Part">part</a> can update its arpeggios early (or late) relative to other parts. Adaptation works best with one-shot arpeggios; a <a href="#Arpeggio_Repeat">repeating</a> arpeggio can only adapt during its first pass.
+<p>For adaptive arpeggios to work properly, the <a href="#Fix_held_notes">fix held notes</a> feature must be disabled, because otherwise it would correct the entire arpeggio, preventing hybrids. Adaptation takes <a href="#Harmonic_Anticipation">harmonic anticipation</a> into account, i.e. a given <a href="#Part">part</a> can update its arpeggios early (or late) relative to other parts.
 
 <a name="Bass"><h2>Bass</h2></a>
 

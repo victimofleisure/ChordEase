@@ -11,7 +11,7 @@ cd Help
 rem md images
 rem copy C:\Chris\MyProjects\ChordEase\Help\images\*.* images
 copy ..\helptopic.css content.css
-navgen C:\Chris\MyProjects\ChordEase\Help\template.txt .
+C:\Chris\tools\navgen C:\Chris\MyProjects\ChordEase\Help\template.txt .
 copy ..\helpheader.txt x
 copy x + Contents.htm
 echo ^<body^>^<html^> >>x

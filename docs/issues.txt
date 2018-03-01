@@ -307,6 +307,16 @@ open	close	type	description	rev	user
 02/29/16	03/01/16	done	in output notes bar, add key label options for intervals and scale tones	1.0.13.000	
 02/29/16	03/01/16	done	output notes bar's rotate labels setting is forced on during startup, regardless of persistent value	1.0.13.000	
 03/01/16	03/02/16	done	UI elements lag behind chord changes due to timer-driven updating; add chord change notification	1.0.13.000	
+10/05/13	03/20/16	done	add mapping function for numbers system	1.0.14.000	
+08/21/15	03/20/16	done	give harmonizer its own page	1.0.14.000	
+03/26/16	03/26/16	done	if CreateEngine displays message box, chord bar's drop lists are blank	1.0.14.000	
+02/06/16	02/06/17	done	chord bar's root and bass drop lists behave erratically if song is transposed	1.0.14.000	
+02/06/16	02/07/17	done	chord editing doesn't account for song transposition; untransposed root and bass notes are shown	1.0.14.000	
+02/06/17	02/08/17	done	chord bar's bass drop list fails to update when bass note is changed via view or MIDI controller	1.0.14.000	
+02/06/17	02/08/17	done	show key-appropriate accidentals in chord bar, view context menus, and insert chord dialog	1.0.14.000	
+02/08/17	02/09/17	done	changing chord bar target via MIDI needlessly updates patch bar	1.0.14.000	
+02/08/17	02/10/17	done	changing scale or mode via MIDI doesn't update chord dictionary dialog	1.0.14.000	
+02/10/17	02/11/17	done	sorting chord dictionary doesn't preserve selection correctly	1.0.14.000	
 08/19/13		hold	MIDI output stream interface with queues, tempo and adjustable latency		
 08/29/13		hold	optionally don't auto-correct black keys; why?		
 09/18/13		hold	improve auto comp and auto bass; band-in-a-box stuff		
@@ -372,11 +382,11 @@ open	close	type	description	rev	user
 04/05/14		punt	parts bar MIDI target row view initially doesn't show scroll bars until resized; can't reproduce it		
 07/09/14		punt	chord type popup menu is inconveniently long; replace with popup drop list? (use chord bar instead)		
 11/11/14		punt	if part MIDI target edit is ended by selecting different part in parts list, wrong part is updated		
+02/09/17		punt	chord bar should indicate MIDI learn mode; changing selected item color requires owner-draw, ugh		
 08/31/13		todo	vocabulary with user supplying rhythym		
 08/31/13		todo	continuous vocabulary while key pressed		
 09/18/13		todo	view showing map of keyboard and which are or will be good and/or common tones		
 09/18/13		todo	endings		
-10/05/13		todo	numbers system; four-note octave?		
 11/17/13		todo	correct held notes at fraction of their original velocity, proportional to decay		
 11/29/13		todo	auto play should respect harmonic anticipation		
 12/07/13		todo	auto play hold; create static harmony via held note corrector		
@@ -391,3 +401,5 @@ open	close	type	description	rev	user
 06/01/14		todo	hi-res icons		
 11/19/15		todo	fixed bass approach should skip chords with durations less than approach length		
 01/19/16		todo	editing song resets software synth to default patches		
+03/20/16		todo	triggered bass approach doesn't handle sections		
+02/13/17		todo	arpeggio output note velocities should optionally decay or have random variation		

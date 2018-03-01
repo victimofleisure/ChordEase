@@ -93,7 +93,7 @@
 <tr><td>Enabled</td><td>The arpeggio repeats for as long as the input note remains pressed.</td></tr>
 </table>
 
-<p>Arpeggio repeat can be combined with <a href="../Parts_bar/Auto.htm#Auto_Play">auto play</a>, resulting in continuous automated arpeggiation. The effect is similar to a music box. It's more interesting if the <a href="../Parts_bar/Comp.htm#Arpeggio_Order">arpeggio order</a> is random.
+<p>Arpeggio repeat can be combined with <a href="../Parts_bar/Auto.htm#Auto_Play">auto play</a>, resulting in continuous automated arpeggios. The effect is similar to a music box. It's more interesting if the <a href="../Parts_bar/Comp.htm#Arpeggio_Order">arpeggio order</a> is random.
 
 <a name="Arpeggio_Adapt"><p><b>Arpeggio Adapt</b></a>
 <p>This setting causes arpeggios that span a chord change to <em>adapt</em> to the change. Ordinarily an arpeggio's notes are determined solely by the chord during which it begins, and remain constant. Consequently if an ordinary arpeggio spans two chords, it may clash with the latter chord. Adaptive arpeggios avoid this potential clash. When the chord changes, any unplayed arpeggio note that's not found in the new chord is replaced with the nearest unused note from the new chord.
@@ -106,7 +106,7 @@
 <tr><td>Yes</td><td>C4 E4</td><td>Ab4 Db5</td></tr>
 </table>
 
-<p>For adaptive arpeggios to work properly, the <a href="../Parts_bar/Part_Output.htm#Fix_held_notes">fix held notes</a> feature must be disabled, because otherwise it would correct the entire arpeggio, preventing hybrids. Adaptation takes <a href="../Parts_bar/Part_Output.htm#Harmonic_Anticipation">harmonic anticipation</a> into account, i.e. a given <a href="../Concepts/Part.htm">part</a> can update its arpeggios early (or late) relative to other parts.
+<p>Note that for adaptive arpeggios to work properly, the <a href="../Parts_bar/Part_Output.htm#Fix_held_notes">fix held notes</a> feature must be disabled, because otherwise it would correct the entire arpeggio, preventing hybrids. Adaptation takes <a href="../Parts_bar/Part_Output.htm#Harmonic_Anticipation">harmonic anticipation</a> into account, i.e. a given <a href="../Concepts/Part.htm">part</a> can update its arpeggios early (or late) relative to other parts. Adaptation works best with one-shot arpeggios; a <a href="../Parts_bar/Comp.htm#Arpeggio_Repeat">repeating</a> arpeggio can only adapt during its first pass.
 
 <!--  content stops HERE  -->
 			

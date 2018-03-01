@@ -1,5 +1,5 @@
 @echo off
-C:\Chris\tools\navgen template.html .
+navgen template.html .
 if errorlevel 1 goto err
 "C:\Chris\MyProjects\FixSelfUrl\Release\FixSelfUrl" *.html
 if errorlevel 1 goto err
@@ -11,7 +11,7 @@ cd Help
 rem md images
 rem copy C:\Chris\MyProjects\ChordEase\Help\images\*.* images
 copy ..\helptopic.css content.css
-C:\Chris\tools\navgen C:\Chris\MyProjects\ChordEase\Help\template.txt .
+navgen C:\Chris\MyProjects\ChordEase\Help\template.txt .
 copy ..\helpheader.txt x
 copy x + Contents.htm
 echo ^<body^>^<html^> >>x

@@ -26,6 +26,7 @@ rem cd ..
 rem ren issues.html issues.htm
 rem echo y | fsr issues.htm "<div id=body>" "<div id=widebody>"
 rem ren issues.htm issues.html
+copy downloadGitHub.html download.html
 goto exit
 :err
 pause Error!

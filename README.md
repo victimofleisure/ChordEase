@@ -1,6 +1,5 @@
-#ChordEase
 Play hard chords easily.
-========================
+------------------------
 
 ChordEase makes it easier to improvise over complicated chord progressions. No matter what the chords are, you can play as if they were all in the key of C. You don't need to play sharps or flats, because ChordEase automatically adds them for you. Though ChordEase is intended for jazz, it could be useful for any type of music that modulates frequently. ChordEase alters your notes in real time in order to make them harmonically correct, while preserving their rhythm and dynamics. By delegating rapid music theory calculations to ChordEase, you gain freedom to concentrate on other aspects of improvisation and performance, such as feel and aesthetics.
 

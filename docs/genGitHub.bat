@@ -1,5 +1,6 @@
 @echo off
 copy C:\Chris\MyProjects\ChordEase\web\*.* .
+copy downloadGitHub.html download.html
 C:\Chris\tools\navgen templateGitHub.html .
 if errorlevel 1 goto err
 "C:\Chris\MyProjects\FixSelfUrl\Release\FixSelfUrl" *.html
@@ -26,7 +27,6 @@ rem cd ..
 rem ren issues.html issues.htm
 rem echo y | fsr issues.htm "<div id=body>" "<div id=widebody>"
 rem ren issues.htm issues.html
-copy downloadGitHub.html download.html
 goto exit
 :err
 pause Error!
